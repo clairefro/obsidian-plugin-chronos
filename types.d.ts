@@ -28,3 +28,14 @@ declare module "vis-timeline" {
     setCustomTimeMarker(content: string, id: string, show: boolean): void;
   }
 }
+
+interface ConstructItemParams {
+  content: string;
+  start: string;
+  separator: string | undefined;
+  end: string | undefined;
+  groupName: string | undefined;
+  color: string | undefined;
+  lineNumber: number;
+  type: "default" | "background";
+}

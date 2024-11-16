@@ -183,7 +183,13 @@ export default class ChronosPlugin extends Plugin {
     const refitButton = container.createEl("button", {
       cls: "chronos-timeline-refit-button",
     });
-    refitButton.innerHTML = crosshairsSvg;
+    // normally would use .innerHTL for simple setting, but Obsidian plugin governance disallows use of inner/outerHTML
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(crosshairsSvg, "image/svg+xml");
+    const svgElement = svgDoc.documentElement;
+
+    refitButton.appendChild(document.importNode(svgElement, true));
+
     setTooltip(refitButton, "Fit all");
     refitButton.addEventListener("click", () => timeline.fit());
   }
@@ -232,16 +238,18 @@ export default class ChronosPlugin extends Plugin {
     const errorMsgContainer = container.createEl("div", {
       cls: "chronos-error-message-container",
     });
-    errorMsgContainer.innerHTML = `<p>Error(s) parsing chronos markdown. Hover to edit:<ul> ${this.formatErrorMessages(
-      error
-    )}</ul></p>`;
+
+    errorMsgContainer.innerText = this.formatErrorMessages(error);
   }
 
   private formatErrorMessages(error: Error): string {
-    return error.message
+    let text = "Error(s) parsing chronos markdown. Hover to edit: \n\n";
+    text += error.message
       .split(";;")
-      .map((msg) => `<li>${msg}</li>`)
-      .join("");
+      .map((msg) => `  - ${msg}`)
+      .join("\n\n");
+
+    return text;
   }
 }
 

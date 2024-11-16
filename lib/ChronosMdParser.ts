@@ -1,4 +1,10 @@
-import { ParseResult, Marker, ChronosDataItem, Group } from "../types";
+import {
+  ParseResult,
+  Marker,
+  ChronosDataItem,
+  Group,
+  ConstructItemParams,
+} from "../types";
 import { Color, Opacity } from "../enums";
 
 export class ChronosMdParser {
@@ -44,33 +50,87 @@ export class ChronosMdParser {
     return { items, markers, groups };
   }
 
-  private _parseLineWithRegex(line: string, regex: RegExp, lineNumber: number) {
-    const match = line.match(regex);
+  private _parseTimeItem(line: string, lineNumber: number) {
+    const itemTypeP = `[-@=]`;
+    const dateP = `(-?\\d{1,}(-?(\\d{2})?-?(\\d{2})?T?(\\d{2})?:?(\\d{2})?:?(\\d{2})?)?)`;
+    const optSp = `\\s*`;
+
+    const separatorP = `([^-\\d\\s]*?)?`;
+    const colorP = `(#(\\w+))?`;
+    const groupP = `(\\{([^}]+)\\})?`;
+
+    const contentP = `([^|]+)`;
+    const descriptionP = `(\\|?\\s*(.*))?`;
+
+    const re = new RegExp(
+      `${itemTypeP}${optSp}\\[${optSp}${dateP}${optSp}${separatorP}${optSp}${dateP}?${optSp}\\]${optSp}${colorP}${optSp}${groupP}${optSp}${contentP}${optSp}${descriptionP}$`
+    );
+
+    const match = line.match(re);
+
     if (!match) {
       this._addParserError(lineNumber, `Invalid format: ${line}`);
       return null;
+    } else {
+      const [
+        ,
+        start,
+        ,
+        ,
+        ,
+        ,
+        ,
+        ,
+        separator,
+        end,
+        ,
+        ,
+        ,
+        ,
+        ,
+        ,
+        ,
+        color,
+        ,
+        groupName,
+        content,
+        ,
+        description,
+      ] = match;
+
+      return {
+        start,
+        separator,
+        end,
+        color,
+        groupName,
+        content,
+        description,
+      };
     }
-    return match;
   }
 
   // Helper to construct item object with common properties
-  private _constructItem(
-    content: string,
-    start: string,
-    end: string | undefined,
-    groupName: string | undefined,
-    color: string | undefined,
-    lineNumber: number,
-    type: "default" | "background" = "default"
-  ) {
-    this._ensureChronologicalDates(start, end, lineNumber);
+  private _constructItem({
+    content,
+    start,
+    separator,
+    end,
+    groupName,
+    color,
+    lineNumber,
+    type = "default",
+  }: ConstructItemParams) {
+    this._validateDates(start, end, separator, lineNumber);
 
     const groupId = groupName ? this._getOrCreateGroupId(groupName) : null;
-
     return {
       content: content || "",
       start: this._parseDate(start),
-      end: end ? this._parseDate(end) : undefined,
+      end:
+        end && new Date(start) !== new Date(end)
+          ? this._parseDate(end)
+          : undefined,
       group: groupId,
       style: color
         ? `background-color: ${this._mapToObsidianColor(
@@ -84,53 +144,45 @@ export class ChronosMdParser {
 
   // Refactored _parseEvent method
   private _parseEvent(line: string, lineNumber: number) {
-    const eventLineRegex =
-      /^-\s*\[(.*?)(?:~(.*?))?\]\s*(#(\w+))?\s*(\{([^}]+)\})?\s*(.*?)(?:\s*\|\s*(.*))?$/;
-    const eventMatch = this._parseLineWithRegex(
-      line,
-      eventLineRegex,
-      lineNumber
-    );
+    const components = this._parseTimeItem(line, lineNumber);
 
-    if (eventMatch) {
-      const [, start, end, , color, , groupName, content, description] =
-        eventMatch;
+    if (components) {
+      const { start, separator, end, color, groupName, content, description } =
+        components;
+
       this.items.push({
-        ...this._constructItem(
+        ...this._constructItem({
           content,
           start,
+          separator,
           end,
           groupName,
           color,
-          lineNumber
-        ),
+          lineNumber,
+          type: "default",
+        }),
         cDescription: description || undefined,
       });
     }
   }
 
-  // Refactored _parsePeriod method
   private _parsePeriod(line: string, lineNumber: number) {
-    const periodLineRegex =
-      /^@\s*\[(.*?)(?:~(.*?))?\]\s*(#(\w+))?\s*(\{([^}]+)\})?\s*(.*?)$/;
-    const periodMatch = this._parseLineWithRegex(
-      line,
-      periodLineRegex,
-      lineNumber
-    );
+    const components = this._parseTimeItem(line, lineNumber);
 
-    if (periodMatch) {
-      const [, start, end, , color, , groupName, content] = periodMatch;
+    if (components) {
+      const { start, separator, end, color, groupName, content, description } =
+        components;
       this.items.push(
-        this._constructItem(
-          content,
+        this._constructItem({
+          content: description ? content + " | " + description : content,
           start,
+          separator,
           end,
           groupName,
           color,
           lineNumber,
-          "background"
-        )
+          type: "background",
+        })
       );
     }
   }
@@ -231,6 +283,51 @@ export class ChronosMdParser {
         );
       }
     }
+  }
+
+  private _ensureValidDates(
+    start: string,
+    end: string | undefined,
+    lineNumber: number
+  ) {
+    if (!this._isValidDate(start)) {
+      const msg = `Invalid date: ${start}. To specify a date range, separate dates with a tilde (~)`;
+      this._addParserError(lineNumber, msg);
+    }
+    if (end && !this._isValidDate(end)) {
+      const msg = `Invalid date: ${end}`;
+      this._addParserError(lineNumber, msg);
+    }
+  }
+
+  private _ensureCorrectDateSeparator(
+    separator: string,
+    lineNumber: number
+  ): void {
+    if (separator !== "~") {
+      const msg = `Invalid date separator "${separator}". Dates in a range must be separated by a tilde (~).`;
+      this._addParserError(lineNumber, msg);
+    }
+  }
+
+  private _isValidDate(dateString: string): boolean {
+    const date = new Date(dateString);
+    try {
+      return !isNaN(date.getTime());
+    } catch (e) {
+      return false;
+    }
+  }
+
+  private _validateDates(
+    start: string,
+    end: string | undefined,
+    separator: string | undefined,
+    lineNumber: number
+  ) {
+    this._ensureValidDates(start, end, lineNumber);
+    separator && this._ensureCorrectDateSeparator(separator, lineNumber);
+    this._ensureChronologicalDates(start, end, lineNumber);
   }
 
   private _addParserError(lineNumber: number, message: string) {
