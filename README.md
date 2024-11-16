@@ -270,7 +270,7 @@ Example
 
 ### Groups `{}`
 
-**Events** and **Periods** can be grouped into "swimlanes" by specifying a `Group Name` in curly brakcets `{}` after the `Date` (or `Color`, if present). Group names are case sensitive and may contain spaces.
+**Events** and **Periods** can be grouped into "swimlanes" by specifying a `Group Name` in curly brackets `{}` after the `Date` (or `Color`, if present). Group names are case sensitive and may contain spaces.
 
 The order of items does not matter, but the example below lumps items together by group for human legibility.
 
