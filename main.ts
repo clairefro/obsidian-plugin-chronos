@@ -6,6 +6,7 @@ import {
   setTooltip,
   PluginSettingTab,
   Notice,
+  Editor,
 } from "obsidian";
 import { DataSet, Timeline } from "vis-timeline/standalone";
 
@@ -16,7 +17,12 @@ import crosshairsSvg from "./assets/icons/crosshairs.svg";
 import { smartDateRange } from "./util/smartDateRange";
 import { knownLocales } from "./util/knownLocales";
 import { enDatestrToISO } from "./util/enDateStrToISO";
-import { cheatsheet } from "./util/cheatsheet";
+import {
+  cheatsheet,
+  templateAdvnaced,
+  templateBasic,
+  templateBlank,
+} from "./util/snippets";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
   selectedLocale: "en",
@@ -35,8 +41,32 @@ export default class ChronosPlugin extends Plugin {
     // register markdown processor
     this.registerMarkdownCodeBlockProcessor(
       "chronos",
-      this.renderChronosBlock.bind(this)
+      this._renderChronosBlock.bind(this)
     );
+
+    this.addCommand({
+      id: "insert-timeline-blank",
+      name: "Insert timeline (blank)",
+      editorCallback: (editor, _view) => {
+        this._insertSnippet(editor, templateBlank);
+      },
+    });
+
+    this.addCommand({
+      id: "insert-timeline-basic",
+      name: "Insert timeline example (basic)",
+      editorCallback: (editor, _view) => {
+        this._insertSnippet(editor, templateBasic);
+      },
+    });
+
+    this.addCommand({
+      id: "insert-timeline-advanced",
+      name: "Insert timeline example (advanced)",
+      editorCallback: (editor, _view) => {
+        this._insertSnippet(editor, templateAdvnaced);
+      },
+    });
   }
 
   onunload() {
@@ -52,7 +82,12 @@ export default class ChronosPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  private renderChronosBlock(source: string, el: HTMLElement) {
+  private _insertSnippet(editor: Editor, snippet: string) {
+    const cursor = editor.getCursor();
+    editor.replaceRange(snippet, cursor);
+  }
+
+  private _renderChronosBlock(source: string, el: HTMLElement) {
     const parser = new ChronosMdParser();
     const container = el.createEl("div", { cls: "chronos-timeline-container" });
 
@@ -60,36 +95,36 @@ export default class ChronosPlugin extends Plugin {
       const { items, markers, groups } = parser.parse(source);
 
       if (!el.dataset.initialized) {
-        this.initializeTimeline(container, items, markers, groups);
+        this._initializeTimeline(container, items, markers, groups);
         el.dataset.initialized = "true";
       }
     } catch (error) {
-      this.handleParseError(error, container);
+      this._handleParseError(error, container);
     }
   }
 
-  private initializeTimeline(
+  private _initializeTimeline(
     container: HTMLElement,
     items: any[],
     markers: Marker[],
     groups: Group[]
   ) {
-    const options = this.getTimelineOptions();
-    const timeline = this.createTimeline(container, items, groups, options);
+    const options = this._getTimelineOptions();
+    const timeline = this._createTimeline(container, items, groups, options);
 
-    this.addMarkers(timeline, markers);
-    this.setupTooltip(timeline, items);
-    this.createRefitButton(container, timeline);
+    this._addMarkers(timeline, markers);
+    this._setupTooltip(timeline, items);
+    this._createRefitButton(container, timeline);
     if (groups.length) {
       // weird workaround for properly renering timelines with groups
-      setTimeout(() => this.zoomOutMinimally(timeline), 150);
+      setTimeout(() => this._zoomOutMinimally(timeline), 150);
     }
     // make sure all items in view by default
     setTimeout(() => timeline.fit(), 100);
     return timeline;
   }
 
-  private getTimelineOptions() {
+  private _getTimelineOptions() {
     return {
       zoomable: true,
       selectable: true,
@@ -97,7 +132,7 @@ export default class ChronosPlugin extends Plugin {
     };
   }
 
-  private createTimeline(
+  private _createTimeline(
     container: HTMLElement,
     items: any[],
     groups: Group[],
@@ -112,7 +147,7 @@ export default class ChronosPlugin extends Plugin {
       timeline = new Timeline(
         container,
         updatedItems,
-        this.createDataGroups(updatedGroups),
+        this._createDataGroups(updatedGroups),
         options
       );
     } else {
@@ -124,7 +159,7 @@ export default class ChronosPlugin extends Plugin {
     return timeline;
   }
 
-  private addMarkers(timeline: Timeline, markers: Marker[]) {
+  private _addMarkers(timeline: Timeline, markers: Marker[]) {
     markers.forEach((marker, index) => {
       const id = `marker_${index}`;
       timeline.addCustomTime(new Date(marker.start), id);
@@ -166,13 +201,13 @@ export default class ChronosPlugin extends Plugin {
     });
   }
 
-  private createDataGroups(rawGroups: Group[]) {
+  private _createDataGroups(rawGroups: Group[]) {
     return new DataSet<Group>(
       rawGroups.map((g) => ({ id: g.id, content: g.content }))
     );
   }
 
-  private setupTooltip(timeline: Timeline, items: any[]) {
+  private _setupTooltip(timeline: Timeline, items: any[]) {
     timeline.on("itemover", (event) => {
       const itemId = event.item;
       const item = new DataSet(items).get(itemId) as any;
@@ -187,7 +222,7 @@ export default class ChronosPlugin extends Plugin {
     });
   }
 
-  private createRefitButton(container: HTMLElement, timeline: Timeline) {
+  private _createRefitButton(container: HTMLElement, timeline: Timeline) {
     const refitButton = container.createEl("button", {
       cls: "chronos-timeline-refit-button",
     });
@@ -227,7 +262,7 @@ export default class ChronosPlugin extends Plugin {
     return { updatedItems, updatedGroups };
   }
 
-  private zoomOutMinimally(timeline: Timeline) {
+  private _zoomOutMinimally(timeline: Timeline) {
     const range = timeline.getWindow();
     const zoomFactor = 1.02; // SLIGHT zoom out
     const newStart = new Date(
@@ -242,15 +277,15 @@ export default class ChronosPlugin extends Plugin {
     timeline.setWindow(newStart, newEnd, { animation: true });
   }
 
-  private handleParseError(error: Error, container: HTMLElement) {
+  private _handleParseError(error: Error, container: HTMLElement) {
     const errorMsgContainer = container.createEl("div", {
       cls: "chronos-error-message-container",
     });
 
-    errorMsgContainer.innerText = this.formatErrorMessages(error);
+    errorMsgContainer.innerText = this._formatErrorMessages(error);
   }
 
-  private formatErrorMessages(error: Error): string {
+  private _formatErrorMessages(error: Error): string {
     let text = "Error(s) parsing chronos markdown. Hover to edit: \n\n";
     text += error.message
       .split(";;")
@@ -306,8 +341,8 @@ class ChronosPluginSettingTab extends PluginSettingTab {
           dropdown.addOption(locale, label);
         });
 
-        const savedLocale =
-          this.plugin.settings.selectedLocale || supportedLocales[0];
+        const savedLocale = this.plugin.settings.selectedLocale || "en";
+
         dropdown.setValue(savedLocale);
 
         dropdown.onChange((value) => {
@@ -324,9 +359,6 @@ class ChronosPluginSettingTab extends PluginSettingTab {
     });
 
     textarea.readOnly = true;
-    textarea.style.width = "100%";
-    textarea.style.height = "200px";
-    textarea.style.overflow = "auto";
 
     new Setting(containerEl).addButton((btn) => {
       btn

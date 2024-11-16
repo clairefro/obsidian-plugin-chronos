@@ -1,3 +1,29 @@
+export const templateBlank = `\`\`\`chronos
+
+\`\`\``;
+
+export const templateBasic = `\`\`\`chronos
+- [2020] Event 1
+
+- [2020-01-04~2020-01-14] Event 2
+
+- [2020-01-10] Event 3
+
+@ [2020-01-06~2020-01-10] Period 1
+\`\`\``;
+
+export const templateAdvnaced = `\`\`\`chronos
+@ [1888-09-26~1965-01-04] {T.S. Eliot} Life: 1888-1965
+- [1949] {T.S. Eliot} "The Cocktail Party" | A play
+- [1920] {T.S. Eliot}  "The Sacred Wood"
+- [1922] {T.S. Eliot} "The Wasteland"
+
+@ [1899-08-24~1986-06-14] {Jorge Luis Borges} Life: 1899-1986
+- [1944] {Jorge Luis Borges} "Ficciones"
+- [1949] #cyan {Jorge Luis Borges} "El Aleph"
+- [1962] {Jorge Luis Borges} "Labyrinths"
+\`\`\``;
+
 export const cheatsheet = `# Chronos Cheatsheet
 
 After installing the Chronos Timeline plugin for Obsidian, copy and paste this whole markdown file into a file in your vault to play around and learn the syntax.
@@ -101,12 +127,12 @@ See available [Colors](#colors)
 \`\`\`
 
 \`\`\`chronos
-@ [1892-10-08~1941-08-31]{Marina Tsvetaeva} 1892-1941
+@ [1892-10-08~1941-08-31] {Marina Tsvetaeva} 1892-1941
 - [1916] {Marina Tsvetaeva} "Подруга"
 - [1928] {Marina Tsvetaeva}  "Поэма концов"
 - [1941] {Marina Tsvetaeva} "Записки о поэзии"
 
-@[1899-08-24~1986-06-14]{Jorge Luis Borges} 1899-1986
+@ [1899-08-24~1986-06-14] {Jorge Luis Borges} 1899-1986
 - [1944] {Jorge Luis Borges} "Ficciones"
 - [1949] {Jorge Luis Borges} "El Aleph"
 - [1962] {Jorge Luis Borges} "Labyrinths"

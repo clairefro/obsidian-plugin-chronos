@@ -2,27 +2,7 @@
 
 After installing the Chronos Timeline plugin for Obsidian, copy and paste this whole markdown file into a file in your vault to play around and learn the syntax.
 
-## Contents
-
-- [Chronos Cheatsheet](#chronos-cheatsheet)
-  - [Contents](#contents)
-  - [Date formats](#date-formats)
-    - [Examples](#examples)
-  - [Events](#events)
-    - [Examples](#examples-1)
-      - [Single Date](#single-date)
-      - [Date range](#date-range)
-      - [Date range with description](#date-range-with-description)
-      - [With color](#with-color)
-      - [With groups](#with-groups)
-  - [Periods](#periods)
-    - [Examples](#examples-2)
-      - [Basic](#basic)
-      - [With color](#with-color-1)
-  - [Markers](#markers)
-    - [Examples](#examples-3)
-  - [Advanced example](#advanced-example)
-  - [Colors](#colors)
+Hover on a timeline and click the Edit button in the upper right to play with the data.
 
 ## Date formats
 
@@ -121,12 +101,12 @@ See available [Colors](#colors)
 ```
 
 ```chronos
-@ [1892-10-08~1941-08-31]{Marina Tsvetaeva} 1892-1941
+@ [1892-10-08~1941-08-31] {Marina Tsvetaeva} 1892-1941
 - [1916] {Marina Tsvetaeva} "Подруга"
 - [1928] {Marina Tsvetaeva}  "Поэма концов"
 - [1941] {Marina Tsvetaeva} "Записки о поэзии"
 
-@[1899-08-24~1986-06-14]{Jorge Luis Borges} 1899-1986
+@ [1899-08-24~1986-06-14] {Jorge Luis Borges} 1899-1986
 - [1944] {Jorge Luis Borges} "Ficciones"
 - [1949] {Jorge Luis Borges} "El Aleph"
 - [1962] {Jorge Luis Borges} "Labyrinths"

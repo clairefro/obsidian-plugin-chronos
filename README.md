@@ -4,7 +4,7 @@ Render interactive timelines in your Obsidian notes from simple markdown. Make s
 
 Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) library.
 
-[![Demo video](./docs/ex-main.png)](https://www.youtube.com/embed/iYaA-QrdMQk?si=WdO7GX657ZKPfTxZ)
+![demo](./docs/ex-main-demo.gif)
 
 ## Quickstart
 
@@ -20,6 +20,20 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 
 ![quickstart example](./docs/ex-comment.png)
 
+You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
+
+### Insert blank
+
+![palette example blank](./docs/ex-palette-blank.gif)
+
+### Insert basic template
+
+![palette example basic](./docs/ex-palette-basic.gif)
+
+### Insert advanced template
+
+![palette example advanced](./docs/ex-palette-adv.gif)
+
 ### Cheatsheet
 
 After installing the Chronos Timeline plugin, paste the contents of [this cheatsheet](./docs/chronos-cheatsheet.md) into a file in your vault to play with examples
@@ -28,6 +42,9 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 
 - [Chronos Timeline - Interactive timelines for Obsidian](#chronos-timeline---interactive-timelines-for-obsidian)
   - [Quickstart](#quickstart)
+    - [Insert blank](#insert-blank)
+    - [Insert basic template](#insert-basic-template)
+    - [Insert advanced template](#insert-advanced-template)
     - [Cheatsheet](#cheatsheet)
   - [Contents](#contents)
 - [Syntax Overview](#syntax-overview)
@@ -50,6 +67,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Refit](#refit)
 - [Localization](#localization)
 - [Generating timelines with AI](#generating-timelines-with-ai) - [Prompt template](#prompt-template)
+  - [Demo video](#demo-video)
 
 # Syntax Overview
 
@@ -425,3 +443,7 @@ Using Chronos syntax, generate markdown for a timeline of the following:
 
 <YOUR REQUEST HERE>
 ````
+
+## Demo video
+
+[![Demo video](./docs/ex-main.png)](https://www.youtube.com/embed/iYaA-QrdMQk?si=WdO7GX657ZKPfTxZ)
