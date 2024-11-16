@@ -118,7 +118,7 @@ You can signify BCE times with the negtive symbol (-)
 
 ## Events (`-`)
 
-Events can include a single date or a date range. Event name and Description are optional.
+Events can include a single date or a date range.
 
 ### Events with a single date
 
@@ -241,13 +241,13 @@ Example
 
 ## Modifiers
 
-Modifiers can be added to **Events** (`-`) and **Periods** (`@`) with the following optional syntax.
+Modifiers **#color** and **{Group}** can be added to **Events** (`-`) and **Periods** (`@`) with the following optional syntax.
 
 ```
-- [Date-Date] #color {Group Name} Event Name | Description
+- [Date-Date] #color {Group Name} Name | Description
 ```
 
-The modifiers must go in this order: between `Dates` and `Event Name`, with color first if both color and group are used.
+The modifiers must go in this order: between `Dates` and `Name`, with color first if both color and group are used.
 
 ### Colors `#color`
 
