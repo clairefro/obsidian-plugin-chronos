@@ -311,7 +311,7 @@ export class ChronosMdParser {
   }
 
   private _isValidDate(dateString: string): boolean {
-    const date = new Date(dateString);
+    const date = this._parseDate(dateString);
     try {
       return !isNaN(date.getTime());
     } catch (e) {

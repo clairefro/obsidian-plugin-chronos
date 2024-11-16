@@ -1,5 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Plugin, App, Setting, setTooltip, PluginSettingTab } from "obsidian";
+import {
+  Plugin,
+  App,
+  Setting,
+  setTooltip,
+  PluginSettingTab,
+  Notice,
+} from "obsidian";
 import { DataSet, Timeline } from "vis-timeline/standalone";
 
 import { ChronosMdParser } from "./lib/ChronosMdParser";
@@ -9,6 +16,7 @@ import crosshairsSvg from "./assets/icons/crosshairs.svg";
 import { smartDateRange } from "./util/smartDateRange";
 import { knownLocales } from "./util/knownLocales";
 import { enDatestrToISO } from "./util/enDateStrToISO";
+import { cheatsheet } from "./util/cheatsheet";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
   selectedLocale: "en",
@@ -307,5 +315,34 @@ class ChronosPluginSettingTab extends PluginSettingTab {
           this.plugin.saveData(this.plugin.settings);
         });
       });
+
+    containerEl.createEl("h2", { text: "Cheatsheet" });
+
+    const textarea = containerEl.createEl("textarea", {
+      cls: "chronos-settings-md-container",
+      text: cheatsheet,
+    });
+
+    textarea.readOnly = true;
+    textarea.style.width = "100%";
+    textarea.style.height = "200px";
+    textarea.style.overflow = "auto";
+
+    new Setting(containerEl).addButton((btn) => {
+      btn
+        .setButtonText("Copy cheatsheet")
+        .setCta()
+        .onClick(async () => {
+          try {
+            await navigator.clipboard.writeText(cheatsheet);
+            new Notice(
+              "Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax"
+            );
+          } catch (err) {
+            console.error("Failed to copy cheatsheet:", err);
+            new Notice("Failed to copy cheatsheet");
+          }
+        });
+    });
   }
 }
