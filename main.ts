@@ -29,17 +29,17 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
   selectedLocale: DEFAULT_LOCALE,
 };
 
+const MS_UNTIL_REFIT = 100;
+
 export default class ChronosPlugin extends Plugin {
   settings: ChronosPluginSettings;
 
   async onload() {
     console.log("Loading Chronos Timeline Plugin...");
 
-    // load settings
     this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
     this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
 
-    // register markdown processor
     this.registerMarkdownCodeBlockProcessor(
       "chronos",
       this._renderChronosBlock.bind(this)
@@ -70,10 +70,7 @@ export default class ChronosPlugin extends Plugin {
     });
   }
 
-  onunload() {
-    // Uncomment for debugging in development
-    // console.log("Unloading Chronos Timeline Plugin...");
-  }
+  onunload() {}
 
   async loadSettings() {
     this.settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) };
@@ -95,6 +92,7 @@ export default class ChronosPlugin extends Plugin {
     try {
       const { items, markers, groups } = parser.parse(source);
 
+      // prevent re-render
       if (!el.dataset.initialized) {
         this._initializeTimeline(container, items, markers, groups);
         el.dataset.initialized = "true";
@@ -116,12 +114,11 @@ export default class ChronosPlugin extends Plugin {
     this._addMarkers(timeline, markers);
     this._setupTooltip(timeline, items);
     this._createRefitButton(container, timeline);
-    if (groups.length) {
-      // weird workaround for properly renering timelines with groups
-      setTimeout(() => this._zoomOutMinimally(timeline), 150);
-    }
+    // weird workaround for properly rendering timelines with groups
+    this._handleZoomWorkaround(timeline, groups);
+
     // make sure all items in view by default
-    setTimeout(() => timeline.fit(), 100);
+    setTimeout(() => timeline.fit(), MS_UNTIL_REFIT);
     return timeline;
   }
 
@@ -276,6 +273,15 @@ export default class ChronosPlugin extends Plugin {
     );
 
     timeline.setWindow(newStart, newEnd, { animation: true });
+  }
+
+  private _handleZoomWorkaround(timeline: Timeline, groups: Group[]) {
+    if (groups.length) {
+      setTimeout(
+        () => this._zoomOutMinimally(timeline),
+        MS_UNTIL_REFIT + 50 /* must come after*/
+      );
+    }
   }
 
   private _handleParseError(error: Error, container: HTMLElement) {
