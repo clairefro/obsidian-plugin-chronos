@@ -98,7 +98,7 @@ If not explicitly provided:
 - The month and day default to `01` (January and the 1st)
 - The hour, minute, and second default to `00` (top of the hour or minute)
 
-Examples
+**Examples**
 
 ```
 - [2020] A year
@@ -147,7 +147,7 @@ Events can include a single date or a date range.
 
 Only `[Date]` is required. If no `Event Name` is provided, the event title will default to the date or date range.
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -167,7 +167,7 @@ A date range is represented with a tilde (`~`) between the start and end dates.
 - [Date~Date] Event Name
 ```
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -181,7 +181,7 @@ Example
 
 You can add additional information to an event by adding a pipe `|` after the Event name. This text will appear in a popup when you hover over an event.
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -198,6 +198,8 @@ Periods are spans of time displayed with a semi-transparent background. **Period
 ```
 @ [Date~Date] Period Name
 ```
+
+**Example**
 
 ````markdown
 ```chronos
@@ -221,7 +223,7 @@ Markers can be used to highlight a key milestone in time. **Markers must be a si
 = [Date] Marker Name
 ```
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -239,7 +241,7 @@ Example
 
 Chronos will ignore any line that starts with `#`. You can use this to write comments to yourself or block out items.
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -272,7 +274,7 @@ By default, Chronos matches your Obsidian theme color.
 
 To give items a specific color, you can include an available color after the date: `#red` | `#orange` | `#yellow` | `#green` | `#blue` | `purple` | `#pink` | `#cyan`
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -293,7 +295,7 @@ Example
 
 The order of items does not matter, but the example below lumps items together by group for human legibility.
 
-Example
+**Example**
 
 ````markdown
 ```chronos
@@ -387,9 +389,9 @@ Available options depend on your system's language settings.
 
 _In the future this may be added as a feature directly in the plugin._
 
-LLMs like [ChatGPT](https://chatgpt.com/) are good at generating Chronos timelines in one shot. Just paste your information in the placeholder `\<YOUR REQUEST HERE\>` and ask AI.
+LLMs like [ChatGPT](https://chatgpt.com/) are good at generating Chronos timelines in one shot. Just paste your information in the placeholder `<YOUR REQUEST HERE>` and ask AI.
 
-Example requests:
+**Example requests:**
 
 - "Industrial Revolution"
 - "Industrial Revolution, with groups for different regions of the world"
