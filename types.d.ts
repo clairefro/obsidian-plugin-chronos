@@ -7,7 +7,14 @@ export interface Marker {
 }
 
 interface ChronosDataItem extends DataItem {
-  cDescription?: string; // for event tooltips
+  cDescription?: string; // prefixed c for chronos - special prop for event tooltips
+}
+
+export interface ChronosDataSetDataItem {
+  content: string;
+  start: Date;
+  end: Date;
+  cDescription?: string; // prefixed c for chronos - special prop for event tooltips
 }
 
 export interface ChronosPluginSettings {
@@ -22,13 +29,6 @@ export interface ParseResult {
   groups: Group[];
 }
 
-declare module "vis-timeline" {
-  /** Add method override bc this method exists and is documented, but not registered in type definitions from library */
-  interface Timeline {
-    setCustomTimeMarker(content: string, id: string, show: boolean): void;
-  }
-}
-
 interface ConstructItemParams {
   content: string;
   start: string;
@@ -38,4 +38,16 @@ interface ConstructItemParams {
   color: string | undefined;
   lineNumber: number;
   type: "default" | "background";
+}
+
+interface ChronosTimelineConstructor {
+  container: HTMLElement;
+  settings: ChronosPluginSettings;
+}
+
+declare module "vis-timeline" {
+  /** Add method override bc this method exists and is documented, but not registered in type definitions from library */
+  interface Timeline {
+    setCustomTimeMarker(content: string, id: string, show: boolean): void;
+  }
 }
