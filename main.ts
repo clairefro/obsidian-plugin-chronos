@@ -385,5 +385,13 @@ class ChronosPluginSettingTab extends PluginSettingTab {
           }
         });
     });
+
+    const link = document.createElement("a");
+    link.textContent = "Learn more";
+    link.href = "https://github.com/clairefro/obsidian-plugin-chronos";
+    link.target = "_blank";
+    link.style.textDecoration = "underline";
+
+    containerEl.appendChild(link);
   }
 }
