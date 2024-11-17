@@ -52,6 +52,7 @@ export class ChronosTimeline {
       zoomable: true,
       selectable: true,
       minHeight: "200px",
+      locale: this.settings.selectedLocale,
     };
   }
 
@@ -93,7 +94,7 @@ export class ChronosTimeline {
     } else {
       timeline = new Timeline(this.container, items, options);
     }
-    setTimeout(() => this._updateTooltipCustomMarkers(), 100);
+    setTimeout(() => this._updateTooltipCustomMarkers(), MS_UNTIL_REFIT);
     return timeline;
   }
 
@@ -143,12 +144,16 @@ export class ChronosTimeline {
       const titleText = m.getAttribute("title");
 
       if (titleText) {
-        const date = smartDateRange(
-          enDatestrToISO(titleText),
-          null,
-          this.settings.selectedLocale
-        );
-        setTooltip(m as HTMLElement, date);
+        let text = titleText;
+        if (this.settings.selectedLocale === "en") {
+          const enDateISO = enDatestrToISO(titleText);
+          text = smartDateRange(enDateISO, null, this.settings.selectedLocale);
+        } else {
+          text = titleText.replace(", 0:00:00", "").replace(/^.*?:/, "").trim(); // TODO: better handling for non-english locales
+        }
+        setTooltip(m as HTMLElement, text);
+
+        // customer markers seem to re-write title on a tick function - need to combat with observer
         const observer = new MutationObserver((mutationsList) => {
           for (const mutation of mutationsList) {
             if (
