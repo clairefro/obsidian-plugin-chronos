@@ -19,7 +19,7 @@ import { knownLocales } from "./util/knownLocales";
 import { enDatestrToISO } from "./util/enDateStrToISO";
 import {
   cheatsheet,
-  templateAdvnaced,
+  templateAdvanced,
   templateBasic,
   templateBlank,
 } from "./util/snippets";
@@ -65,7 +65,7 @@ export default class ChronosPlugin extends Plugin {
       id: "insert-timeline-advanced",
       name: "Insert timeline example (advanced)",
       editorCallback: (editor, _view) => {
-        this._insertSnippet(editor, templateAdvnaced);
+        this._insertSnippet(editor, templateAdvanced);
       },
     });
   }

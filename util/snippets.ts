@@ -12,7 +12,7 @@ export const templateBasic = `\`\`\`chronos
 @ [2020-01-06~2020-01-10] Period 1
 \`\`\``;
 
-export const templateAdvnaced = `\`\`\`chronos
+export const templateAdvanced = `\`\`\`chronos
 @ [1888-09-26~1965-01-04] {T.S. Eliot} Life: 1888-1965
 - [1949] {T.S. Eliot} "The Cocktail Party" | A play
 - [1920] {T.S. Eliot}  "The Sacred Wood"
