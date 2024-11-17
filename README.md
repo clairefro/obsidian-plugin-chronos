@@ -67,7 +67,6 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Refit](#refit)
 - [Localization](#localization)
 - [Generating timelines with AI](#generating-timelines-with-ai) - [Prompt template](#prompt-template)
-  - [Demo video](#demo-video)
 
 # Syntax Overview
 
@@ -388,7 +387,7 @@ Available options depend on your system's language settings.
 
 _In the future this may be added as a feature directly in the plugin._
 
-LLMs like [ChatGPT](https://chatgpt.com/) are good at generating Chronos timelines in one shot. Just paste your information in the placeholder <YOUR REQUEST HERE> and ask AI.
+LLMs like [ChatGPT](https://chatgpt.com/) are good at generating Chronos timelines in one shot. Just paste your information in the placeholder `\<YOUR REQUEST HERE\>` and ask AI.
 
 Example requests:
 
@@ -445,7 +444,3 @@ Using Chronos syntax, generate markdown for a timeline of the following:
 
 <YOUR REQUEST HERE>
 ````
-
-## Demo video
-
-[![Demo video](./docs/ex-main.png)](https://www.youtube.com/embed/iYaA-QrdMQk?si=WdO7GX657ZKPfTxZ)
