@@ -81,7 +81,7 @@ Chronos parses markdown in `chronos` code blocks into objects on a timeline
 The first character of each line in your `chronos` block determines the item type:
 
 - [Events](#events--) (`-`)
-- [Periods](#periods-)(`@`)
+- [Periods](#periods-) (`@`)
 - [Markers](#markers-) (`=`)
 - [Comments](#comments-) (`#`)
 
