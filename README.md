@@ -146,7 +146,7 @@ Events can include a single date or a date range.
 - [Date] Event Name
 ```
 
-Only `[Date]` is required. If no `Event Name` is provided, the event will have no title text.
+Only `[Date]` is required. If no `Event Name` is provided, the event title will default to the date or date range.
 
 Example
 
@@ -194,7 +194,7 @@ Example
 
 ## Periods `@`
 
-Periods represent a span of time and are displayed with a semi-transparent background. They are represented using the @ symbol. **Periods must be a range with a start and end date**.
+Periods are pans of time displayed with a semi-transparent background. **Periods must be a range with a start and end date**. `Period Name` is optional
 
 ```
 @ [Date~Date] Period Name
@@ -216,7 +216,7 @@ Periods represent a span of time and are displayed with a semi-transparent backg
 
 ## Markers `=`
 
-Markers are used to highlight a significant event that defines the start or end of a time period. Markers are typically placed on key dates and represent important milestones. **Markers must be a single date**.
+Markers are used to highlight a significant event that defines the start or end of a time period. Markers are typically placed on key dates and represent important milestones. **Markers must be a single date**. `Marker Name` is optional
 
 ```
 = [Date] Marker Name
