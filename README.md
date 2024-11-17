@@ -129,7 +129,7 @@ The start and end date must be in chronological order.
 You can signify BCE times with the negtive symbol (-)
 
 ```
-- [-10000]  <--- 10000 BCE
+- [-10000]    <--- 10000 BCE
 - [-550~-20]  <--- 550 ~ 20 BCE
 - [-550~550]  <--- 550 BCE ~ 550 CE
 ```
