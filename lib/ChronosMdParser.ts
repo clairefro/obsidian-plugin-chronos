@@ -6,6 +6,8 @@ import {
   ConstructItemParams,
 } from "../types";
 import { Color, Opacity } from "../enums";
+import { smartDateRange } from "../util/smartDateRange";
+import { DEFAULT_LOCALE } from "../constants";
 
 export class ChronosMdParser {
   private errors: string[] = [];
@@ -13,7 +15,11 @@ export class ChronosMdParser {
   private markers: Marker[] = [];
   private groups: Group[] = [];
   private groupMap: { [key: string]: number } = {};
+  private locale: string;
 
+  constructor(locale = DEFAULT_LOCALE) {
+    this.locale = locale;
+  }
   parse(data: string): ParseResult {
     const lines = data.split("\n");
     this._resetVars();
@@ -59,7 +65,7 @@ export class ChronosMdParser {
     const colorP = `(#(\\w+))?`;
     const groupP = `(\\{([^}]+)\\})?`;
 
-    const contentP = `([^|]+)`;
+    const contentP = `([^|]+)?`;
     const descriptionP = `(\\|?\\s*(.*))?`;
 
     const re = new RegExp(
@@ -150,9 +156,13 @@ export class ChronosMdParser {
       const { start, separator, end, color, groupName, content, description } =
         components;
 
+      const defaultTitle = end
+        ? smartDateRange(start, end, this.locale)
+        : start;
+
       this.items.push({
         ...this._constructItem({
-          content,
+          content: content ? content : defaultTitle,
           start,
           separator,
           end,

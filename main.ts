@@ -23,9 +23,10 @@ import {
   templateBasic,
   templateBlank,
 } from "./util/snippets";
+import { DEFAULT_LOCALE } from "./constants";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
-  selectedLocale: "en",
+  selectedLocale: DEFAULT_LOCALE,
 };
 
 export default class ChronosPlugin extends Plugin {
@@ -88,7 +89,7 @@ export default class ChronosPlugin extends Plugin {
   }
 
   private _renderChronosBlock(source: string, el: HTMLElement) {
-    const parser = new ChronosMdParser();
+    const parser = new ChronosMdParser(this.settings.selectedLocale);
     const container = el.createEl("div", { cls: "chronos-timeline-container" });
 
     try {
@@ -213,10 +214,10 @@ export default class ChronosPlugin extends Plugin {
       const item = new DataSet(items).get(itemId) as any;
       if (itemId) {
         const text = `${item?.content} (${smartDateRange(
-          item.start,
-          item.end,
+          item.start.toISOString().split("T")[0],
+          item.end.toISOString().split("T")[0],
           this.settings.selectedLocale
-        )})${item?.cDescription ? " \n " + item?.cDescription : ""}`;
+        )})${item?.cDescription ? " \n " + item.cDescription : ""}`;
         setTooltip(event.event.target, text);
       }
     });
@@ -333,7 +334,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Select Locale")
-      .setDesc("Choose a locale for date formatting when hovering on events")
+      .setDesc(
+        "Choose a locale for displaying dates in tooltips and default item names"
+      )
       .addDropdown((dropdown) => {
         supportedLocales.forEach((locale, i) => {
           const localeDisplayName = supportedLocalesNativeDisplayNames[i];
