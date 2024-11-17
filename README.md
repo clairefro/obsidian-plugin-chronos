@@ -216,7 +216,7 @@ Periods are pans of time displayed with a semi-transparent background. **Periods
 
 ## Markers `=`
 
-Markers are used to highlight a significant event that defines the start or end of a time period. Markers are typically placed on key dates and represent important milestones. **Markers must be a single date**. `Marker Name` is optional
+Markers can be used to highlight a key milestone in time. **Markers must be a single date**. `Marker Name` is optional
 
 ```
 = [Date] Marker Name
