@@ -1,4 +1,4 @@
-# Chronos Timeline - Interactive timelines for Obsidian
+# Chronos Timeline: interactive timelines for Obsidian
 
 Render interactive timelines in your Obsidian notes from simple markdown. Make sense of anything time related.
 
@@ -40,7 +40,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 
 ## Contents
 
-- [Chronos Timeline - Interactive timelines for Obsidian](#chronos-timeline---interactive-timelines-for-obsidian)
+- [Chronos Timeline: interactive timelines for Obsidian](#chronos-timeline-interactive-timelines-for-obsidian)
   - [Quickstart](#quickstart)
     - [Insert blank](#insert-blank)
     - [Insert basic template](#insert-basic-template)
