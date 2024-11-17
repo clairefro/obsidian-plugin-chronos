@@ -212,7 +212,7 @@ export default class ChronosPlugin extends Plugin {
       if (itemId) {
         const text = `${item?.content} (${smartDateRange(
           item.start.toISOString().split("T")[0],
-          item.end.toISOString().split("T")[0],
+          item.end?.toISOString().split("T")[0],
           this.settings.selectedLocale
         )})${item?.cDescription ? " \n " + item.cDescription : ""}`;
         setTooltip(event.event.target, text);
