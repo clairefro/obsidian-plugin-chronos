@@ -194,7 +194,7 @@ Example
 
 ## Periods `@`
 
-Periods are pans of time displayed with a semi-transparent background. **Periods must be a range with a start and end date**. `Period Name` is optional
+Periods are spans of time displayed with a semi-transparent background. **Periods must be a range with a start and end date**. `Period Name` is optional
 
 ```
 @ [Date~Date] Period Name
