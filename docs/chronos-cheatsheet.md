@@ -175,11 +175,11 @@ See available [Colors](#colors)
 
 # Early Cold War
 
-@ [1957~1969] #cyan {SSSR} Space Race
+@ [1957~1969] #cyan {USSR} Space Race
 @ [1957~1969] #cyan {USA} Space Race
 - [1950-06-25~1953-07-27] {Asia} Korean War | between North and South Korea
-- [1955-05-14] {SSSR} Warsaw Pact | in response to NATO
-- [1957-10-04] #cyan {SSSR} Sputnik launched | initiating the Space Race
+- [1955-05-14] {USSR} Warsaw Pact | in response to NATO
+- [1957-10-04] #cyan {USSR} Sputnik launched | initiating the Space Race
 - [1961-04-17] {Cuba} Bay of Pigs Invasion | in Cuba
 
 # Height of Tensions
@@ -191,16 +191,16 @@ See available [Colors](#colors)
 
 # Détente Period
 
-- [1979-12-24~1989-02-15] {SSSR} Soviet-Afghan War | straining Soviet resources
+- [1979-12-24~1989-02-15] {USSR} Soviet-Afghan War | straining Soviet resources
 - [1983-03-23] {USA} Reagan announces the Strategic Defense Initiative (SDI)
-- [1986-04-26] {SSSR} Chernobyl nuclear disaster
+- [1986-04-26] {USSR} Chernobyl nuclear disaster
 - [1987-12-08] {Global} INF Treaty | signed, eliminating intermediate-range nuclear missiles
 
 # Late Cold War
 
 - [1989-11-09] {Europe} Fall of the Berlin Wall | symbolizing the end of Cold War tensions
 - [1991-07-31] {Global} START I Treaty signed | further arms reduction
-- [1991-12-26] {SSSR} Dissolution of the Soviet Union | officially ending the Cold War
+- [1991-12-26] {USSR} Dissolution of the Soviet Union | officially ending the Cold War
 
 = [1991-12-26] End of the Cold War
 
