@@ -269,7 +269,9 @@ The modifiers must go in this order: between `Dates` and `Name`, with color firs
 
 ### Colors `#color`
 
-Available colors: `#red` | `#orange` | `#yellow` | `#green` | `#blue` | `purple` | `#pink` | `#cyan`
+By default, Chronos matches your Obsidian theme color.
+
+To give items a specific color, you can include an available color after the date: `#red` | `#orange` | `#yellow` | `#green` | `#blue` | `purple` | `#pink` | `#cyan`
 
 Example
 
