@@ -147,7 +147,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
         });
       });
 
-    containerEl.createEl("h2", { text: "Cheatsheet" });
+    new Setting(containerEl).setName("Cheatsheet").setHeading();
 
     const textarea = containerEl.createEl("textarea", {
       cls: "chronos-settings-md-container",
