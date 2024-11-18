@@ -106,7 +106,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Preferred Locale" });
+    containerEl.createEl("h2", { text: "Chronos Timeline Settings" });
 
     const supportedLocales: string[] = [];
     const supportedLocalesNativeDisplayNames: Intl.DisplayNames[] = [];
