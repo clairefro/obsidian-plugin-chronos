@@ -1,6 +1,6 @@
 # Chronos Timeline: interactive timelines for Obsidian
 
-Render interactive timelines in your Obsidian notes from simple markdown. Make sense of anything time related.
+Render interactive timelines in your Obsidian notes from simple Markdown. Make sense of anything time related.
 
 Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) library.
 
@@ -70,7 +70,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 
 # Syntax Overview
 
-Chronos parses markdown in `chronos` code blocks into objects on a timeline
+Chronos parses Markdown in `chronos` code blocks into objects on a timeline
 
 ````markdown
 ```chronos
@@ -364,7 +364,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 
 ## Edit
 
-To enter **Edit** mode an update your `chronos` markdown, hover over the timeline and click the code icon that appears in the upper-right corner.
+To enter **Edit** mode an update your `chronos` Markdown, hover over the timeline and click the code icon that appears in the upper-right corner.
 
 ![edit example](./docs/ex-edit.png)
 ![edit example - markdown mode](./docs/ex-edit-2.png)
@@ -401,7 +401,7 @@ LLMs like [ChatGPT](https://chatgpt.com/) are good at generating Chronos timelin
 ### Prompt template
 
 ````markdown
-Generate timelines in markdown using Chronos syntax, a simple line-by-line format for creating events, periods, and markers.
+Generate timelines in Markdown using Chronos syntax, a simple line-by-line format for creating events, periods, and markers.
 
 ### Syntax Overview:
 
@@ -442,7 +442,7 @@ Generate timelines in markdown using Chronos syntax, a simple line-by-line forma
 = [1991-12-26] End of the Cold War
 ```
 
-Using Chronos syntax, generate markdown for a timeline of the following:
+Using Chronos syntax, generate Markdown for a timeline of the following:
 
 <YOUR REQUEST HERE>
 ````
