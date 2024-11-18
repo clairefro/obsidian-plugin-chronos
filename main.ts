@@ -128,7 +128,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Select locale")
-      .setDesc("Choose a locale for displaying dates in items")
+      .setDesc("Choose a locale for displaying dates")
       .addDropdown((dropdown) => {
         supportedLocales.forEach((locale, i) => {
           const localeDisplayName = supportedLocalesNativeDisplayNames[i];
