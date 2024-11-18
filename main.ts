@@ -106,8 +106,6 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: "Chronos Timeline Settings" });
-
     const supportedLocales: string[] = [];
     const supportedLocalesNativeDisplayNames: Intl.DisplayNames[] = [];
 
@@ -129,7 +127,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
     });
 
     new Setting(containerEl)
-      .setName("Select Locale")
+      .setName("Select locale")
       .setDesc("Choose a locale for displaying dates in items")
       .addDropdown((dropdown) => {
         supportedLocales.forEach((locale, i) => {
