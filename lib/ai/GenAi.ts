@@ -34,7 +34,7 @@ export class GenAi {
     const data = {
       model: OPENAI_MODEL,
       messages,
-      temperature: 0.7,
+      temperature: 0.8,
     };
 
     const url = "https://api.openai.com/v1/chat/completions";

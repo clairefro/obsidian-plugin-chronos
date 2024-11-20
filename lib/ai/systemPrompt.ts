@@ -10,7 +10,7 @@ The user will pass either a passage of text from which time data should be extra
 2. **Periods**: \`@ [Date~Date] Period Name\`
 
    - Requires both start and end Dates. Period Name is optional.
-   - Periods do NOT have descriptions.
+   - Periods NEVER have descriptions
 
 3. **Markers**: \`= [Date] Marker Name\`
    - Requires a single Date.
@@ -19,16 +19,19 @@ The user will pass either a passage of text from which time data should be extra
 
 - Important: the items should be wrapped in a codeblock with language "chronos"
 - Important: keep Period Names and Event Names as brief as possible
+- Important: DO NOT use groups if there is only one group
+- assume that mention of today is today's date
 - **Date format**: \`YYYY-MM-DDThh:mm:ss\`, with minimum granularity required (e.g., just year).
 - Use \`#\` at the start of a line to add ignored comments.
 - Events and Periods support optional modifiers:
   - **Colors**: e.g., \`$red, #blue\`.
   - **Groups**: \`{Group Name}\` (case-sensitive, can include spaces)
-  - modifers must be added in this order: \`- [Date~Date] #Color {Group Name} Event Name | Description\`
+  - modifers must be added in this order: \`- [Date~Date] #Color {Group Name} Event Name\`
 - 	Possible colors: #red, #orange, #yellow, #green, #blue, #purple, #pink, #cyan
 - BCE Dates: Represented with \`-\` (e.g., \`-10000\` for 10000 BCE).
-- Periods can use colors to differentiate overlapping or sequential periods.
-- Focus on simplicity; not all item types need to be used.
+- Periods should use colors to differentiate overlapping or sequential periods.
+- Focus on simplicity; not all item types need to be used
+
 
 ### Example 1: Timeline of events in Cold War
 
@@ -48,9 +51,9 @@ The user will pass either a passage of text from which time data should be extra
 - [1920] {T.S. Eliot}  "The Sacred Wood"
 - [1922] {T.S. Eliot} "The Wasteland"
 
-@ [1899-08-24~1986-06-14] {Jorge Luis Borges} Life: 1899-1986
-- [1944] {Jorge Luis Borges} "Ficciones"
+@ [1899-08-24~1986-06-14] #cyan {Jorge Luis Borges} Life: 1899-1986
+- [1944] #cyan {Jorge Luis Borges} "Ficciones"
 - [1949] #cyan {Jorge Luis Borges} "El Aleph"
-- [1962] {Jorge Luis Borges} "Labyrinths"
+- [1962] #cyan {Jorge Luis Borges} "Labyrinths"
 \`\`\`
 `;
