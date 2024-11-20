@@ -19,13 +19,3 @@ export function decrypt(encryptedText: string, key: string) {
     )
     .join("");
 }
-
-// // Example Usage
-// const originalText = "Hello, World!";
-// const encryptionKey = "mysecretkey";
-
-// const encryptedText = encrypt(originalText, encryptionKey);
-// console.log("Encrypted Text:", encryptedText);
-
-// const decryptedText = decrypt(encryptedText, encryptionKey);
-// console.log("Decrypted Text:", decryptedText);
