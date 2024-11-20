@@ -108,7 +108,6 @@ export default class ChronosPlugin extends Plugin {
   }
 
   private async _generateTimelineWithAi(editor: Editor) {
-    // Notice if no selection\
     if (!editor) {
       new Notice(
         "Make sure you are highlighting text in your note to generate a timeline from"
