@@ -264,11 +264,9 @@ export class ChronosMdParser {
       throw new Error(`Invalid date format: ${dateString}`);
     }
     // TODO : add detailed error messages for other date components
-
     const formattedYear = isBCE ? -parseInt(year, 10) : parseInt(year, 10);
-
     // Return a Date object based on the parsed components
-    return new Date(
+    const date = new Date(
       formattedYear,
       parseInt(month, 10) - 1, // month is 0-based in JS
       parseInt(day, 10),
@@ -276,6 +274,9 @@ export class ChronosMdParser {
       parseInt(minute, 10),
       parseInt(second, 10)
     );
+    // must explictly set the year for years less than 3 digits
+    date.setFullYear(formattedYear);
+    return date;
   }
 
   private _ensureChronologicalDates(
