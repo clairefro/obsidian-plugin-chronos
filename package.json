@@ -2,7 +2,7 @@
   "name": "chronos",
   "version": "1.0.0",
   "description": "Render interactive timelines in your notes from markdown",
-  "main": "main.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
