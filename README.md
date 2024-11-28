@@ -34,6 +34,17 @@ You can insert blank, basic, or advanced templates using the Command Pallete (`c
 
 ![palette example advanced](./docs/ex-palette-adv.gif)
 
+### Generate timeline with AI
+
+Highlight text in your notes and run the "Generate" command.
+
+Input can be long text in your notes with time information, or vague like:
+
+- "Detailed history of the Cold War"
+- "Compare the life and works of Borges and C.S. Lewis"
+
+![genai example](./docs/ex-genai.gif)
+
 ### Cheatsheet
 
 After installing the Chronos Timeline plugin, paste the contents of [this cheatsheet](./docs/chronos-cheatsheet.md) into a file in your vault to play with examples
@@ -45,6 +56,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Insert blank](#insert-blank)
     - [Insert basic template](#insert-basic-template)
     - [Insert advanced template](#insert-advanced-template)
+    - [Generate timeline with AI](#generate-timeline-with-ai)
     - [Cheatsheet](#cheatsheet)
   - [Contents](#contents)
 - [Syntax Overview](#syntax-overview)
@@ -66,7 +78,6 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Edit](#edit)
   - [Refit](#refit)
 - [Localization](#localization)
-- [Generating timelines with AI](#generating-timelines-with-ai) - [Prompt template](#prompt-template)
 
 # Syntax Overview
 
@@ -384,65 +395,3 @@ Available options depend on your system's language settings.
 ![localization example - settings menu](./docs/ex-localization-1.png)
 
 ![localization example - tooltip](./docs/ex-localization-2.png)
-
-# Generating timelines with AI
-
-_In the future this may be added as a feature directly in the plugin._
-
-LLMs like [ChatGPT](https://chatgpt.com/) are good at generating Chronos timelines in one shot. Just paste your information in the placeholder `<YOUR REQUEST HERE>` and ask AI.
-
-**Example requests:**
-
-- "Industrial Revolution"
-- "Industrial Revolution, with groups for different regions of the world"
-- "The life and works of Jorge Luis Borges"
-- _some text with time data to convert to Chronos_
-
-### Prompt template
-
-````markdown
-Generate timelines in Markdown using Chronos syntax, a simple line-by-line format for creating events, periods, and markers.
-
-### Syntax Overview:
-
-1. **Events**: `- [Date~Date] Event Name | Description`
-
-   - The second Date, Event Name, and Description are optional.
-
-2. **Periods**: `@ [Date~Date] Period Name`
-
-   - Requires both start and end Dates. Period Name is optional.
-   - Periods do NOT have descriptions.
-
-3. **Markers**: `= [Date] Marker Name`
-   - Requires a single Date.
-
-### Rules:
-
-- Important: the items should be wrapped in a codeblock with language "chronos"
-- Important: keep Period Names and Event Names as brief as possible
-- **Date format**: `YYYY-MM-DDThh:mm:ss`, with minimum granularity required (e.g., just year).
-- Use `#` at the start of a line to add ignored comments.
-- Events and Periods support optional modifiers:
-  - **Colors**: e.g., `$red, #blue`.
-  - **Groups**: `{Group Name}` (case-sensitive, can include spaces).
-- Possible colors: $red, #orange, #yellow, #green, #blue, #purple, #pink, #cyan
-- BCE Dates: Represented with `-` (e.g., `-10000` for 10000 BCE).
-- Periods can use colors to differentiate overlapping or sequential periods.
-- Focus on simplicity; not all item types need to be used.
-
-### Example:
-
-```chronos
-- [1947-03-12] Truman Doctrine | Committing the U.S. to containing communism
-- [1948-06-24~1949-05-12] Berlin Blockade | Soviet blockade and Allied airlift
-@ [1947-01-01~1953-12-31] Early Cold War
-- [1957-10-04] Sputnik launched | Start of the Space Race
-@ [1963-01-01~1979-12-31] #red Détente Period
-= [1991-12-26] End of the Cold War
-```
-
-Using Chronos syntax, generate Markdown for a timeline of the following:
-
-<YOUR REQUEST HERE>
-````

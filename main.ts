@@ -9,6 +9,7 @@ import {
 
 import { ChronosPluginSettings } from "./types";
 
+import { TextModal } from "./components/TextModal";
 import { knownLocales } from "./util/knownLocales";
 import {
   cheatsheet,
@@ -16,8 +17,10 @@ import {
   templateBasic,
   templateBlank,
 } from "./util/snippets";
-import { DEFAULT_LOCALE } from "./constants";
+import { DEFAULT_LOCALE, PEPPER } from "./constants";
 import { ChronosTimeline } from "./lib/ChronosTimeline";
+import { decrypt, encrypt } from "./util/vanillaEncrypt";
+import { GenAi } from "./lib/ai/GenAi";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
   selectedLocale: DEFAULT_LOCALE,
@@ -60,6 +63,13 @@ export default class ChronosPlugin extends Plugin {
         this._insertSnippet(editor, templateAdvanced);
       },
     });
+    this.addCommand({
+      id: "generate-timeline-ai",
+      name: "Generate timeline with AI",
+      editorCallback: (editor, _view) => {
+        this._generateTimelineWithAi(editor);
+      },
+    });
   }
 
   onunload() {}
@@ -77,6 +87,12 @@ export default class ChronosPlugin extends Plugin {
     editor.replaceRange(snippet, cursor);
   }
 
+  private _insertTextAfterSelection(editor: Editor, textToInsert: string) {
+    const cursor = editor.getCursor("to");
+    const padding = "\n\n";
+    editor.replaceRange(padding + textToInsert, cursor);
+  }
+
   private _renderChronosBlock(source: string, el: HTMLElement) {
     const container = el.createEl("div", { cls: "chronos-timeline-container" });
     const timeline = new ChronosTimeline({
@@ -89,6 +105,54 @@ export default class ChronosPlugin extends Plugin {
     } catch (error) {
       console.log(error);
     }
+  }
+
+  private async _generateTimelineWithAi(editor: Editor) {
+    if (!editor) {
+      new Notice(
+        "Make sure you are highlighting text in your note to generate a timeline from"
+      );
+    }
+
+    const selection = this._getCurrentSelectedText(editor);
+    if (!selection) {
+      new Notice(
+        "Highlight some text you'd like to convert into a timeline, then run the generate command again"
+      );
+      return;
+    }
+    // open loading modal
+    const loadingModal = new TextModal(this.app, `Working on it....`);
+    loadingModal.open();
+    try {
+      const chronos = await this._textToChronos(selection);
+      chronos && this._insertTextAfterSelection(editor, chronos);
+    } catch (e) {
+      console.error(e);
+
+      loadingModal.setText(e.message);
+      return;
+    }
+    loadingModal.close();
+  }
+
+  private async _textToChronos(selection: string): Promise<string | void> {
+    if (!this.settings.key) {
+      new Notice(
+        "No API Key found. Please add an OpenAI API key in Chronos Timeline Plugin Settings"
+      );
+      return;
+    }
+    const res = await new GenAi(this._getApiKey()).toChronos(selection);
+    return res;
+  }
+
+  private _getCurrentSelectedText(editor: Editor): string {
+    return editor ? editor.getSelection() : "";
+  }
+
+  private _getApiKey() {
+    return decrypt(this.settings.key || "", PEPPER);
   }
 }
 
@@ -145,6 +209,27 @@ class ChronosPluginSettingTab extends PluginSettingTab {
           this.plugin.saveData(this.plugin.settings);
         });
       });
+
+    new Setting(containerEl)
+      .setName("OpenAI API key")
+      .setDesc("(optional) For generating timelines with AI")
+      .addText((text) =>
+        text
+          .setPlaceholder("Enter your OpenAI API Key")
+          .setValue(
+            this.plugin.settings.key
+              ? decrypt(this.plugin.settings.key, PEPPER)
+              : ""
+          )
+          .onChange(async (value) => {
+            if (!value.trim()) {
+              this.plugin.settings.key = "";
+            } else {
+              this.plugin.settings.key = encrypt(value.trim(), PEPPER);
+            }
+            await this.plugin.saveSettings();
+          })
+      );
 
     new Setting(containerEl).setName("Cheatsheet").setHeading();
 

@@ -19,6 +19,7 @@ export interface ChronosDataSetDataItem {
 
 export interface ChronosPluginSettings {
   selectedLocale: string;
+  key?: string;
 }
 
 export type Group = { id: number; content: string };
