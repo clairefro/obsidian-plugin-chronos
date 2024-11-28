@@ -211,7 +211,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("OpenAI API Key")
+      .setName("OpenAI API key")
       .setDesc("(optional) For generating timelines with AI")
       .addText((text) =>
         text
