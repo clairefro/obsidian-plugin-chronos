@@ -1,6 +1,6 @@
 # Chronos Timeline: interactive timelines for Obsidian
 
-Render interactive timelines in your Obsidian notes from simple Markdown. Make sense of anything time related.
+Render interactive timelines in your Obsidian notes from simple Markdown. Make time make sense.
 
 Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) library.
 
