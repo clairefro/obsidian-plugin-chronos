@@ -109,6 +109,8 @@ If not explicitly provided:
 - The month and day default to `01` (January and the 1st)
 - The hour, minute, and second default to `00` (top of the hour or minute)
 
+**Hours** use 24-hr military time. So 3am is `03`, while 3pm is `15`
+
 **Examples**
 
 ```
