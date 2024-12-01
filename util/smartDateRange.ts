@@ -39,8 +39,8 @@ export function smartDateRange(
   endDate: string | null = null,
   locale: string
 ) {
-  const start = new Date(startDate);
-  const end = endDate ? new Date(endDate) : null;
+  const start = new Date(startDate + "Z");
+  const end = endDate ? new Date(endDate + "Z") : null;
 
   // Options to format month and day as per locale
   const monthOptions = { month: "short", timeZone: "UTC" };
