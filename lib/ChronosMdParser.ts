@@ -69,7 +69,7 @@ export class ChronosMdParser {
     const descriptionP = `(\\|?\\s*(.*))?`;
 
     const re = new RegExp(
-      `${itemTypeP}${optSp}\\[${optSp}${dateP}${optSp}${separatorP}${optSp}${dateP}?${optSp}\\]${optSp}${colorP}${optSp}${groupP}${optSp}${contentP}${optSp}${descriptionP}$`
+      `${itemTypeP}${optSp}\\[${optSp}${dateP}?${optSp}${separatorP}${optSp}${dateP}?${optSp}\\]${optSp}${colorP}${optSp}${groupP}${optSp}${contentP}${optSp}${descriptionP}$`
     );
 
     const match = line.match(re);
@@ -104,10 +104,12 @@ export class ChronosMdParser {
         description,
       ] = match;
 
+      const now = new Date().toISOString().split("T")[0];
+
       return {
-        start,
+        start: start || now,
         separator,
-        end,
+        end: separator ? (end ? end : now) : undefined,
         color,
         groupName,
         content,
