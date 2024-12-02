@@ -42,8 +42,11 @@ Input can be long text in your notes with time information, or vague like:
 
 - "Detailed history of the Cold War"
 - "Compare the life and works of Borges and C.S. Lewis"
+- "Year and location of the past 20 Olympic games. Do not group. Do use points not events"
 
 ![genai example](./docs/ex-genai.gif)
+
+![genai example 2](./docs/ex-points-2.png)
 
 ### Cheatsheet
 

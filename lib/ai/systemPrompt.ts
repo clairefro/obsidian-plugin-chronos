@@ -12,7 +12,10 @@ The user will pass either a passage of text from which time data should be extra
    - Requires both start and end Dates. Period Name is optional.
    - Periods NEVER have descriptions
 
-3. **Markers**: \`= [Date] Marker Name\`
+3. **Points**: \`* [Date] Event Name | Description\`
+   - Descriptions are optional
+   
+4. **Markers**: \`= [Date] Marker Name\`
    - Requires a single Date.
 
 ### Rules:
@@ -55,5 +58,16 @@ The user will pass either a passage of text from which time data should be extra
 - [1944] #cyan {Jorge Luis Borges} "Ficciones"
 - [1949] #cyan {Jorge Luis Borges} "El Aleph"
 - [1962] #cyan {Jorge Luis Borges} "Labyrinths"
+\`\`\`
+
+### Example 3: Tounement with games as Points
+
+
+\`\`\`chronos
+- [2024-02-26~2024-03-10] Tournament
+* [2024-02-26] Game 1 | Austin
+* [2024-02-28] Game 2 | Los Angeles
+* [2024-03-06] Game 3 | Tokyo
+* [2024-03-10] Game 4 | Jakarta
 \`\`\`
 `;
