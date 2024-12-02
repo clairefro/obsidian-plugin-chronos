@@ -149,7 +149,7 @@ You can signify BCE times with the negtive symbol (-)
 
 ### Limitations
 
-- Dates **must be between year 271,821 BC and 275,761 AD**, due to how Dates work in JS
+- Dates **must be between year 271,821 BCE and 275,761 CE**, due to how Dates work in JS
 
 ## Events (`-`)
 
