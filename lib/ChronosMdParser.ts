@@ -37,6 +37,9 @@ export class ChronosMdParser {
       } else if (line.startsWith("@")) {
         // Period
         this._parsePeriod(line, lineNumber);
+      } else if (line.startsWith("*")) {
+        // Period
+        this._parsePoint(line, lineNumber);
       } else if (line.startsWith("=")) {
         // Marker
         this._parseMarker(line, lineNumber);
@@ -57,7 +60,7 @@ export class ChronosMdParser {
   }
 
   private _parseTimeItem(line: string, lineNumber: number) {
-    const itemTypeP = `[-@=]`;
+    const itemTypeP = `[-@=\\*]`;
     const dateP = `(-?\\d{1,}(-?(\\d{2})?-?(\\d{2})?T?(\\d{2})?:?(\\d{2})?:?(\\d{2})?)?)`;
     const optSp = `\\s*`;
 
@@ -73,7 +76,7 @@ export class ChronosMdParser {
     );
 
     const match = line.match(re);
-
+    console.log({ match });
     if (!match) {
       this._addParserError(lineNumber, `Invalid format: ${line}`);
       return null;
@@ -136,19 +139,26 @@ export class ChronosMdParser {
     this._validateDates(start, end, separator, lineNumber);
 
     const groupId = groupName ? this._getOrCreateGroupId(groupName) : null;
+
+    let style = "";
+    if (color) {
+      style += `background-color: ${this._mapToObsidianColor(
+        color as Color,
+        type === "background" ? Opacity.Opaque : Opacity.Solid
+      )};`;
+    }
+    if (type === "point") {
+      // make text readable on bg
+      style += "color: var(--text-normal) !important;";
+    }
     return {
       content: content || "",
       start: toUTCDate(start),
       end:
         end && toUTCDate(start) !== toUTCDate(end) ? toUTCDate(end) : undefined,
       group: groupId,
-      style: color
-        ? `background-color: ${this._mapToObsidianColor(
-            color as Color,
-            type === "background" ? Opacity.Opaque : Opacity.Solid
-          )};`
-        : undefined,
-      ...(type === "background" ? { type: "background" } : {}),
+      style: style.length ? style : undefined,
+      ...(type === "default" ? {} : { type }),
     };
   }
 
@@ -194,6 +204,29 @@ export class ChronosMdParser {
           type: "background",
         })
       );
+    }
+  }
+
+  private _parsePoint(line: string, lineNumber: number) {
+    console.log("enter parse point");
+    const components = this._parseTimeItem(line, lineNumber);
+
+    if (components) {
+      const { start, separator, color, groupName, content, description } =
+        components;
+      this.items.push({
+        ...this._constructItem({
+          content: content ? content : "\u00A0", // non-breaking space hack to keep blank items same height as items with title
+          start,
+          separator,
+          end: undefined,
+          groupName,
+          color,
+          lineNumber,
+          type: "point",
+        }),
+        cDescription: description || undefined,
+      });
     }
   }
 

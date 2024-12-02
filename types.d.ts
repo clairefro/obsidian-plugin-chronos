@@ -38,7 +38,7 @@ interface ConstructItemParams {
   groupName: string | undefined;
   color: string | undefined;
   lineNumber: number;
-  type: "default" | "background";
+  type: "default" | "background" | "point";
 }
 
 interface ChronosTimelineConstructor {

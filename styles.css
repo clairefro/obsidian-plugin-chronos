@@ -78,6 +78,10 @@
   color: var(--text-on-accent-inverted);
 }
 
+.chronos-timeline-container .vis-point {
+  cursor: pointer;
+}
+
 .chronos-timeline-container .vis-text {
   color: var(--text-normal) !important;
 }

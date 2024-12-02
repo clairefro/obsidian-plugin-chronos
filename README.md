@@ -69,6 +69,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Events with start and end dates](#events-with-start-and-end-dates)
     - [Events with descriptions](#events-with-descriptions)
   - [Periods `@`](#periods-)
+  - [Points `*`](#points-)
   - [Markers `=`](#markers-)
   - [Comments (`#`)](#comments-)
   - [Modifiers](#modifiers)
@@ -232,6 +233,26 @@ Periods are spans of time displayed with a semi-transparent background. **Period
 ````
 
 ![period example](./docs/ex-period.png)
+
+## Points `*`
+
+Points are ideal for marking a point in time. You can optionally add a `Description` that will appear on hover.
+
+```
+* [Date] Point Name | Description
+```
+
+````markdown
+```chronos
+- [2024-02-26~2024-03-10] Tournament
+* [2024-02-26] Game 1 | Austin
+* [2024-02-28] Game 2 | Los Angeles
+* [2024-03-06] Game 3 | Tokyo
+* [2024-03-10] Game 4 | Jakarta
+```
+````
+
+![point example](./docs/ex-point.png)
 
 ## Markers `=`
 

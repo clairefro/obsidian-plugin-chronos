@@ -147,6 +147,22 @@ See available [Colors](#colors)
 - [369] Yamato state sends envoys to Korea
 ```
 
+## Points
+
+**Syntax**
+
+```
+* [Date] Point Name | Description
+```
+
+```chronos
+- [2024-02-26~2024-03-10] Tournament
+* [2024-02-26] Game 1 | Austin
+* [2024-02-28] Game 2 | Los Angeles
+* [2024-03-06] Game 3 | Tokyo
+* [2024-03-10] Game 4 | Jakarta
+```
+
 ## Markers
 
 **Syntax**
