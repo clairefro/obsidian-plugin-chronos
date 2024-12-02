@@ -1,4 +1,5 @@
 import { setTooltip } from "obsidian";
+import moment from "moment";
 import { Timeline, TimelineOptions } from "vis-timeline";
 import { DataSet } from "vis-timeline/standalone";
 import crosshairsSvg from "../assets/icons/crosshairs.svg";
@@ -53,6 +54,9 @@ export class ChronosTimeline {
       selectable: true,
       minHeight: "200px",
       locale: this.settings.selectedLocale,
+      moment: (date: Date) => {
+        return moment(date).utc();
+      },
     };
   }
 
@@ -114,8 +118,8 @@ export class ChronosTimeline {
       ) as unknown as ChronosDataSetDataItem;
       if (item) {
         const text = `${item.content} (${smartDateRange(
-          item.start.toISOString().split("T")[0],
-          item.end?.toISOString().split("T")[0],
+          item.start.toISOString(),
+          item.end ? item.end.toISOString() : null,
           this.settings.selectedLocale
         )})${item?.cDescription ? " \n " + item.cDescription : ""}`;
         setTooltip(event.event.target, text);

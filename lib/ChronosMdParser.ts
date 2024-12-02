@@ -6,8 +6,8 @@ import {
   ConstructItemParams,
 } from "../types";
 import { Color, Opacity } from "../enums";
-import { smartDateRange } from "../util/smartDateRange";
 import { DEFAULT_LOCALE } from "../constants";
+import { toPaddedISOZ, toUTCDate, validateUTCDate } from "../util/utcUtil";
 
 export class ChronosMdParser {
   private errors: string[] = [];
@@ -107,9 +107,13 @@ export class ChronosMdParser {
       const now = new Date().toISOString().split("T")[0];
 
       return {
-        start: start || now,
+        start: start ? toPaddedISOZ(start) : toPaddedISOZ(now),
         separator,
-        end: separator ? (end ? end : now) : undefined,
+        end: separator
+          ? end
+            ? toPaddedISOZ(end)
+            : toPaddedISOZ(now)
+          : undefined,
         color,
         groupName,
         content,
@@ -134,11 +138,9 @@ export class ChronosMdParser {
     const groupId = groupName ? this._getOrCreateGroupId(groupName) : null;
     return {
       content: content || "",
-      start: this._parseDate(start),
+      start: toUTCDate(start),
       end:
-        end && new Date(start) !== new Date(end)
-          ? this._parseDate(end)
-          : undefined,
+        end && toUTCDate(start) !== toUTCDate(end) ? toUTCDate(end) : undefined,
       group: groupId,
       style: color
         ? `background-color: ${this._mapToObsidianColor(
@@ -158,13 +160,9 @@ export class ChronosMdParser {
       const { start, separator, end, color, groupName, content, description } =
         components;
 
-      const defaultTitle = end
-        ? smartDateRange(start, end, this.locale)
-        : start;
-
       this.items.push({
         ...this._constructItem({
-          content: content ? content : defaultTitle,
+          content: content ? content : "\u00A0", // non-breaking space hack to keep blank items same height as items with title
           start,
           separator,
           end,
@@ -206,7 +204,7 @@ export class ChronosMdParser {
       const [, start, content] = markerMatch;
 
       this.markers.push({
-        start: this._parseDate(start).toISOString(),
+        start: toUTCDate(start).toISOString(),
         content: content || "",
       });
     } else {
@@ -247,69 +245,20 @@ export class ChronosMdParser {
       : `rgba(var(--color-${colorMap[color]}-rgb), var(--chronos-opacity))`;
   }
 
-  private _parseDate(dateString: string): Date {
-    // Handle "lazy dates" and BCE
-    const isBCE = dateString.startsWith("-");
-
-    const parts = dateString.replace(/^-/, "").split(/[-T: ]/);
-
-    const [
-      year,
-      month = "01",
-      day = "01",
-      hour = "00",
-      minute = "00",
-      second = "00",
-    ] = parts;
-
-    if (!year) {
-      throw new Error(`Invalid date format: ${dateString}`);
-    }
-    // TODO : add detailed error messages for other date components
-    const formattedYear = isBCE ? -parseInt(year, 10) : parseInt(year, 10);
-    // Return a Date object based on the parsed components
-    const date = new Date(
-      formattedYear,
-      parseInt(month, 10) - 1, // month is 0-based in JS
-      parseInt(day, 10),
-      parseInt(hour, 10),
-      parseInt(minute, 10),
-      parseInt(second, 10)
-    );
-    // must explictly set the year for years less than 3 digits
-    date.setFullYear(formattedYear);
-    return date;
-  }
-
   private _ensureChronologicalDates(
     start: string,
     end: string | undefined,
     lineNumber: number
   ) {
     if (start && end) {
-      const startDate = this._parseDate(start);
-      const endDate = this._parseDate(end);
+      const startDate = toUTCDate(start);
+      const endDate = toUTCDate(end);
       if (startDate > endDate) {
         this._addParserError(
           lineNumber,
           `Start date (${start}) is after end date (${end}).`
         );
       }
-    }
-  }
-
-  private _ensureValidDates(
-    start: string,
-    end: string | undefined,
-    lineNumber: number
-  ) {
-    if (!this._isValidDate(start)) {
-      const msg = `Invalid date: ${start}. To specify a date range, separate dates with a tilde (~)`;
-      this._addParserError(lineNumber, msg);
-    }
-    if (end && !this._isValidDate(end)) {
-      const msg = `Invalid date: ${end}`;
-      this._addParserError(lineNumber, msg);
     }
   }
 
@@ -323,12 +272,11 @@ export class ChronosMdParser {
     }
   }
 
-  private _isValidDate(dateString: string): boolean {
-    const date = this._parseDate(dateString);
+  private _validateDate(dateString: string, lineNumber: number): void {
     try {
-      return !isNaN(date.getTime());
+      validateUTCDate(dateString);
     } catch (e) {
-      return false;
+      this._addParserError(lineNumber, e.message);
     }
   }
 
@@ -338,7 +286,8 @@ export class ChronosMdParser {
     separator: string | undefined,
     lineNumber: number
   ) {
-    this._ensureValidDates(start, end, lineNumber);
+    this._validateDate(start, lineNumber);
+    end && this._validateDate(end, lineNumber);
     separator && this._ensureCorrectDateSeparator(separator, lineNumber);
     this._ensureChronologicalDates(start, end, lineNumber);
   }

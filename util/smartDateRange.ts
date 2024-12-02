@@ -1,4 +1,5 @@
 import { isRtl } from "./knownLocales";
+import { toUTCDate } from "./utcUtil";
 
 function _formatYearByLocale(date: Date, locale: string) {
   switch (locale) {
@@ -35,12 +36,12 @@ function _rangeJustShowYear(startDate: Date, endDate: Date) {
 }
 
 export function smartDateRange(
-  startDate: string,
-  endDate: string | null = null,
+  startStr: string,
+  endStr: string | null = null,
   locale: string
 ) {
-  const start = new Date(startDate + "Z");
-  const end = endDate ? new Date(endDate + "Z") : null;
+  const start = toUTCDate(startStr);
+  const end = endStr ? toUTCDate(endStr) : null;
 
   // Options to format month and day as per locale
   const monthOptions = { month: "short", timeZone: "UTC" };
