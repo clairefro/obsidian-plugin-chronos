@@ -63,6 +63,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [A note on dates](#a-note-on-dates)
     - [Date ranges](#date-ranges)
     - [BCE time](#bce-time)
+    - [Limitations](#limitations)
   - [Events (`-`)](#events--)
     - [Events with a single date](#events-with-a-single-date)
     - [Events with start and end dates](#events-with-start-and-end-dates)
@@ -145,6 +146,10 @@ You can signify BCE times with the negtive symbol (-)
 - [-550~-20]  <--- 550 ~ 20 BCE
 - [-550~550]  <--- 550 BCE ~ 550 CE
 ```
+
+### Limitations
+
+- Dates **must be between year 271,821 BC and 275,761 AD**, due to how Dates work in JS
 
 ## Events (`-`)
 
