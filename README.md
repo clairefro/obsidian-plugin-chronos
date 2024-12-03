@@ -98,6 +98,7 @@ The first character of each line in your `chronos` block determines the item typ
 
 - [Events](#events--) (`-`)
 - [Periods](#periods-) (`@`)
+- [Points](#points-) (`*`)
 - [Markers](#markers-) (`=`)
 - [Comments](#comments-) (`#`)
 
