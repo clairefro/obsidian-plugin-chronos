@@ -420,7 +420,7 @@ Click the **Refit** button (crosshairs icon) in the lower-right corner to adjust
 
 # Localization
 
-You can choose your preferred language for event date tooltips, from the Chronos Timeline plugin settings.
+You can choose your preferred language for dates, from the Chronos Timeline plugin settings.
 
 Available options depend on your system's language settings.
 
