@@ -147,12 +147,10 @@ export class ChronosMdParser {
       )};`;
     }
     if (type === "point") {
-      console.log("yo");
       // make text readable on bg and colored items
       style += color
         ? "color: black !important;"
         : "color: var(--text-normal) !important;";
-      console.log(style);
     }
     return {
       content: content || "",
