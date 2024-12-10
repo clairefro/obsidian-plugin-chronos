@@ -67,14 +67,14 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Date ranges](#date-ranges)
     - [BCE time](#bce-time)
     - [Limitations](#limitations)
-  - [Events (`-`)](#events--)
+  - [Events `-`](#events--)
     - [Events with a single date](#events-with-a-single-date)
     - [Events with start and end dates](#events-with-start-and-end-dates)
     - [Events with descriptions](#events-with-descriptions)
   - [Periods `@`](#periods-)
   - [Points `*`](#points-)
   - [Markers `=`](#markers-)
-  - [Comments (`#`)](#comments-)
+  - [Comments `#`](#comments-)
   - [Modifiers](#modifiers)
     - [Colors `#color`](#colors-color)
     - [Groups `{}`](#groups-)
@@ -156,7 +156,7 @@ You can signify BCE times with the negtive symbol (-)
 
 - Dates **must be between year 271,821 BCE and 275,761 CE**, due to how Dates work in JS
 
-## Events (`-`)
+## Events `-`
 
 Events can include a single date or a date range.
 
@@ -280,7 +280,7 @@ Markers can be used to highlight a key milestone in time. **Markers must be a si
 
 ![marker example](./docs/ex-marker.png)
 
-## Comments (`#`)
+## Comments `#`
 
 Chronos will ignore any line that starts with `#`. You can use this to write comments to yourself or block out items.
 
