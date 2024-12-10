@@ -53,6 +53,7 @@ export class ChronosTimeline {
       zoomable: true,
       selectable: true,
       minHeight: "200px",
+      align: this.settings.align,
       locale: this.settings.selectedLocale,
       moment: (date: Date) => {
         return moment(date).utc();

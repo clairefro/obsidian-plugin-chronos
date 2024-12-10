@@ -8,6 +8,7 @@ export interface Marker {
 
 interface ChronosDataItem extends DataItem {
   cDescription?: string; // prefixed c for chronos - special prop for event tooltips
+  align?: "left" | "center" | "right";
 }
 
 export interface ChronosDataSetDataItem {
@@ -20,6 +21,7 @@ export interface ChronosDataSetDataItem {
 export interface ChronosPluginSettings {
   selectedLocale: string;
   key?: string;
+  align: "left" | "center" | "right";
 }
 
 export type Group = { id: number; content: string };

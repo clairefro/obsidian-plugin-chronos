@@ -24,6 +24,7 @@ import { GenAi } from "./lib/ai/GenAi";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
   selectedLocale: DEFAULT_LOCALE,
+  align: "left",
 };
 
 export default class ChronosPlugin extends Plugin {
@@ -209,6 +210,23 @@ class ChronosPluginSettingTab extends PluginSettingTab {
           this.plugin.saveData(this.plugin.settings);
         });
       });
+
+    new Setting(containerEl)
+      .setName("Item alignment")
+      .setDesc(
+        "Alignement of event boxes and item text (re-rerender timeline to see change)"
+      )
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("left", "Left")
+          .addOption("center", "Center")
+          .addOption("right", "Right")
+          .setValue(this.plugin.settings.align)
+          .onChange(async (value: "left" | "center" | "right") => {
+            this.plugin.settings.align = value;
+            await this.plugin.saveSettings();
+          })
+      );
 
     new Setting(containerEl)
       .setName("OpenAI API key")
