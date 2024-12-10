@@ -89,6 +89,7 @@ export class ChronosTimeline {
         items,
         groups
       );
+
       timeline = new Timeline(
         this.container,
         updatedItems,
@@ -178,15 +179,12 @@ export class ChronosTimeline {
     let updatedItems = [...items];
     const updatedGroups = [...groups];
 
-    if (
-      groups.length > 0 &&
-      groups.some((group) => group.id === DEFAULT_GROUP_ID)
-    ) {
+    if (groups.length) {
       updatedGroups.push({ id: DEFAULT_GROUP_ID, content: " " });
     }
 
     updatedItems = items.map((item) => {
-      if (!item.group) item.group = DEFAULT_GROUP_ID;
+      if (groups.length && !item.group) item.group = DEFAULT_GROUP_ID;
       return item;
     });
 
