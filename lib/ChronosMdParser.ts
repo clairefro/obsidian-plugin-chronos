@@ -76,7 +76,6 @@ export class ChronosMdParser {
     );
 
     const match = line.match(re);
-    console.log({ match });
     if (!match) {
       this._addParserError(lineNumber, `Invalid format: ${line}`);
       return null;
@@ -148,8 +147,12 @@ export class ChronosMdParser {
       )};`;
     }
     if (type === "point") {
-      // make text readable on bg
-      style += "color: var(--text-normal) !important;";
+      console.log("yo");
+      // make text readable on bg and colored items
+      style += color
+        ? "color: black !important;"
+        : "color: var(--text-normal) !important;";
+      console.log(style);
     }
     return {
       content: content || "",
@@ -208,7 +211,6 @@ export class ChronosMdParser {
   }
 
   private _parsePoint(line: string, lineNumber: number) {
-    console.log("enter parse point");
     const components = this._parseTimeItem(line, lineNumber);
 
     if (components) {
