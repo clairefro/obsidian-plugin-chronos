@@ -4,10 +4,12 @@ import {
   ChronosDataItem,
   Group,
   ConstructItemParams,
+  Flags,
 } from "../types";
 import { Color, Opacity } from "../enums";
 import { DEFAULT_LOCALE } from "../constants";
 import { toPaddedISOZ, toUTCDate, validateUTCDate } from "../util/utcUtil";
+import { FLAGS_PREFIX } from "./flags";
 
 export class ChronosMdParser {
   private errors: string[] = [];
@@ -16,6 +18,7 @@ export class ChronosMdParser {
   private groups: Group[] = [];
   private groupMap: { [key: string]: number } = {};
   private locale: string;
+  private flags: Flags = {}
 
   constructor(locale = DEFAULT_LOCALE) {
     this.locale = locale;
@@ -43,6 +46,9 @@ export class ChronosMdParser {
       } else if (line.startsWith("=")) {
         // Marker
         this._parseMarker(line, lineNumber);
+      } else if (line.startsWith(FLAGS_PREFIX)) {
+        // Flag
+        this._parseFlag(line, lineNumber);
       } else if (line) {
         this._addParserError(lineNumber, `Unrecognized format: ${line}`);
       }
@@ -52,11 +58,12 @@ export class ChronosMdParser {
       throw new Error(this.errors.join(";;"));
     }
 
+    const flags = this.flags
     const items = this.items;
     const markers = this.markers;
     const groups = this.groups;
 
-    return { items, markers, groups };
+    return { items, markers, groups, flags };
   }
 
   private _parseTimeItem(line: string, lineNumber: number) {
@@ -245,6 +252,30 @@ export class ChronosMdParser {
     }
   }
 
+  
+  private _parseFlag(line: string, lineNumber: number) {
+
+    const orderbyFlagP = `(orderby)\\s+([-\\w|]+)$`;
+
+    const re = new RegExp(
+      `${FLAGS_PREFIX}\\s*${orderbyFlagP}`,
+      "i"
+    );
+
+    const match = line.match(re);
+
+    console.log({ match });
+    if (!match) {
+      this._addParserError(lineNumber, `Invalid parameters format: ${line}`);
+      return null;
+    } else {
+        if(match[1].toLocaleLowerCase() === "orderby") {                           
+            this.flags.orderBy = match[2].split("|")
+        }
+    }
+
+  }
+
   private _getOrCreateGroupId(groupName: string): number {
     if (this.groupMap[groupName] !== undefined) {
       return this.groupMap[groupName];
@@ -345,10 +376,15 @@ export class ChronosMdParser {
     this.groups = [];
   }
 
+  private _clearFlags() {
+    this.flags = {};
+  }
+
   private _resetVars() {
     this._clearErrors();
     this._clearItems();
     this._clearMarkers();
     this._clearGroups();
+    this._clearFlags();
   }
 }
