@@ -318,8 +318,8 @@ The *OrderBy* flag can be used to specify an ordering
 > ORDERBY start|-content
 ````
 
-- You can use any of these fields: `start` | `end` | `content` | `style` | `description`.
-    - *Start date* | *end date* | *item label content* | *style (color, etc)* | *item description*
+- You can use any of these fields: `start` | `end` | `content` | `color` | `description`.
+    - *Start date* | *end date* | *item label content* | *color (also style)* | *item description*
 - You can stack them by joining them with a pipe `|` to add another sorting level.
 - You can prepend a dash `-` to any of the fields to order in descending order on this field.
 
@@ -331,7 +331,7 @@ The *OrderBy* flag can be used to specify an ordering
 
 ````markdown
 ```chronos
-> ORDERBY -style|start
+> ORDERBY -style | start
 
 # Middle Ages
 

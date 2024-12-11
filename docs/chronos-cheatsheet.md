@@ -113,6 +113,29 @@ See available [Colors](#colors)
 
 ```
 
+## Ordering
+
+**Order by content**
+
+```chronos
+> ORDERBY content
+ 
+- [2026] Baaaaaaz 
+- [2024] Fooooooooo 
+- [2025] Barrrrrr 
+```
+
+**Order by content descending**
+
+```chronos
+> ORDERBY -content
+ 
+- [2026] Baaaaaaz 
+- [2024] Fooooooooo 
+- [2025] Barrrrrr 
+```
+
+
 ## Periods
 
 **Full Syntax**
