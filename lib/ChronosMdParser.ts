@@ -255,7 +255,7 @@ export class ChronosMdParser {
   
   private _parseFlag(line: string, lineNumber: number) {
 
-    const orderbyFlagP = `(orderby)\\s+([-\\w|]+)$`;
+    const orderbyFlagP = `(orderby)\\s*([-\\w|\\s]+)$`;
 
     const re = new RegExp(
       `${FLAGS_PREFIX}\\s*${orderbyFlagP}`,

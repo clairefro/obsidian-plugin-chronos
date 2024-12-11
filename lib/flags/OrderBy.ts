@@ -42,6 +42,7 @@ export const orderFunctionBuilder: (flags: Flags) => TimelineOptionsComparisonFu
 
 export const orderByFlagParser: (orderBy: string[]) => SortingOptions[] = (orderBy: string[]) => {
     return orderBy.map((field) => {
+        field = field.trim();
         return {
             sortingField: field.startsWith("-") ? field.substring(1) : field,
             sortingOrder: field.startsWith("-") ? SortingOrder.DESC : SortingOrder.ASC
