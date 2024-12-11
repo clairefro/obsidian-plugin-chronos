@@ -24,10 +24,11 @@ export const orderFunctionBuilder: (flags: Flags) => TimelineOptionsComparisonFu
                     diff = b.content.localeCompare(a.content);
                     break;
                 case "style":
-                    diff = b.style?.localeCompare(a.style ?? "") ?? 0;
+                case "color":
+                    diff = (b.style ?? "")?.localeCompare(a.style ?? "") ?? 0;
                     break;
                 case "description":
-                    diff = b.cDescription?.localeCompare(a.cDescription ?? "") ?? 0;
+                    diff = (b.cDescription ?? "")?.localeCompare(a.cDescription ?? "") ?? 0;
                     break;
             }
 
