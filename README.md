@@ -75,6 +75,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Points `*`](#points-)
   - [Markers `=`](#markers-)
   - [Comments `#`](#comments-)
+  - [Flags `>`](#flags-)
   - [Modifiers](#modifiers)
     - [Colors `#color`](#colors-color)
     - [Groups `{}`](#groups-)
@@ -101,6 +102,7 @@ The first character of each line in your `chronos` block determines the item typ
 - [Points](#points-) (`*`)
 - [Markers](#markers-) (`=`)
 - [Comments](#comments-) (`#`)
+- [Flags](#flags-) (`>`)
 
 Certain items can be modified with colors and group membership (see [Modifiers](#modifiers))
 
@@ -300,6 +302,67 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 ````
 
 ![comment example](./docs/ex-comment.png)
+
+## Flags `>`
+
+### *OrderBy* flag
+
+By default, Chronos ordering is set by the stacking of the elements in the timeline.
+
+The *OrderBy* flag can be used to specify an ordering
+
+> [!WARNING]  
+> Ordering can make the timeline laggy when there are many items. Use with precaution
+
+````
+> ORDERBY start|-content
+````
+
+- You can use any of these fields: `start` | `end` | `content` | `color` | `description`.
+    - *Start date* | *end date* | *item label content* | *color (also style)* | *item description*
+- You can stack them by joining them with a pipe `|` to add another sorting level.
+- You can prepend a dash `-` to any of the fields to order in descending order on this field.
+
+#### Example 
+
+**Order by style descending, then start date**
+
+![ex order by style date](./docs/ex-order-by-style-date.png)
+
+````markdown
+```chronos
+> ORDERBY -style | start
+
+# Middle Ages
+
+- [1066-10-14] #pink { } Battle of Hastings | William the Conqueror becomes king of England
+- [1215-06-15] #blue { } Magna Carta signed | Establishing principles of modern law
+- [1347~1351] #orange { } Black Death | Devastating plague in Europe
+- [1492-10-12] #pink { } Christopher Columbus discovers the Americas | Marking the beginning of European exploration
+
+- [1453-05-29] #blue { } Fall of Constantinople | End of the Byzantine Empire
+- [1095-07-01] #pink { } First Crusade launched | Aimed to recapture Jerusalem
+
+# Early Modern Period
+
+- [1517-10-31] #blue { } Martin Luther's 95 Theses | Beginning of the Protestant Reformation
+- [1607-05-14] #pink { } Jamestown established | First permanent English settlement in the Americas
+- [1642~1649] #orange { } English Civil War | Conflict between Royalists and Parliamentarians
+- [1776-07-04] #blue { } Declaration of Independence | Founding of the United States
+- [1789-07-14] #pink { } Storming of the Bastille | Beginning of the French Revolution
+
+- [1800-01-01] #blue { } Start of 19th Century | Marking modern developments
+
+# Industrial Revolution and 19th Century
+
+- [1760~1840] #orange { } Industrial Revolution | Transforming industry and economy
+- [1804-12-02] #pink { } Napoleon crowns himself Emperor | Marking the height of his power
+- [1861-04-12~1865-05-09] #orange { } American Civil War | Conflict between the Union and Confederacy
+- [1889-03-31] #blue { } Eiffel Tower inaugurated | Symbol of modern engineering
+
+
+```
+````
 
 ## Modifiers
 

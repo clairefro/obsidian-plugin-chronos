@@ -26,10 +26,15 @@ export interface ChronosPluginSettings {
 
 export type Group = { id: number; content: string };
 
+export type Flags = { 
+    orderBy?: string[] 
+}
+
 export interface ParseResult {
   items: ChronosDataItem[];
   markers: Marker[];
   groups: Group[];
+  flags: Flags;
 }
 
 interface ConstructItemParams {

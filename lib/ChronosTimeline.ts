@@ -14,6 +14,7 @@ import {
 import { enDatestrToISO } from "../util/enDateStrToISO";
 import { smartDateRange } from "../util/smartDateRange";
 import { ChronosMdParser } from "./ChronosMdParser";
+import { orderFunctionBuilder } from "./flags";
 
 const MS_UNTIL_REFIT = 100;
 
@@ -31,9 +32,10 @@ export class ChronosTimeline {
 
   render(source: string) {
     try {
-      const { items, markers, groups } = this.parser.parse(source);
+      const { items, markers, groups, flags } = this.parser.parse(source);
 
       const options = this._getTimelineOptions();
+      options.order = orderFunctionBuilder(flags);
       const timeline = this._createTimeline(items, groups, options);
 
       this._addMarkers(timeline, markers);
@@ -48,7 +50,7 @@ export class ChronosTimeline {
     }
   }
 
-  private _getTimelineOptions() {
+  private _getTimelineOptions(): TimelineOptions {
     return {
       zoomable: true,
       selectable: true,
