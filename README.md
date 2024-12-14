@@ -327,13 +327,13 @@ The _OrderBy_ flag can be used to specify an ordering
 
 #### Example
 
-**Order by style descending, then start date**
+**Order by colo descending, then start date**
 
 ![ex order by style date](./docs/ex-order-by-style-date.png)
 
 ````markdown
 ```chronos
-> ORDERBY -style | start
+> ORDERBY -color | start
 
 # Middle Ages
 
