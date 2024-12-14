@@ -249,6 +249,41 @@ See available [Colors](#colors)
 
 \`\`\`
 
+## Ordering
+
+**Order by start date**
+
+\`\`\`chronos
+> ORDERBY start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+\`\`\`
+
+**Order by start (descending)**
+
+\`\`\`chronos
+> ORDERBY -start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+\`\`\`
+
+**Order by color and start**
+
+\`\`\`chronos
+> ORDERBY color|start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+\`\`\`
+
 ## Colors
 
 - \`#red\`

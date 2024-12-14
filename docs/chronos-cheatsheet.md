@@ -115,26 +115,38 @@ See available [Colors](#colors)
 
 ## Ordering
 
-**Order by content**
+**Order by start date**
 
 ```chronos
-> ORDERBY content
- 
-- [2026] Baaaaaaz 
-- [2024] Fooooooooo 
-- [2025] Barrrrrr 
+> ORDERBY start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
 ```
 
-**Order by content descending**
+**Order by start (descending)**
 
 ```chronos
-> ORDERBY -content
- 
-- [2026] Baaaaaaz 
-- [2024] Fooooooooo 
-- [2025] Barrrrrr 
+> ORDERBY -start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
 ```
 
+**Order by color and start**
+
+```chronos
+> ORDERBY color|start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
 
 ## Periods
 

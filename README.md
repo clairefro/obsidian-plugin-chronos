@@ -76,6 +76,8 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Markers `=`](#markers-)
   - [Comments `#`](#comments-)
   - [Flags `>`](#flags-)
+    - [_OrderBy_ flag](#orderby-flag)
+      - [Example](#example)
   - [Modifiers](#modifiers)
     - [Colors `#color`](#colors-color)
     - [Groups `{}`](#groups-)
@@ -305,25 +307,25 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 
 ## Flags `>`
 
-### *OrderBy* flag
+### _OrderBy_ flag
 
 By default, Chronos ordering is set by the stacking of the elements in the timeline.
 
-The *OrderBy* flag can be used to specify an ordering
+The _OrderBy_ flag can be used to specify an ordering
 
 > [!WARNING]  
 > Ordering can make the timeline laggy when there are many items. Use with precaution
 
-````
+```
 > ORDERBY start|-content
-````
+```
 
 - You can use any of these fields: `start` | `end` | `content` | `color` | `description`.
-    - *Start date* | *end date* | *item label content* | *color (also style)* | *item description*
+  - _Start date_ | _end date_ | _item label content_ | _color_ | _item description_
 - You can stack them by joining them with a pipe `|` to add another sorting level.
 - You can prepend a dash `-` to any of the fields to order in descending order on this field.
 
-#### Example 
+#### Example
 
 **Order by style descending, then start date**
 
