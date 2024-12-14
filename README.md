@@ -361,8 +361,6 @@ The _OrderBy_ flag can be used to specify an ordering
 - [1804-12-02] #pink { } Napoleon crowns himself Emperor | Marking the height of his power
 - [1861-04-12~1865-05-09] #orange { } American Civil War | Conflict between the Union and Confederacy
 - [1889-03-31] #blue { } Eiffel Tower inaugurated | Symbol of modern engineering
-
-
 ```
 ````
 
