@@ -47,6 +47,7 @@ interface ConstructItemParams {
   color: string | undefined;
   lineNumber: number;
   type: "default" | "background" | "point";
+  cLink?: string;
 }
 
 interface ChronosTimelineConstructor {

@@ -192,6 +192,7 @@ export default class ChronosPlugin extends Plugin {
       }
     });
   }
+
   // Helper method to find the line number for a specific heading
   private async _findLineForHeading(
     file: TFile,

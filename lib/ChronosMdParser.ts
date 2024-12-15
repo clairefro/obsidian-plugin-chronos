@@ -151,6 +151,7 @@ export class ChronosMdParser {
     color,
     lineNumber,
     type = "default",
+    cLink,
   }: ConstructItemParams) {
     this._validateDates(start, end, separator, lineNumber);
 
@@ -163,12 +164,16 @@ export class ChronosMdParser {
         type === "background" ? Opacity.Opaque : Opacity.Solid
       )};`;
     }
+
     if (type === "point") {
       // make text readable on bg and colored items
       style += color
         ? "color: black !important;"
         : "color: var(--text-normal) !important;";
     }
+
+    // add link style for points and events with link
+    const isLink = (type === "point" || type === "default") && cLink;
     return {
       content: content || "",
       start: toUTCDate(start),
@@ -176,6 +181,8 @@ export class ChronosMdParser {
         end && toUTCDate(start) !== toUTCDate(end) ? toUTCDate(end) : undefined,
       group: groupId,
       style: style.length ? style : undefined,
+      className: isLink ? "is-link" : "",
+      cLink,
       ...(type === "default" ? {} : { type }),
     };
   }
@@ -206,6 +213,7 @@ export class ChronosMdParser {
           color,
           lineNumber,
           type: "default",
+          cLink,
         }),
         cDescription: description || undefined,
         cLink,
@@ -257,6 +265,7 @@ export class ChronosMdParser {
           color,
           lineNumber,
           type: "point",
+          cLink,
         }),
         cDescription: description || undefined,
         cLink,

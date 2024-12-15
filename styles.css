@@ -72,14 +72,32 @@
 
 .chronos-timeline-container .vis-box,
 .chronos-timeline-container .vis-range {
-  cursor: pointer;
+  cursor: default;
   border-color: var(--background-secondary);
   background-color: var(--interactive-accent);
   color: var(--text-on-accent-inverted);
 }
 
+/* Link styles*/
+.chronos-timeline-container .is-link {
+  cursor: pointer !important;
+}
+
+.chronos-timeline-container .is-link .vis-item-content {
+  text-transform: none !important;
+  text-decoration: underline !important;
+  text-decoration-line: underline !important;
+  text-decoration-style: solid !important;
+  text-decoration-color: currentColor !important;
+  text-underline-offset: 5px !important;
+}
+
+.chronos-timeline-container .vis-item-content {
+  text-decoration: inherit !important;
+}
+
 .chronos-timeline-container .vis-point {
-  cursor: pointer;
+  cursor: default;
 }
 
 .chronos-timeline-container .vis-text {
