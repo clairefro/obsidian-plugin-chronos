@@ -18,7 +18,7 @@ export class ChronosMdParser {
   private groups: Group[] = [];
   private groupMap: { [key: string]: number } = {};
   private locale: string;
-  private flags: Flags = {}
+  private flags: Flags = {};
 
   constructor(locale = DEFAULT_LOCALE) {
     this.locale = locale;
@@ -58,7 +58,7 @@ export class ChronosMdParser {
       throw new Error(this.errors.join(";;"));
     }
 
-    const flags = this.flags
+    const flags = this.flags;
     const items = this.items;
     const markers = this.markers;
     const groups = this.groups;
@@ -113,7 +113,17 @@ export class ChronosMdParser {
         description,
       ] = match;
 
+      // get current date for default start/end date
       const now = new Date().toISOString().split("T")[0];
+
+      // Check for links in content and description - extract the first one
+      const contentLink = content ? this._extractWikiLink(content) : null;
+      const descriptionLink = description
+        ? this._extractWikiLink(description)
+        : undefined;
+      const link = contentLink || descriptionLink;
+
+      console.log({ link, content, description });
 
       return {
         start: start ? toPaddedISOZ(start) : toPaddedISOZ(now),
@@ -127,6 +137,7 @@ export class ChronosMdParser {
         groupName,
         content,
         description,
+        cLink: link,
       };
     }
   }
@@ -252,15 +263,10 @@ export class ChronosMdParser {
     }
   }
 
-  
   private _parseFlag(line: string, lineNumber: number) {
-
     const orderbyFlagP = `(orderby)\\s*([-\\w|\\s]+)$`;
 
-    const re = new RegExp(
-      `${FLAGS_PREFIX}\\s*${orderbyFlagP}`,
-      "i"
-    );
+    const re = new RegExp(`${FLAGS_PREFIX}\\s*${orderbyFlagP}`, "i");
 
     const match = line.match(re);
 
@@ -269,11 +275,10 @@ export class ChronosMdParser {
       this._addParserError(lineNumber, `Invalid parameters format: ${line}`);
       return null;
     } else {
-        if(match[1].toLocaleLowerCase() === "orderby") {                           
-            this.flags.orderBy = match[2].split("|")
-        }
+      if (match[1].toLocaleLowerCase() === "orderby") {
+        this.flags.orderBy = match[2].split("|");
+      }
     }
-
   }
 
   private _getOrCreateGroupId(groupName: string): number {
@@ -285,6 +290,12 @@ export class ChronosMdParser {
       this.groupMap[groupName] = groupId;
       return groupId;
     }
+  }
+
+  private _extractWikiLink(text: string): string | undefined {
+    const wikiLinkRegex = /\[\[([^\]]+)(\|([^\]]+))?\]\]/;
+    const match = text.match(wikiLinkRegex);
+    return match ? match[1] : undefined;
   }
 
   private _mapToObsidianColor(color: Color, opacity: Opacity) {
