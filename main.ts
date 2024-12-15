@@ -5,6 +5,7 @@ import {
   PluginSettingTab,
   Notice,
   Editor,
+  TFile,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -103,9 +104,110 @@ export default class ChronosPlugin extends Plugin {
 
     try {
       timeline.render(source);
+      timeline.on("click", (event) => {
+        const itemId = event.item;
+        if (itemId) {
+          const item = timeline.items?.find((i) => i.id === itemId);
+
+          if (item?.cLink) {
+            this._openFileFromWikiLink(item.cLink);
+          }
+        }
+      });
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async _openFileFromWikiLink(wikiLink: string) {
+    const cleanedLink = wikiLink.replace(/^\[\[|\]\]$/g, "");
+
+    // Check if the link contains a section/heading
+    const [filename, section] = cleanedLink.split("#");
+    const [fullPath, alias] = cleanedLink.split("|");
+
+    try {
+      const file =
+        this.app.vault
+          .getFiles()
+          .find(
+            (file) =>
+              file.path === fullPath ||
+              file.basename === fullPath ||
+              file.basename === alias
+          ) ||
+        this._findFileByAlias(alias) ||
+        // 3. Try matching by basename
+        this.app.vault
+          .getFiles()
+          .find(
+            (file) => file.basename.toLowerCase() === alias?.toLowerCase()
+          ) ||
+        null;
+      if (file) {
+        // apparently getLeaf("tab") opens the link in a new tab
+        const newLeaf = this.app.workspace.getLeaf("tab");
+        await newLeaf.openFile(file, {
+          active: true,
+          state: section
+            ? {
+                // If a section is specified, try to scroll to that heading
+                focus: true,
+                line: this._findLineForHeading(file, section),
+              }
+            : undefined,
+        });
+      } else {
+        const msg = `Linked note not found: ${filename}`;
+        console.warn(msg);
+        new Notice(msg);
+      }
+    } catch (error) {
+      const msg = `Error opening file: ${error.message}`;
+      console.error(msg);
+      new Notice(msg);
+    }
+  }
+
+  private _findFileByAlias(alias?: string): TFile | undefined {
+    if (!alias) return undefined;
+
+    return this.app.vault.getFiles().find((file) => {
+      try {
+        // Read file metadata
+        const fileCache = this.app.metadataCache.getFileCache(file);
+
+        // Check if aliases exist in frontmatter
+        const frontmatterAliases = fileCache?.frontmatter?.aliases;
+
+        // If aliases exist, check if the given alias is in the list
+        return Array.isArray(frontmatterAliases)
+          ? frontmatterAliases.some(
+              (a) => a.toLowerCase() === alias.toLowerCase()
+            )
+          : frontmatterAliases?.toLowerCase() === alias.toLowerCase();
+      } catch (error) {
+        console.error("Error checking aliases:", error);
+        return false;
+      }
+    });
+  }
+  // Helper method to find the line number for a specific heading
+  private async _findLineForHeading(
+    file: TFile,
+    heading: string
+  ): Promise<number | undefined> {
+    const fileContent = await this.app.vault.read(file);
+    const lines = fileContent.split("\n");
+
+    // Find the line number of the heading
+    const headingLine = lines.findIndex(
+      (line) =>
+        line.trim().replace("#", "").trim().toLowerCase() ===
+        heading.toLowerCase()
+    );
+
+    return headingLine !== -1 ? headingLine : undefined;
   }
 
   private async _generateTimelineWithAi(editor: Editor) {

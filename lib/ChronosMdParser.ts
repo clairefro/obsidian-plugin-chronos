@@ -23,6 +23,7 @@ export class ChronosMdParser {
   constructor(locale = DEFAULT_LOCALE) {
     this.locale = locale;
   }
+
   parse(data: string): ParseResult {
     const lines = data.split("\n");
     this._resetVars();
@@ -75,8 +76,8 @@ export class ChronosMdParser {
     const colorP = `(#(\\w+))?`;
     const groupP = `(\\{([^}]+)\\})?`;
 
-    const contentP = `([^|]+)?`;
-    const descriptionP = `(\\|?\\s*(.*))?`;
+    const contentP = `(.+?)`;
+    const descriptionP = `(\\|\\s*(?<!\\[\\[[^\\]]*)\\s*(.*))?`;
 
     const re = new RegExp(
       `${itemTypeP}${optSp}\\[${optSp}${dateP}?${optSp}${separatorP}${optSp}${dateP}?${optSp}\\]${optSp}${colorP}${optSp}${groupP}${optSp}${contentP}${optSp}${descriptionP}$`
@@ -122,8 +123,6 @@ export class ChronosMdParser {
         ? this._extractWikiLink(description)
         : undefined;
       const link = contentLink || descriptionLink;
-
-      console.log({ link, content, description });
 
       return {
         start: start ? toPaddedISOZ(start) : toPaddedISOZ(now),
@@ -186,8 +185,16 @@ export class ChronosMdParser {
     const components = this._parseTimeItem(line, lineNumber);
 
     if (components) {
-      const { start, separator, end, color, groupName, content, description } =
-        components;
+      const {
+        start,
+        separator,
+        end,
+        color,
+        groupName,
+        content,
+        description,
+        cLink,
+      } = components;
 
       this.items.push({
         ...this._constructItem({
@@ -201,6 +208,7 @@ export class ChronosMdParser {
           type: "default",
         }),
         cDescription: description || undefined,
+        cLink,
       });
     }
   }
@@ -230,8 +238,15 @@ export class ChronosMdParser {
     const components = this._parseTimeItem(line, lineNumber);
 
     if (components) {
-      const { start, separator, color, groupName, content, description } =
-        components;
+      const {
+        start,
+        separator,
+        color,
+        groupName,
+        content,
+        description,
+        cLink,
+      } = components;
       this.items.push({
         ...this._constructItem({
           content: content ? content : "\u00A0", // non-breaking space hack to keep blank items same height as items with title
@@ -244,6 +259,7 @@ export class ChronosMdParser {
           type: "point",
         }),
         cDescription: description || undefined,
+        cLink,
       });
     }
   }
