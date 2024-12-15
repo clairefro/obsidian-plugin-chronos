@@ -73,7 +73,7 @@
 .chronos-timeline-container .vis-box,
 .chronos-timeline-container .vis-range {
   cursor: default;
-  border-color: var(--background-secondary);
+  border-color: transparent;
   background-color: var(--interactive-accent);
   color: var(--text-on-accent-inverted);
 }
@@ -132,4 +132,37 @@
   background-color: var(--color-base-20);
   border-radius: 5px;
   font-family: "monospace";
+}
+
+.vis-label {
+  color: var(--text-muted) !important;
+}
+
+.chronos-timeline-container .vis-text {
+  color: var(--text-muted) !important;
+}
+
+.chronos-timeline-container
+  :is(
+    .vis-timeline,
+    .vis-panel.vis-center,
+    .vis-panel.vis-left,
+    .vis-panel.vis-right,
+    .vis-panel.vis-top,
+    .vis-panel.vis-bottom
+  ) {
+  border-color: var(--color-base-40);
+}
+
+.chronos-timeline-container .vis-time-axis .vis-grid.vis-major {
+  border-color: var(--color-base-50);
+}
+
+.chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
+  border-color: var(--color-base-35);
+}
+
+.chronos-timeline-container .vis-foreground > .vis-group,
+.chronos-timeline-container .vis-labelset > .vis-label {
+  border-bottom-color: var(--color-base-40);
 }
