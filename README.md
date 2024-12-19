@@ -497,6 +497,14 @@ Examples:
 
 ![example: note linking 2](./docs/ex-note-linking-2.png)
 
+You can link directly to a section heading in a note by adding `#section name` to the path
+
+````markdown
+```chronos
+- [2021~2022] My long note | [[path/to/note#section]]
+```
+````
+
 > Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
 
 # Actions
