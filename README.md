@@ -433,7 +433,7 @@ The order of items does not matter, but the example below lumps items together b
 
 Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert.
 
-Works for Event and Point type items.
+Works for Event and Point type items. You can add a link to the
 
 ![example: note linking](./docs/ex-note-linking.gif)
 
@@ -447,6 +447,8 @@ Examples:
 * [2022] Link in description | [[path/to/note]]
 ```
 ````
+
+![example: note linking 2](./docs/ex-note-linking-2.png)
 
 > Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
 
