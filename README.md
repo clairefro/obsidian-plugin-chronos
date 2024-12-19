@@ -93,6 +93,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Groups `{}`](#groups-)
   - [Advanced example](#advanced-example)
 - [Note linking (beta)](#note-linking-beta)
+- [Dynamic Timelines](#dynamic-timelines)
 - [Actions](#actions)
   - [Edit](#edit)
   - [Refit](#refit)
@@ -507,6 +508,102 @@ You can link directly to a section heading in a note by adding `#section name` t
 ````
 
 > Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
+
+
+# Dynamic Timelines
+
+Turn your Obsidian notes into living, breathing timelines that **update automatically** as you work. By combining Chronos with [Dataview](https://blacksmithgu.github.io/obsidian-dataview/), you can create timelines that dynamically reflect your notes, tasks, or any other data in your vault.
+
+## Prerequisites
+
+- [Dataview](https://blacksmithgu.github.io/obsidian-dataview/) plugin installed
+- JavaScript queries enabled in Dataview settings
+
+## Basic Example
+
+Create a timeline of birthdays from notes in the directory `Contacts` and also link the notes:
+
+```dataviewjs
+const pages = dv.pages('"Contacts"').where(p => p.birthday); // skip all without birthday
+
+let events = pages.map(p => {
+    const date = new Date(p["birthday"]).toISOString().split('.')[0];
+    const title = p.file.name;
+    return `- [${date}] ${title} | [[${title}]]`;
+}).join("\n");
+
+const chronosBlock = `\`\`\`chronos\n${events}\n\`\`\``;
+dv.paragraph(chronosBlock);
+```
+
+## Advanced Usage
+
+Create a timeline of all contacts' birthdays, with family members highlighted in blue:
+
+```dataviewjs
+// Query all contacts with birthdays
+const contacts = dv.pages('"Contacts"').where(p => p.birthday);
+
+// Generate events with family members in blue
+let events = contacts.map(p => {
+    const date = new Date(p.birthday).toISOString().split('T')[0];
+    const isFamily = p.tags?.includes("family");
+    const color = isFamily ? "#blue" : "";
+    return `- [${date}] ${color} ${p.file.name} | [[${p.file.path}]]`;
+}).join("\n");
+
+// Add some styling
+const chronosBlock = `\`\`\`chronos
+> ORDERBY start
+
+# Birthday Timeline
+${events}
+\`\`\``;
+
+dv.paragraph(chronosBlock);
+```
+
+## Combining Dynamic and Static Events
+
+You can mix dynamically generated events with static timeline entries.
+Here's an example that combines dynamic birthdays with fixed holidays and periods:
+
+```dataviewjs
+// Query all contacts with birthdays
+const contacts = dv.pages('"Contacts"').where(p => p.birthday);
+
+// Generate birthday events
+let birthdayEvents = contacts.map(p => {
+    const date = new Date(p.birthday).toISOString().split('T')[0];
+    const isFamily = p.tags?.includes("family");
+    const color = isFamily ? "#blue" : "";
+    return `- [${date}] ${color} ${p.file.name} | [[${p.file.path}]]`;
+}).join("\n");
+
+// Combine with static events
+const chronosBlock = `\`\`\`chronos
+> ORDERBY start
+
+# Important Dates
+@ [2024-12-20~2025-01-05] #pink Holiday Season
+= [2024-12-25] Christmas Day
+= [2025-01-01] New Year's Day
+
+# Birthdays
+${birthdayEvents}
+\`\`\``;
+
+dv.paragraph(chronosBlock);
+```
+
+## Tips
+
+- Use frontmatter dates for consistent formatting (also for ranges)
+- Style events with dynamic colors and groups using any Dataview query logic
+- Mix with static events and periods
+- Leverage Dataview's full query capabilities to generate timeline events
+
+The **timeline updates automatically** whenever your source notes change!
 
 # Actions
 
