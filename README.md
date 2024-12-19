@@ -478,9 +478,9 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 
 # Note linking (beta)
 
-Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert.
+Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert. Chronos will link to the **first link** provided in an item.
 
-Works for Event and Point type items. You can add a link to the
+Works for Event and Point type items. You can add a link to the item name (link path visible), or the description (link path hidden). Items with a link will appear underlined.
 
 ![example: note linking](./docs/ex-note-linking.gif)
 
