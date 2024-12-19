@@ -90,8 +90,8 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Modifiers](#modifiers)
     - [Colors `#color`](#colors-color)
     - [Groups `{}`](#groups-)
-  - [Note linking (Beta)](#note-linking-beta)
   - [Advanced example](#advanced-example)
+- [Note linking (beta)](#note-linking-beta)
 - [Actions](#actions)
   - [Edit](#edit)
   - [Refit](#refit)
@@ -429,29 +429,6 @@ The order of items does not matter, but the example below lumps items together b
 
 ![groups example](./docs/ex-groups.png)
 
-## Note linking (Beta)
-
-Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert.
-
-Works for Event and Point type items. You can add a link to the
-
-![example: note linking](./docs/ex-note-linking.gif)
-
-Examples:
-
-````markdown
-```chronos
-- [2021~2022] No link
-- [2023~2024] With link [[path/to/note]]
-- [2022~2024] Link in description | [[path/to/note]]
-* [2022] Link in description | [[path/to/note]]
-```
-````
-
-![example: note linking 2](./docs/ex-note-linking-2.png)
-
-> Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
-
 ## Advanced example
 
 This example combines **Events**, **Periods**, **Markers**, **Comments**, **Descriptions**, **Groups** and **Colors**
@@ -498,6 +475,29 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ````
 
 ![advanced example](./docs/ex-advanced.png)
+
+# Note linking (beta)
+
+Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert.
+
+Works for Event and Point type items. You can add a link to the
+
+![example: note linking](./docs/ex-note-linking.gif)
+
+Examples:
+
+````markdown
+```chronos
+- [2021~2022] No link
+- [2023~2024] With link [[path/to/note]]
+- [2022~2024] Link in description | [[path/to/note]]
+* [2022] Link in description | [[path/to/note]]
+```
+````
+
+![example: note linking 2](./docs/ex-note-linking-2.png)
+
+> Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
 
 # Actions
 
