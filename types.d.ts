@@ -8,6 +8,7 @@ export interface Marker {
 
 interface ChronosDataItem extends DataItem {
   cDescription?: string; // prefixed c for chronos - special prop for event tooltips
+  cLink?: string; // optional link
   align?: "left" | "center" | "right";
 }
 
@@ -26,9 +27,9 @@ export interface ChronosPluginSettings {
 
 export type Group = { id: number; content: string };
 
-export type Flags = { 
-    orderBy?: string[] 
-}
+export type Flags = {
+  orderBy?: string[];
+};
 
 export interface ParseResult {
   items: ChronosDataItem[];
@@ -46,6 +47,7 @@ interface ConstructItemParams {
   color: string | undefined;
   lineNumber: number;
   type: "default" | "background" | "point";
+  cLink?: string;
 }
 
 interface ChronosTimelineConstructor {

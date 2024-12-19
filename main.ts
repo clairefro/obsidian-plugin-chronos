@@ -5,6 +5,8 @@ import {
   PluginSettingTab,
   Notice,
   Editor,
+  TFile,
+  MarkdownView,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -35,6 +37,13 @@ export default class ChronosPlugin extends Plugin {
 
     this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
     this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
+
+    this.registerEvent(
+      this.app.vault.on("rename", async (file, oldPath) => {
+        console.log({ file, oldPath });
+        await this._updateWikiLinks(oldPath, file.path);
+      })
+    );
 
     this.registerMarkdownCodeBlockProcessor(
       "chronos",
@@ -103,9 +112,101 @@ export default class ChronosPlugin extends Plugin {
 
     try {
       timeline.render(source);
+      timeline.on("click", (event) => {
+        const itemId = event.item;
+        if (itemId) {
+          const item = timeline.items?.find((i) => i.id === itemId);
+
+          if (item?.cLink) {
+            this._openFileFromWikiLink(item.cLink);
+          }
+        }
+      });
     } catch (error) {
       console.log(error);
     }
+  }
+
+  async _openFileFromWikiLink(wikiLink: string) {
+    const cleanedLink = wikiLink.replace(/^\[\[|\]\]$/g, "");
+
+    // Check if the link contains a section/heading
+    const [filename, section] = cleanedLink.split("#");
+    const [path, alias] = cleanedLink.split("|");
+
+    const pathNoHeader = path.split("#")[0];
+
+    try {
+      const file =
+        // 1. Try with file finder and match based on full path or alias
+        this.app.vault
+          .getFiles()
+          .find(
+            (file) =>
+              file.path === pathNoHeader + ".md" ||
+              file.path === pathNoHeader ||
+              file.basename === pathNoHeader
+          ) ||
+        // 2. Try matching by basename (case-insensitive)
+        this.app.vault
+          .getFiles()
+          .find(
+            (file) => file.basename.toLowerCase() === alias?.toLowerCase()
+          ) ||
+        null; // Return null if no match is found
+      if (file) {
+        // apparently getLeaf("tab") opens the link in a new tab
+        const newLeaf = this.app.workspace.getLeaf("tab");
+        const line = section
+          ? await this._findLineForHeading(file, section)
+          : 0;
+        await newLeaf.openFile(file, {
+          active: true,
+          // If a section is specified, try to scroll to that heading
+          state: {
+            focus: true,
+            line,
+          },
+        });
+
+        /* set cursor to heading if present */
+        line &&
+          setTimeout(() => {
+            const editor =
+              this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+
+            if (editor && line != null) {
+              editor.setCursor(line + 30);
+            }
+          }, 100);
+      } else {
+        const msg = `Linked note not found: ${filename}`;
+        console.warn(msg);
+        new Notice(msg);
+      }
+    } catch (error) {
+      const msg = `Error opening file: ${error.message}`;
+      console.error(msg);
+      new Notice(msg);
+    }
+  }
+
+  // Helper method to find the line number for a specific heading
+  private async _findLineForHeading(
+    file: TFile,
+    heading: string
+  ): Promise<number | undefined> {
+    const fileContent = await this.app.vault.read(file);
+    const lines = fileContent.split("\n");
+
+    // Find the line number of the heading
+    const headingLine = lines.findIndex(
+      (line) =>
+        line.trim().replace("#", "").trim().toLowerCase() ===
+        heading.toLowerCase()
+    );
+
+    return headingLine !== -1 ? headingLine : 0;
   }
 
   private async _generateTimelineWithAi(editor: Editor) {
@@ -154,6 +255,85 @@ export default class ChronosPlugin extends Plugin {
 
   private _getApiKey() {
     return decrypt(this.settings.key || "", PEPPER);
+  }
+
+  private async _updateWikiLinks(oldPath: string, newPath: string) {
+    const files = this.app.vault.getMarkdownFiles();
+
+    const updatedFiles = [];
+    console.log(
+      `Checking files for 'chronos' blocks to see whether there is a need to update links to ${this._normalizePath(
+        newPath
+      )}...`
+    );
+    for (const file of files) {
+      const content = await this.app.vault.read(file);
+      const hasChronosBlock = /```(?:\s*)chronos/.test(content);
+      if (hasChronosBlock) {
+        const updatedContent = this._updateLinksInChronosBlocks(
+          content,
+          oldPath,
+          newPath
+        );
+
+        if (updatedContent !== content) {
+          console.log("UPDATING ", file.path);
+          updatedFiles.push(file.path);
+
+          await this.app.vault.modify(file, updatedContent);
+        }
+      }
+    }
+    console.log(`Done checking files with 'chronos' blocks.`);
+    if (updatedFiles.length) {
+      console.log(
+        `Updated links to ${this._normalizePath(newPath)} in ${
+          updatedFiles.length
+        } files: `,
+        updatedFiles
+      );
+    }
+  }
+
+  private _updateLinksInChronosBlocks(
+    content: string,
+    oldPath: string,
+    newPath: string
+  ): string {
+    const codeFenceRegex = /```(?:\s*)chronos([\s\S]*?)```/g;
+    let match: RegExpExecArray | null;
+    let modifiedContent = content;
+
+    while ((match = codeFenceRegex.exec(content)) !== null) {
+      const originalFence = match[0];
+      const fenceContent = match[1];
+
+      const normalizedOldPath = this._normalizePath(oldPath);
+      const normalizedNewPath = this._normalizePath(newPath);
+
+      // Replace wiki links inside the code fence
+      const updatedFenceContent = fenceContent.replace(
+        new RegExp(`\\[\\[${this._escapeRegExp(normalizedOldPath)}\\]\\]`, "g"),
+        `[[${normalizedNewPath}]]`
+      );
+
+      // Replace the entire code fence in the content
+      modifiedContent = modifiedContent.replace(
+        originalFence,
+        `\`\`\`chronos${updatedFenceContent}\`\`\``
+      );
+    }
+
+    return modifiedContent;
+  }
+
+  private _normalizePath(path: string) {
+    // strip aliases and .md extension
+    return path.replace(/(\|.+$)|(\.md$)/g, "");
+  }
+
+  private _escapeRegExp(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }
 

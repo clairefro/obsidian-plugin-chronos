@@ -18,11 +18,12 @@ export class ChronosMdParser {
   private groups: Group[] = [];
   private groupMap: { [key: string]: number } = {};
   private locale: string;
-  private flags: Flags = {}
+  private flags: Flags = {};
 
   constructor(locale = DEFAULT_LOCALE) {
     this.locale = locale;
   }
+
   parse(data: string): ParseResult {
     const lines = data.split("\n");
     this._resetVars();
@@ -58,7 +59,7 @@ export class ChronosMdParser {
       throw new Error(this.errors.join(";;"));
     }
 
-    const flags = this.flags
+    const flags = this.flags;
     const items = this.items;
     const markers = this.markers;
     const groups = this.groups;
@@ -75,8 +76,8 @@ export class ChronosMdParser {
     const colorP = `(#(\\w+))?`;
     const groupP = `(\\{([^}]+)\\})?`;
 
-    const contentP = `([^|]+)?`;
-    const descriptionP = `(\\|?\\s*(.*))?`;
+    const contentP = `(.+?)`;
+    const descriptionP = `(\\|\\s*(?<!\\[\\[[^\\]]*)\\s*(.*))?`;
 
     const re = new RegExp(
       `${itemTypeP}${optSp}\\[${optSp}${dateP}?${optSp}${separatorP}${optSp}${dateP}?${optSp}\\]${optSp}${colorP}${optSp}${groupP}${optSp}${contentP}${optSp}${descriptionP}$`
@@ -113,7 +114,15 @@ export class ChronosMdParser {
         description,
       ] = match;
 
+      // get current date for default start/end date
       const now = new Date().toISOString().split("T")[0];
+
+      // Check for links in content and description - extract the first one
+      const contentLink = content ? this._extractWikiLink(content) : null;
+      const descriptionLink = description
+        ? this._extractWikiLink(description)
+        : undefined;
+      const link = contentLink || descriptionLink;
 
       return {
         start: start ? toPaddedISOZ(start) : toPaddedISOZ(now),
@@ -127,6 +136,7 @@ export class ChronosMdParser {
         groupName,
         content,
         description,
+        cLink: link,
       };
     }
   }
@@ -141,6 +151,7 @@ export class ChronosMdParser {
     color,
     lineNumber,
     type = "default",
+    cLink,
   }: ConstructItemParams) {
     this._validateDates(start, end, separator, lineNumber);
 
@@ -153,12 +164,16 @@ export class ChronosMdParser {
         type === "background" ? Opacity.Opaque : Opacity.Solid
       )};`;
     }
+
     if (type === "point") {
       // make text readable on bg and colored items
       style += color
         ? "color: black !important;"
         : "color: var(--text-normal) !important;";
     }
+
+    // add link style for points and events with link
+    const isLink = (type === "point" || type === "default") && cLink;
     return {
       content: content || "",
       start: toUTCDate(start),
@@ -166,6 +181,8 @@ export class ChronosMdParser {
         end && toUTCDate(start) !== toUTCDate(end) ? toUTCDate(end) : undefined,
       group: groupId,
       style: style.length ? style : undefined,
+      className: isLink ? "is-link" : "",
+      cLink,
       ...(type === "default" ? {} : { type }),
     };
   }
@@ -175,8 +192,16 @@ export class ChronosMdParser {
     const components = this._parseTimeItem(line, lineNumber);
 
     if (components) {
-      const { start, separator, end, color, groupName, content, description } =
-        components;
+      const {
+        start,
+        separator,
+        end,
+        color,
+        groupName,
+        content,
+        description,
+        cLink,
+      } = components;
 
       this.items.push({
         ...this._constructItem({
@@ -188,8 +213,10 @@ export class ChronosMdParser {
           color,
           lineNumber,
           type: "default",
+          cLink,
         }),
         cDescription: description || undefined,
+        cLink,
       });
     }
   }
@@ -219,8 +246,15 @@ export class ChronosMdParser {
     const components = this._parseTimeItem(line, lineNumber);
 
     if (components) {
-      const { start, separator, color, groupName, content, description } =
-        components;
+      const {
+        start,
+        separator,
+        color,
+        groupName,
+        content,
+        description,
+        cLink,
+      } = components;
       this.items.push({
         ...this._constructItem({
           content: content ? content : "\u00A0", // non-breaking space hack to keep blank items same height as items with title
@@ -231,8 +265,10 @@ export class ChronosMdParser {
           color,
           lineNumber,
           type: "point",
+          cLink,
         }),
         cDescription: description || undefined,
+        cLink,
       });
     }
   }
@@ -252,28 +288,21 @@ export class ChronosMdParser {
     }
   }
 
-  
   private _parseFlag(line: string, lineNumber: number) {
-
     const orderbyFlagP = `(orderby)\\s*([-\\w|\\s]+)$`;
 
-    const re = new RegExp(
-      `${FLAGS_PREFIX}\\s*${orderbyFlagP}`,
-      "i"
-    );
+    const re = new RegExp(`${FLAGS_PREFIX}\\s*${orderbyFlagP}`, "i");
 
     const match = line.match(re);
 
-    console.log({ match });
     if (!match) {
       this._addParserError(lineNumber, `Invalid parameters format: ${line}`);
       return null;
     } else {
-        if(match[1].toLocaleLowerCase() === "orderby") {                           
-            this.flags.orderBy = match[2].split("|")
-        }
+      if (match[1].toLocaleLowerCase() === "orderby") {
+        this.flags.orderBy = match[2].split("|");
+      }
     }
-
   }
 
   private _getOrCreateGroupId(groupName: string): number {
@@ -285,6 +314,12 @@ export class ChronosMdParser {
       this.groupMap[groupName] = groupId;
       return groupId;
     }
+  }
+
+  private _extractWikiLink(text: string): string | undefined {
+    const wikiLinkRegex = /\[\[([^\]]+)(\|([^\]]+))?\]\]/;
+    const match = text.match(wikiLinkRegex);
+    return match ? match[1] : undefined;
   }
 
   private _mapToObsidianColor(color: Color, opacity: Opacity) {

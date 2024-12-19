@@ -22,32 +22,54 @@ export class ChronosTimeline {
   private container: HTMLElement;
   private settings: ChronosPluginSettings;
   private parser: ChronosMdParser;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private eventHandlers: { [key: string]: (event: any) => void } = {};
+  items: ChronosDataItem[] | undefined;
+  timeline: Timeline | undefined;
 
   constructor({ container, settings }: ChronosTimelineConstructor) {
     this.container = container;
     this.settings = settings;
-
     this.parser = new ChronosMdParser(this.settings.selectedLocale);
   }
 
   render(source: string) {
     try {
       const { items, markers, groups, flags } = this.parser.parse(source);
-
       const options = this._getTimelineOptions();
       options.order = orderFunctionBuilder(flags);
-      const timeline = this._createTimeline(items, groups, options);
 
+      const timeline = this._createTimeline(items, groups, options);
       this._addMarkers(timeline, markers);
       this._setupTooltip(timeline, items);
       this._createRefitButton(timeline);
       this._handleZoomWorkaround(timeline, groups);
 
-      // make sure all items in view by default
+      this.timeline = timeline;
+
+      // Ensure all items are visible by default
       setTimeout(() => timeline.fit(), MS_UNTIL_REFIT);
     } catch (error) {
-      this._handleParseError(error, this.container);
+      this._handleParseError(error);
     }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on(eventType: string, handler: (event: any) => void) {
+    this.eventHandlers[eventType] = handler;
+    if (this.timeline) {
+      this._setupEventHandlers(this.timeline);
+    }
+  }
+
+  private _setupEventHandlers(timeline: Timeline) {
+    // Set up event listeners based on the registered handlers
+    Object.keys(this.eventHandlers).forEach((eventType) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      timeline.on(eventType, (event: any) => {
+        this.eventHandlers[eventType](event);
+      });
+    });
   }
 
   private _getTimelineOptions(): TimelineOptions {
@@ -57,41 +79,37 @@ export class ChronosTimeline {
       minHeight: "200px",
       align: this.settings.align,
       locale: this.settings.selectedLocale,
-      moment: (date: Date) => {
-        return moment(date).utc();
-      },
+      moment: (date: Date) => moment(date).utc(),
     };
   }
 
-  private _handleParseError(error: Error, container: HTMLElement) {
-    const errorMsgContainer = container.createEl("div", {
+  private _handleParseError(error: Error) {
+    const errorMsgContainer = this.container.createEl("div", {
       cls: "chronos-error-message-container",
     });
-
     errorMsgContainer.innerText = this._formatErrorMessages(error);
   }
 
   private _formatErrorMessages(error: Error): string {
-    let text = "Error(s) parsing chronos markdown. Hover to edit: \n\n";
-    text += error.message
+    return `Error(s) parsing chronos markdown. Hover to edit: \n\n${error.message
       .split(";;")
       .map((msg) => `  - ${msg}`)
-      .join("\n\n");
-
-    return text;
+      .join("\n\n")}`;
   }
 
   private _createTimeline(
     items: ChronosDataItem[],
     groups: Group[] = [],
     options: TimelineOptions
-  ) {
+  ): Timeline {
     let timeline: Timeline;
     if (groups.length) {
       const { updatedItems, updatedGroups } = this.assignItemsToGroups(
         items,
         groups
       );
+
+      this.items = updatedItems;
 
       timeline = new Timeline(
         this.container,
@@ -101,7 +119,9 @@ export class ChronosTimeline {
       );
     } else {
       timeline = new Timeline(this.container, items, options);
+      this.items = items;
     }
+
     setTimeout(() => this._updateTooltipCustomMarkers(), MS_UNTIL_REFIT);
     return timeline;
   }
@@ -116,16 +136,15 @@ export class ChronosTimeline {
 
   private _setupTooltip(timeline: Timeline, items: ChronosDataItem[]) {
     timeline.on("itemover", (event) => {
-      const itemId = event.item;
       const item = new DataSet(items).get(
-        itemId
+        event.item
       ) as unknown as ChronosDataSetDataItem;
       if (item) {
         const text = `${item.content} (${smartDateRange(
           item.start.toISOString(),
-          item.end ? item.end.toISOString() : null,
+          item.end?.toISOString() ?? null,
           this.settings.selectedLocale
-        )})${item?.cDescription ? " \n " + item.cDescription : ""}`;
+        )})${item.cDescription ? " \n " + item.cDescription : ""}`;
         setTooltip(event.event.target, text);
       }
     });
@@ -150,18 +169,16 @@ export class ChronosTimeline {
       this.container.querySelectorAll(".vis-custom-time");
     customTimeMarkers.forEach((m) => {
       const titleText = m.getAttribute("title");
-
       if (titleText) {
         let text = titleText;
         if (this.settings.selectedLocale === "en") {
           const enDateISO = enDatestrToISO(titleText);
           text = smartDateRange(enDateISO, null, this.settings.selectedLocale);
         } else {
-          text = titleText.replace(", 0:00:00", "").replace(/^.*?:/, "").trim(); // TODO: better handling for non-english locales
+          text = titleText.replace(", 0:00:00", "").replace(/^.*?:/, "").trim();
         }
         setTooltip(m as HTMLElement, text);
 
-        // customer markers seem to re-write title on a tick function - need to combat with observer
         const observer = new MutationObserver((mutationsList) => {
           for (const mutation of mutationsList) {
             if (
@@ -180,11 +197,9 @@ export class ChronosTimeline {
   private assignItemsToGroups(items: ChronosDataItem[], groups: Group[]) {
     const DEFAULT_GROUP_ID = 0;
     let updatedItems = [...items];
-    const updatedGroups = [...groups];
-
-    if (groups.length) {
-      updatedGroups.push({ id: DEFAULT_GROUP_ID, content: " " });
-    }
+    const updatedGroups = groups.length
+      ? [...groups, { id: DEFAULT_GROUP_ID, content: " " }]
+      : groups;
 
     updatedItems = items.map((item) => {
       if (groups.length && !item.group) item.group = DEFAULT_GROUP_ID;
@@ -202,16 +217,13 @@ export class ChronosTimeline {
 
   private _handleZoomWorkaround(timeline: Timeline, groups: Group[]) {
     if (groups.length) {
-      setTimeout(
-        () => this._zoomOutMinimally(timeline),
-        MS_UNTIL_REFIT + 50 /* must come after*/
-      );
+      setTimeout(() => this._zoomOutMinimally(timeline), MS_UNTIL_REFIT + 50);
     }
   }
 
   private _zoomOutMinimally(timeline: Timeline) {
     const range = timeline.getWindow();
-    const zoomFactor = 1.02; // SLIGHT zoom out
+    const zoomFactor = 1.02;
     const newStart = new Date(
       range.start.valueOf() -
         ((range.end.valueOf() - range.start.valueOf()) * (zoomFactor - 1)) / 2

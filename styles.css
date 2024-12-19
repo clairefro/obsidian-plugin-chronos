@@ -72,14 +72,32 @@
 
 .chronos-timeline-container .vis-box,
 .chronos-timeline-container .vis-range {
-  cursor: pointer;
-  border-color: var(--background-secondary);
+  cursor: default;
+  border-color: transparent;
   background-color: var(--interactive-accent);
   color: var(--text-on-accent-inverted);
 }
 
+/* Link styles*/
+.chronos-timeline-container .is-link {
+  cursor: pointer !important;
+}
+
+.chronos-timeline-container .is-link .vis-item-content {
+  text-transform: none !important;
+  text-decoration: underline !important;
+  text-decoration-line: underline !important;
+  text-decoration-style: solid !important;
+  text-decoration-color: currentColor !important;
+  text-underline-offset: 5px !important;
+}
+
+.chronos-timeline-container .vis-item-content {
+  text-decoration: inherit !important;
+}
+
 .chronos-timeline-container .vis-point {
-  cursor: pointer;
+  cursor: default;
 }
 
 .chronos-timeline-container .vis-text {
@@ -114,4 +132,37 @@
   background-color: var(--color-base-20);
   border-radius: 5px;
   font-family: "monospace";
+}
+
+.vis-label {
+  color: var(--text-muted) !important;
+}
+
+.chronos-timeline-container .vis-text {
+  color: var(--text-muted) !important;
+}
+
+.chronos-timeline-container
+  :is(
+    .vis-timeline,
+    .vis-panel.vis-center,
+    .vis-panel.vis-left,
+    .vis-panel.vis-right,
+    .vis-panel.vis-top,
+    .vis-panel.vis-bottom
+  ) {
+  border-color: var(--color-base-40);
+}
+
+.chronos-timeline-container .vis-time-axis .vis-grid.vis-major {
+  border-color: var(--color-base-50);
+}
+
+.chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
+  border-color: var(--color-base-35);
+}
+
+.chronos-timeline-container .vis-foreground > .vis-group,
+.chronos-timeline-container .vis-labelset > .vis-label {
+  border-bottom-color: var(--color-base-40);
 }
