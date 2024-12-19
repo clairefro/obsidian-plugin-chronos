@@ -9,6 +9,7 @@ Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) librar
 ## Features
 
 - Portable plain text data
+- Text-to-timeline with AI
 - Note linking
 - Grouping
 - Colors
