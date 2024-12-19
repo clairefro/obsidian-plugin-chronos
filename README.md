@@ -93,6 +93,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Groups `{}`](#groups-)
   - [Advanced example](#advanced-example)
 - [Note linking (beta)](#note-linking-beta)
+- [Dynamic Timelines](#dynamic-timelines)
 - [Actions](#actions)
   - [Edit](#edit)
   - [Refit](#refit)
