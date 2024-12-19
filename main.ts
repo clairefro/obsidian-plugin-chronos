@@ -154,7 +154,6 @@ export default class ChronosPlugin extends Plugin {
             (file) => file.basename.toLowerCase() === alias?.toLowerCase()
           ) ||
         null; // Return null if no match is found
-      console.log({ file });
       if (file) {
         // apparently getLeaf("tab") opens the link in a new tab
         const newLeaf = this.app.workspace.getLeaf("tab");
@@ -261,35 +260,47 @@ export default class ChronosPlugin extends Plugin {
   private async _updateWikiLinks(oldPath: string, newPath: string) {
     const files = this.app.vault.getMarkdownFiles();
 
-    const hasChronos = [];
+    const updatedFiles = [];
     console.log(
-      "Checking files for 'chronos' blocks to see whether there is a need to update links..."
+      `Checking files for 'chronos' blocks to see whether there is a need to update links to ${this._normalizePath(
+        newPath
+      )}...`
     );
     for (const file of files) {
-      console.log({ file });
       const content = await this.app.vault.read(file);
-      console.log({ content });
-      if (/```(?:\s*)chronos/.test(content)) {
-        hasChronos.push(file.path);
-        const updatedContent = this._processContent(content, oldPath, newPath);
-        console.log({ oldPath, newPath, updatedContent, content });
-        console.log({ isUpdated: updatedContent !== content });
+      const hasChronosBlock = /```(?:\s*)chronos/.test(content);
+      if (hasChronosBlock) {
+        const updatedContent = this._updateLinksInChronosBlocks(
+          content,
+          oldPath,
+          newPath
+        );
 
         if (updatedContent !== content) {
-          //   await this.app.vault.modify(file, updatedContent);
+          console.log("UPDATING ", file.path);
+          updatedFiles.push(file.path);
+
+          await this.app.vault.modify(file, updatedContent);
         }
       }
     }
-    console.log("Done checking files with 'chronos' blocks.");
-    console.log(hasChronos);
+    console.log(`Done checking files with 'chronos' blocks.`);
+    if (updatedFiles.length) {
+      console.log(
+        `Updated links to ${this._normalizePath(newPath)} in ${
+          updatedFiles.length
+        } files: `,
+        updatedFiles
+      );
+    }
   }
 
-  private _processContent(
+  private _updateLinksInChronosBlocks(
     content: string,
     oldPath: string,
     newPath: string
   ): string {
-    const codeFenceRegex = /```chronos([\s\S]*?)```/g;
+    const codeFenceRegex = /```(?:\s*)chronos([\s\S]*?)```/g;
     let match: RegExpExecArray | null;
     let modifiedContent = content;
 
@@ -297,10 +308,13 @@ export default class ChronosPlugin extends Plugin {
       const originalFence = match[0];
       const fenceContent = match[1];
 
+      const normalizedOldPath = this._normalizePath(oldPath);
+      const normalizedNewPath = this._normalizePath(newPath);
+
       // Replace wiki links inside the code fence
       const updatedFenceContent = fenceContent.replace(
-        new RegExp(`\\[\\[${this._escapeRegExp(oldPath)}\\]\\]`, "g"),
-        `[[${newPath}]]`
+        new RegExp(`\\[\\[${this._escapeRegExp(normalizedOldPath)}\\]\\]`, "g"),
+        `[[${normalizedNewPath}]]`
       );
 
       // Replace the entire code fence in the content
@@ -311,6 +325,11 @@ export default class ChronosPlugin extends Plugin {
     }
 
     return modifiedContent;
+  }
+
+  private _normalizePath(path: string) {
+    // strip aliases and .md extension
+    return path.replace(/(\|.+$)|(\.md$)/g, "");
   }
 
   private _escapeRegExp(string: string): string {

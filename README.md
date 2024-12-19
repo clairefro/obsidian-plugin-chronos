@@ -6,6 +6,14 @@ Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) librar
 
 ![demo](./docs/ex-main-demo.gif)
 
+## Features
+
+- Portable plain text data
+- Note linking
+- Grouping
+- Colors
+- (coming soon!) Render timelines anywhere outside Obsidian
+
 ## Quickstart
 
 Create timelines in your notes by opening a `chronos` codeblock and adding items
@@ -55,6 +63,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 ## Contents
 
 - [Chronos Timeline: interactive timelines for Obsidian](#chronos-timeline-interactive-timelines-for-obsidian)
+  - [Features](#features)
   - [Quickstart](#quickstart)
     - [Insert blank](#insert-blank)
     - [Insert basic template](#insert-basic-template)
@@ -81,6 +90,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Modifiers](#modifiers)
     - [Colors `#color`](#colors-color)
     - [Groups `{}`](#groups-)
+  - [Note linking (Beta)](#note-linking-beta)
   - [Advanced example](#advanced-example)
 - [Actions](#actions)
   - [Edit](#edit)
@@ -327,7 +337,7 @@ The _OrderBy_ flag can be used to specify an ordering
 
 #### Example
 
-**Order by colo descending, then start date**
+**Order by color descending, then start date**
 
 ![ex order by style date](./docs/ex-order-by-style-date.png)
 
@@ -418,6 +428,27 @@ The order of items does not matter, but the example below lumps items together b
 ````
 
 ![groups example](./docs/ex-groups.png)
+
+## Note linking (Beta)
+
+Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert.
+
+Works for Event and Point type items.
+
+![example: note linking](./docs/ex-note-linking.gif)
+
+Examples:
+
+````markdown
+```chronos
+- [2021~2022] No link
+- [2023~2024] With link [[path/to/note]]
+- [2022~2024] Link in description | [[path/to/note]]
+* [2022] Link in description | [[path/to/note]]
+```
+````
+
+> Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
 
 ## Advanced example
 

@@ -295,7 +295,6 @@ export class ChronosMdParser {
 
     const match = line.match(re);
 
-    console.log({ match });
     if (!match) {
       this._addParserError(lineNumber, `Invalid parameters format: ${line}`);
       return null;
