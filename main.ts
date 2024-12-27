@@ -27,6 +27,7 @@ import { GenAi } from "./lib/ai/GenAi";
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
   selectedLocale: DEFAULT_LOCALE,
   align: "left",
+  openNewTab: true,
 };
 
 export default class ChronosPlugin extends Plugin {
@@ -156,11 +157,13 @@ export default class ChronosPlugin extends Plugin {
         null; // Return null if no match is found
       if (file) {
         // apparently getLeaf("tab") opens the link in a new tab
-        const newLeaf = this.app.workspace.getLeaf("tab");
+        // https://docs.obsidian.md/Reference/TypeScript+API/Workspace/getLeaf_1 
+        // (false or null uses "an existing leaf which can be navigated" which apparently means the active tab, "tab" or true creates a new tab)
+        const targetLeaf = this.app.workspace.getLeaf(this.settings.openNewTab);
         const line = section
           ? await this._findLineForHeading(file, section)
           : 0;
-        await newLeaf.openFile(file, {
+        await targetLeaf.openFile(file, {
           active: true,
           // If a section is specified, try to scroll to that heading
           state: {
@@ -426,6 +429,18 @@ class ChronosPluginSettingTab extends PluginSettingTab {
               this.plugin.settings.key = encrypt(value.trim(), PEPPER);
             }
             await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("Open links in active tab")
+      .setDesc("Unselected: timeline entry links open in new tab (default).  Selected: timeline entry links open in active tab.")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(savedopenNewTab)
+          .onChange(async (value) => {
+            this.plugin.settings.openNewTab = value;
+            await this.plugin.saveData(this.plugin.settings);
           })
       );
 
