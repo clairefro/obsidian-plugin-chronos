@@ -7,7 +7,6 @@ import {
   Editor,
   TFile,
   MarkdownView,
-  FileView,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";

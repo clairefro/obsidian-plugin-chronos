@@ -1,7 +1,7 @@
 {
   "id": "chronos",
   "name": "Chronos Timeline",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "minAppVersion": "0.15.0",
   "description": "Render interactive timelines in your notes from Markdown",
   "author": "Claire Froelich",
