@@ -36,19 +36,32 @@ export class ChronosTimeline {
   render(source: string) {
     try {
       const { items, markers, groups, flags } = this.parser.parse(source);
+
       const options = this._getTimelineOptions();
-      options.order = orderFunctionBuilder(flags);
+
+      // Handle flags
+      if (flags?.orderBy) {
+        options.order = orderFunctionBuilder(flags);
+      }
+
+      const hasDefaultViewFlag =
+        flags?.defaultView?.start && flags?.defaultView?.end;
+
+      if (hasDefaultViewFlag) {
+        options.start = flags?.defaultView?.start;
+        options.end = flags?.defaultView?.end;
+      }
 
       const timeline = this._createTimeline(items, groups, options);
       this._addMarkers(timeline, markers);
       this._setupTooltip(timeline, items);
       this._createRefitButton(timeline);
-      this._handleZoomWorkaround(timeline, groups);
+      !hasDefaultViewFlag && this._handleZoomWorkaround(timeline, groups);
 
       this.timeline = timeline;
 
       // Ensure all items are visible by default
-      setTimeout(() => timeline.fit(), MS_UNTIL_REFIT);
+      !hasDefaultViewFlag && setTimeout(() => timeline.fit(), MS_UNTIL_REFIT);
     } catch (error) {
       this._handleParseError(error);
     }

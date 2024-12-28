@@ -284,6 +284,16 @@ See available [Colors](#colors)
 - [2020~2030] #red  Event A
 \`\`\`
 
+## Default view dates
+
+Use the \`> DEFAULTVIEW start|end\` flag to specify default start and end dates for your timeline's initial load
+
+\`\`\`chronos
+> DEFAULTVIEW  -3000|3000
+
+- [2024] AGI
+\`\`\`
+
 ## Colors
 
 - \`#red\`

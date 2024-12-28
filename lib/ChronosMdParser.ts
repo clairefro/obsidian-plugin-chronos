@@ -289,19 +289,57 @@ export class ChronosMdParser {
   }
 
   private _parseFlag(line: string, lineNumber: number) {
-    const orderbyFlagP = `(orderby)\\s*([-\\w|\\s]+)$`;
-
-    const re = new RegExp(`${FLAGS_PREFIX}\\s*${orderbyFlagP}`, "i");
-
+    const flagContentP = `(\\w+)\\s+([-\\w|\\s]+)$`;
+    const re = new RegExp(`${FLAGS_PREFIX}\\s*${flagContentP}`, "i");
     const match = line.match(re);
 
-    if (!match) {
-      this._addParserError(lineNumber, `Invalid parameters format: ${line}`);
-      return null;
-    } else {
-      if (match[1].toLocaleLowerCase() === "orderby") {
-        this.flags.orderBy = match[2].split("|");
-      }
+    if (!match) return;
+
+    const flagName = match[1]?.toLocaleLowerCase();
+    const flagContent = match[2]?.split("|") || [];
+
+    switch (flagName) {
+      case "orderby":
+        this.flags.orderBy = flagContent;
+        break;
+
+      case "defaultview":
+        if (!flagContent.length) {
+          this._addParserError(
+            lineNumber,
+            `Missing dates in DEFAULTVIEW flag: ${line}`
+          );
+          return;
+        }
+        if (flagContent.length < 2) {
+          this._addParserError(
+            lineNumber,
+            `Must provide a start and end date for DEFAULTVIEW flag in format start|end: ${line}`
+          );
+          return;
+        }
+
+        try {
+          this._validateDates(
+            toUTCDate(flagContent[0]).toISOString().split("T")[0],
+            toUTCDate(flagContent[1]).toISOString().split("T")[0],
+            "~", // Hijacking _validateDates function for validation
+            lineNumber
+          );
+
+          this.flags.defaultView = {
+            start: toUTCDate(flagContent[0]).toISOString(),
+            end: toUTCDate(flagContent[1]).toISOString(),
+          };
+        } catch (e) {
+          this._addParserError(lineNumber, `${e.message}: ${line}`);
+        }
+        break;
+
+      default:
+        // TODO: Handle case where flag is not recognized
+        this._addParserError(lineNumber, `Unrecognized flag: ${line}`);
+        break;
     }
   }
 

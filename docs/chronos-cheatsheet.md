@@ -113,41 +113,6 @@ See available [Colors](#colors)
 
 ```
 
-## Ordering
-
-**Order by start date**
-
-```chronos
-> ORDERBY start
-
-- [2026~2028] Event D
-- [2024~2028] Event B
-- [2025~2030] #red Event C
-- [2020~2030] #red  Event A
-```
-
-**Order by start (descending)**
-
-```chronos
-> ORDERBY -start
-
-- [2026~2028] Event D
-- [2024~2028] Event B
-- [2025~2030] #red Event C
-- [2020~2030] #red  Event A
-```
-
-**Order by color and start**
-
-```chronos
-> ORDERBY color|start
-
-- [2026~2028] Event D
-- [2024~2028] Event B
-- [2025~2030] #red Event C
-- [2020~2030] #red  Event A
-```
-
 ## Periods
 
 **Full Syntax**
@@ -214,6 +179,51 @@ See available [Colors](#colors)
 - [1455] Gutenberg Bible Printed
 @ [1501~1600] The Spread of Printing
 - [1517] Martin Luther's 95 Theses
+```
+
+## Ordering
+
+**Order by start date**
+
+```chronos
+> ORDERBY start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+
+**Order by start (descending)**
+
+```chronos
+> ORDERBY -start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+
+**Order by color and start**
+
+```chronos
+> ORDERBY color|start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+
+## Default view dates
+
+Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates for your timeline's initial load
+
+```chronos
+> DEFAULTVIEW  -3000|3000
+
+- [2024] AGI
 ```
 
 ## Advanced example

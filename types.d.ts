@@ -29,6 +29,10 @@ export type Group = { id: number; content: string };
 
 export type Flags = {
   orderBy?: string[];
+  defaultView?: {
+    start?: string;
+    end?: string;
+  };
 };
 
 export interface ParseResult {

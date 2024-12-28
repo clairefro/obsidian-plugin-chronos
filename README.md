@@ -86,7 +86,8 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Markers `=`](#markers-)
   - [Comments `#`](#comments-)
   - [Flags `>`](#flags-)
-    - [_OrderBy_ flag](#orderby-flag)
+    - [ORDERBY flag](#orderby-flag)
+    - [DEFAULTVIEW flag](#defaultview-flag)
       - [Example](#example)
   - [Modifiers](#modifiers)
     - [Colors `#color`](#colors-color)
@@ -324,7 +325,7 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 
 ## Flags `>`
 
-### _OrderBy_ flag
+### ORDERBY flag
 
 By default, Chronos ordering is set by the stacking of the elements in the timeline.
 
@@ -341,6 +342,18 @@ The `ORDERBY` flag can be used to specify an ordering
   - _Start date_ | _end date_ | _item label content_ | _color_ | _item description_
 - You can stack them by joining them with a pipe `|` to add another sorting level.
 - You can prepend a dash `-` to any of the fields to order in descending order on this field.
+
+### DEFAULTVIEW flag
+
+Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates for your timeline's initial load. You can use YYYY-MM-DD timestamps for the start and end date, with the minimum requirement being YYYY.
+
+```chronos
+> DEFAULTVIEW  -3000|3000
+
+- [2024] AGI
+```
+
+![default view example](./docs/ex-default-view.png)
 
 #### Example
 
