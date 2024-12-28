@@ -94,6 +94,11 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
   - [Advanced example](#advanced-example)
 - [Note linking (beta)](#note-linking-beta)
 - [Dynamic Timelines](#dynamic-timelines)
+  - [Prerequisites](#prerequisites)
+  - [Basic Example](#basic-example)
+  - [Advanced Usage](#advanced-usage)
+  - [Combining Dynamic and Static Events](#combining-dynamic-and-static-events)
+  - [Tips](#tips)
 - [Actions](#actions)
   - [Edit](#edit)
   - [Refit](#refit)
@@ -323,7 +328,7 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 
 By default, Chronos ordering is set by the stacking of the elements in the timeline.
 
-The _OrderBy_ flag can be used to specify an ordering
+The `ORDERBY` flag can be used to specify an ordering
 
 > [!WARNING]  
 > Ordering can make the timeline laggy when there are many items. Use with precaution
@@ -339,42 +344,35 @@ The _OrderBy_ flag can be used to specify an ordering
 
 #### Example
 
-**Order by color descending, then start date**
-
-![ex order by style date](./docs/ex-order-by-style-date.png)
+**Order by start date**
 
 ````markdown
 ```chronos
-> ORDERBY -color | start
+> ORDERBY start
 
-# Middle Ages
-
-- [1066-10-14] #pink { } Battle of Hastings | William the Conqueror becomes king of England
-- [1215-06-15] #blue { } Magna Carta signed | Establishing principles of modern law
-- [1347~1351] #orange { } Black Death | Devastating plague in Europe
-- [1492-10-12] #pink { } Christopher Columbus discovers the Americas | Marking the beginning of European exploration
-
-- [1453-05-29] #blue { } Fall of Constantinople | End of the Byzantine Empire
-- [1095-07-01] #pink { } First Crusade launched | Aimed to recapture Jerusalem
-
-# Early Modern Period
-
-- [1517-10-31] #blue { } Martin Luther's 95 Theses | Beginning of the Protestant Reformation
-- [1607-05-14] #pink { } Jamestown established | First permanent English settlement in the Americas
-- [1642~1649] #orange { } English Civil War | Conflict between Royalists and Parliamentarians
-- [1776-07-04] #blue { } Declaration of Independence | Founding of the United States
-- [1789-07-14] #pink { } Storming of the Bastille | Beginning of the French Revolution
-
-- [1800-01-01] #blue { } Start of 19th Century | Marking modern developments
-
-# Industrial Revolution and 19th Century
-
-- [1760~1840] #orange { } Industrial Revolution | Transforming industry and economy
-- [1804-12-02] #pink { } Napoleon crowns himself Emperor | Marking the height of his power
-- [1861-04-12~1865-05-09] #orange { } American Civil War | Conflict between the Union and Confederacy
-- [1889-03-31] #blue { } Eiffel Tower inaugurated | Symbol of modern engineering
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
 ```
 ````
+
+![order by start date](./docs/ex-order-by-start.png)
+
+**Order by color and start**
+
+````markdown
+```chronos
+> ORDERBY color|start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+````
+
+![order by color and start date](./docs/ex-order-by-color-start.png)
 
 ## Modifiers
 
@@ -508,7 +506,6 @@ You can link directly to a section heading in a note by adding `#section name` t
 ````
 
 > Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
-
 
 # Dynamic Timelines
 
