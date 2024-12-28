@@ -7,6 +7,7 @@ import {
   Editor,
   TFile,
   MarkdownView,
+  FileView,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -112,13 +113,16 @@ export default class ChronosPlugin extends Plugin {
 
     try {
       timeline.render(source);
-      timeline.on("click", (event) => {
+      timeline.on("mouseDown", (event) => {
         const itemId = event.item;
         if (itemId) {
           const item = timeline.items?.find((i) => i.id === itemId);
 
+          const openInNewLeaf =
+            event.event.button === 1 || event.event.shiftKey;
+
           if (item?.cLink) {
-            this._openFileFromWikiLink(item.cLink);
+            this._openFileFromWikiLink(item.cLink, openInNewLeaf);
           }
         }
       });
@@ -127,7 +131,7 @@ export default class ChronosPlugin extends Plugin {
     }
   }
 
-  async _openFileFromWikiLink(wikiLink: string) {
+  async _openFileFromWikiLink(wikiLink: string, openInNewLeaf = false) {
     const cleanedLink = wikiLink.replace(/^\[\[|\]\]$/g, "");
 
     // Check if the link contains a section/heading
@@ -155,12 +159,16 @@ export default class ChronosPlugin extends Plugin {
           ) ||
         null; // Return null if no match is found
       if (file) {
-        // apparently getLeaf("tab") opens the link in a new tab
-        const newLeaf = this.app.workspace.getLeaf("tab");
+        let leaf = this.app.workspace.getLeaf(false); // open in current leaf by default
+        if (openInNewLeaf) {
+          // apparently getLeaf("tab") opens the link in a new tab
+          leaf = this.app.workspace.getLeaf("tab");
+        }
         const line = section
           ? await this._findLineForHeading(file, section)
           : 0;
-        await newLeaf.openFile(file, {
+
+        await leaf.openFile(file, {
           active: true,
           // If a section is specified, try to scroll to that heading
           state: {
