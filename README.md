@@ -482,6 +482,9 @@ Link to other notes in your vault by adding a wiki link to either the item name 
 
 Works for Event and Point type items. You can add a link to the item name (link path visible), or the description (link path hidden). Items with a link will appear underlined.
 
+**Left-click**: open link in **current** tab
+**Middle-click or Shift + click**: open link in **new** tab
+
 ![example: note linking](./docs/ex-note-linking.gif)
 
 Examples:
