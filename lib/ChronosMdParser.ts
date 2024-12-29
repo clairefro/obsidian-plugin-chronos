@@ -373,13 +373,17 @@ export class ChronosMdParser {
     };
 
     if (!colorMap[color]) {
-      console.warn(`Color "${color}" not recognized.`);
-      return undefined;
+      // Support native CSS colors by using the specified string directly.
+      // Preserve previous behavior for Obsidian named colors (in case a user relied on a theme overwriting the basic color values)
+      // This will result in unexpected behavior if the value is not a valid CSS color value (i.e. name, rgb, etc.).
+      return opacity === "solid"
+        ? `${color.replace(';','_')}` // sanitize input to reduce the chance of some sort of display exploit
+        : `${color}; opacity(var(--chronos-opacity))`;
+    } else {
+      return opacity === "solid"
+        ? `var(--color-${colorMap[color]})`
+        : `rgba(var(--color-${colorMap[color]}-rgb), var(--chronos-opacity))`;
     }
-
-    return opacity === "solid"
-      ? `var(--color-${colorMap[color]})`
-      : `rgba(var(--color-${colorMap[color]}-rgb), var(--chronos-opacity))`;
   }
 
   private _ensureChronologicalDates(
