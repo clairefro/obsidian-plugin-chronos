@@ -115,6 +115,7 @@ export default class ChronosPlugin extends Plugin {
       timeline.on("mouseDown", (event) => {
         const itemId = event.item;
         if (itemId) {
+          event.preventDefault();
           const item = timeline.items?.find((i) => i.id === itemId);
 
           const openInNewLeaf =
