@@ -1,11 +1,11 @@
 {
-  "id": "chronos",
-  "name": "Chronos Timeline",
-  "version": "1.1.2",
-  "minAppVersion": "0.15.0",
-  "description": "Render interactive timelines in your notes from Markdown",
-  "author": "Claire Froelich",
-  "authorUrl": "https://clairefro.dev",
-  "fundingUrl": "https://buymeacoffee.com/clairefro",
-  "isDesktopOnly": false
+	"id": "chronos",
+	"name": "Chronos Timeline",
+	"version": "1.1.3",
+	"minAppVersion": "0.15.0",
+	"description": "Render interactive timelines in your notes from Markdown",
+	"author": "Claire Froelich",
+	"authorUrl": "https://clairefro.dev",
+	"fundingUrl": "https://buymeacoffee.com/clairefro",
+	"isDesktopOnly": false
 }
