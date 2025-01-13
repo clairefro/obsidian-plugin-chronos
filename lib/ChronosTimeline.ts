@@ -56,7 +56,8 @@ export class ChronosTimeline {
       this._addMarkers(timeline, markers);
       this._setupTooltip(timeline, items);
       this._createRefitButton(timeline);
-      !hasDefaultViewFlag && this._handleZoomWorkaround(timeline, groups);
+      // for whatever reason, timelines with groups render wonky on first paint and can be remedied by zooming in an out...
+      this._handleZoomWorkaround(timeline, groups);
 
       this.timeline = timeline;
 
@@ -230,11 +231,11 @@ export class ChronosTimeline {
 
   private _handleZoomWorkaround(timeline: Timeline, groups: Group[]) {
     if (groups.length) {
-      setTimeout(() => this._zoomOutMinimally(timeline), MS_UNTIL_REFIT + 50);
+      setTimeout(() => this._jiggleZoom(timeline), MS_UNTIL_REFIT + 50);
     }
   }
 
-  private _zoomOutMinimally(timeline: Timeline) {
+  private _jiggleZoom(timeline: Timeline) {
     const range = timeline.getWindow();
     const zoomFactor = 1.02;
     const newStart = new Date(
@@ -246,6 +247,11 @@ export class ChronosTimeline {
         ((range.end.valueOf() - range.start.valueOf()) * (zoomFactor - 1)) / 2
     );
 
+    // zoom out...
     timeline.setWindow(newStart, newEnd, { animation: true });
+    // zoom back in
+    setTimeout(() => {
+      timeline.setWindow(range.start, range.end, { animation: true });
+    }, 200);
   }
 }

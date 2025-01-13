@@ -4,6 +4,8 @@ Render interactive timelines in your Obsidian notes from simple Markdown. Make t
 
 Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) library.
 
+<a href="https://www.buymeacoffee.com/clairefro"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a potato&emoji=🍠&slug=clairefro&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a> 
+
 ![demo](./docs/ex-main-demo.gif)
 
 ## Features
@@ -31,9 +33,6 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
 
-### Insert blank
-
-![palette example blank](./docs/ex-palette-blank.gif)
 
 ### Insert basic template
 
@@ -536,7 +535,7 @@ Turn your Obsidian notes into living, breathing timelines that **update automati
 
 Create a timeline of birthdays from notes in the directory `Contacts` and also link the notes:
 
-```dataviewjs
+```js
 const pages = dv.pages('"Contacts"').where(p => p.birthday); // skip all without birthday
 
 let events = pages.map(p => {
@@ -553,7 +552,7 @@ dv.paragraph(chronosBlock);
 
 Create a timeline of all contacts' birthdays, with family members highlighted in blue:
 
-```dataviewjs
+```js
 // Query all contacts with birthdays
 const contacts = dv.pages('"Contacts"').where(p => p.birthday);
 
@@ -581,7 +580,7 @@ dv.paragraph(chronosBlock);
 You can mix dynamically generated events with static timeline entries.
 Here's an example that combines dynamic birthdays with fixed holidays and periods:
 
-```dataviewjs
+```js
 // Query all contacts with birthdays
 const contacts = dv.pages('"Contacts"').where(p => p.birthday);
 
