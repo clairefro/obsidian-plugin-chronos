@@ -4,7 +4,7 @@ Render interactive timelines in your Obsidian notes from simple Markdown. Make t
 
 Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) library.
 
-<a href="https://www.buymeacoffee.com/clairefro"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a potato&emoji=🍠&slug=clairefro&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a> 
+<a href="https://www.buymeacoffee.com/clairefro"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a potato&emoji=🍠&slug=clairefro&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
 
 ![demo](./docs/ex-main-demo.gif)
 
@@ -32,7 +32,6 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 ![quickstart example](./docs/ex-comment.png)
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
-
 
 ### Insert basic template
 
@@ -63,45 +62,45 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 ## Contents
 
 - [Chronos Timeline: interactive timelines for Obsidian](#chronos-timeline-interactive-timelines-for-obsidian)
-  - [Features](#features)
-  - [Quickstart](#quickstart)
-    - [Insert blank](#insert-blank)
-    - [Insert basic template](#insert-basic-template)
-    - [Insert advanced template](#insert-advanced-template)
-    - [Generate timeline with AI](#generate-timeline-with-ai)
-    - [Cheatsheet](#cheatsheet)
-  - [Contents](#contents)
+    - [Features](#features)
+    - [Quickstart](#quickstart)
+        - [Insert blank](#insert-blank)
+        - [Insert basic template](#insert-basic-template)
+        - [Insert advanced template](#insert-advanced-template)
+        - [Generate timeline with AI](#generate-timeline-with-ai)
+        - [Cheatsheet](#cheatsheet)
+    - [Contents](#contents)
 - [Syntax Overview](#syntax-overview)
-  - [A note on dates](#a-note-on-dates)
-    - [Date ranges](#date-ranges)
-    - [BCE time](#bce-time)
-    - [Limitations](#limitations)
-  - [Events `-`](#events--)
-    - [Events with a single date](#events-with-a-single-date)
-    - [Events with start and end dates](#events-with-start-and-end-dates)
-    - [Events with descriptions](#events-with-descriptions)
-  - [Periods `@`](#periods-)
-  - [Points `*`](#points-)
-  - [Markers `=`](#markers-)
-  - [Comments `#`](#comments-)
-  - [Flags `>`](#flags-)
-    - [ORDERBY flag](#orderby-flag)
-    - [DEFAULTVIEW flag](#defaultview-flag)
-      - [Example](#example)
-  - [Modifiers](#modifiers)
-    - [Colors `#color`](#colors-color)
-    - [Groups `{}`](#groups-)
-  - [Advanced example](#advanced-example)
+    - [A note on dates](#a-note-on-dates)
+        - [Date ranges](#date-ranges)
+        - [BCE time](#bce-time)
+        - [Limitations](#limitations)
+    - [Events `-`](#events--)
+        - [Events with a single date](#events-with-a-single-date)
+        - [Events with start and end dates](#events-with-start-and-end-dates)
+        - [Events with descriptions](#events-with-descriptions)
+    - [Periods `@`](#periods-)
+    - [Points `*`](#points-)
+    - [Markers `=`](#markers-)
+    - [Comments `#`](#comments-)
+    - [Flags `>`](#flags-)
+        - [ORDERBY flag](#orderby-flag)
+        - [DEFAULTVIEW flag](#defaultview-flag)
+            - [Example](#example)
+    - [Modifiers](#modifiers)
+        - [Colors `#color`](#colors-color)
+        - [Groups `{}`](#groups-)
+    - [Advanced example](#advanced-example)
 - [Note linking (beta)](#note-linking-beta)
 - [Dynamic Timelines](#dynamic-timelines)
-  - [Prerequisites](#prerequisites)
-  - [Basic Example](#basic-example)
-  - [Advanced Usage](#advanced-usage)
-  - [Combining Dynamic and Static Events](#combining-dynamic-and-static-events)
-  - [Tips](#tips)
+    - [Prerequisites](#prerequisites)
+    - [Basic Example](#basic-example)
+    - [Advanced Usage](#advanced-usage)
+    - [Combining Dynamic and Static Events](#combining-dynamic-and-static-events)
+    - [Tips](#tips)
 - [Actions](#actions)
-  - [Edit](#edit)
-  - [Refit](#refit)
+    - [Edit](#edit)
+    - [Refit](#refit)
 - [Localization](#localization)
 
 # Syntax Overview
@@ -338,7 +337,7 @@ The `ORDERBY` flag can be used to specify an ordering
 ```
 
 - You can use any of these fields: `start` | `end` | `content` | `color` | `description`.
-  - _Start date_ | _end date_ | _item label content_ | _color_ | _item description_
+    - _Start date_ | _end date_ | _item label content_ | _color_ | _item description_
 - You can stack them by joining them with a pipe `|` to add another sorting level.
 - You can prepend a dash `-` to any of the fields to order in descending order on this field.
 
@@ -522,6 +521,12 @@ You can link directly to a section heading in a note by adding `#section name` t
 
 > Note: Moving or renaming a note SOMETIMES updates links in your Chronos timeline blocks, if the path is used for the link (not an alias, ex: just `note` instead of `path/to/note`). I'm working on updating alias links safely
 
+## Previewing links
+
+While hovering a timeline item with a link, press Control or Command to show a preview of the linked note
+
+![example: link preview](./docs/ex-link-preview.png)
+
 # Dynamic Timelines
 
 Turn your Obsidian notes into living, breathing timelines that **update automatically** as you work. By combining Chronos with [Dataview](https://blacksmithgu.github.io/obsidian-dataview/), you can create timelines that dynamically reflect your notes, tasks, or any other data in your vault.
@@ -536,13 +541,15 @@ Turn your Obsidian notes into living, breathing timelines that **update automati
 Create a timeline of birthdays from notes in the directory `Contacts` and also link the notes:
 
 ```js
-const pages = dv.pages('"Contacts"').where(p => p.birthday); // skip all without birthday
+const pages = dv.pages('"Contacts"').where((p) => p.birthday); // skip all without birthday
 
-let events = pages.map(p => {
-    const date = new Date(p["birthday"]).toISOString().split('.')[0];
-    const title = p.file.name;
-    return `- [${date}] ${title} | [[${title}]]`;
-}).join("\n");
+let events = pages
+	.map((p) => {
+		const date = new Date(p["birthday"]).toISOString().split(".")[0];
+		const title = p.file.name;
+		return `- [${date}] ${title} | [[${title}]]`;
+	})
+	.join("\n");
 
 const chronosBlock = `\`\`\`chronos\n${events}\n\`\`\``;
 dv.paragraph(chronosBlock);
@@ -554,15 +561,17 @@ Create a timeline of all contacts' birthdays, with family members highlighted in
 
 ```js
 // Query all contacts with birthdays
-const contacts = dv.pages('"Contacts"').where(p => p.birthday);
+const contacts = dv.pages('"Contacts"').where((p) => p.birthday);
 
 // Generate events with family members in blue
-let events = contacts.map(p => {
-    const date = new Date(p.birthday).toISOString().split('T')[0];
-    const isFamily = p.tags?.includes("family");
-    const color = isFamily ? "#blue" : "";
-    return `- [${date}] ${color} ${p.file.name} | [[${p.file.path}]]`;
-}).join("\n");
+let events = contacts
+	.map((p) => {
+		const date = new Date(p.birthday).toISOString().split("T")[0];
+		const isFamily = p.tags?.includes("family");
+		const color = isFamily ? "#blue" : "";
+		return `- [${date}] ${color} ${p.file.name} | [[${p.file.path}]]`;
+	})
+	.join("\n");
 
 // Add some styling
 const chronosBlock = `\`\`\`chronos
@@ -582,15 +591,17 @@ Here's an example that combines dynamic birthdays with fixed holidays and period
 
 ```js
 // Query all contacts with birthdays
-const contacts = dv.pages('"Contacts"').where(p => p.birthday);
+const contacts = dv.pages('"Contacts"').where((p) => p.birthday);
 
 // Generate birthday events
-let birthdayEvents = contacts.map(p => {
-    const date = new Date(p.birthday).toISOString().split('T')[0];
-    const isFamily = p.tags?.includes("family");
-    const color = isFamily ? "#blue" : "";
-    return `- [${date}] ${color} ${p.file.name} | [[${p.file.path}]]`;
-}).join("\n");
+let birthdayEvents = contacts
+	.map((p) => {
+		const date = new Date(p.birthday).toISOString().split("T")[0];
+		const isFamily = p.tags?.includes("family");
+		const color = isFamily ? "#blue" : "";
+		return `- [${date}] ${color} ${p.file.name} | [[${p.file.path}]]`;
+	})
+	.join("\n");
 
 // Combine with static events
 const chronosBlock = `\`\`\`chronos
