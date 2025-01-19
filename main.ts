@@ -133,6 +133,33 @@ export default class ChronosPlugin extends Plugin {
 				}
 			});
 
+			// Add hover preview for linked notes
+			timeline.on("itemover", async (event) => {
+				const itemId = event.item;
+				if (itemId) {
+					const item = timeline.items?.find((i) => i.id === itemId);
+					console.log("clink", item?.cLink);
+					if (item?.cLink) {
+						// Get the target element to show hover on
+						const targetEl = event.event.target as HTMLElement;
+
+						// Use Obsidian's built-in hover preview
+						this.app.workspace.trigger("hover-link", {
+							event: event.event,
+							source: "chronos-timeline",
+							hoverParent: container,
+							targetEl: targetEl,
+							linktext: item.cLink,
+						});
+					}
+				}
+			});
+			// Close item preview on item out
+			timeline.on("itemout", () => {
+				// Force close any open hovers
+				this.app.workspace.trigger("hover-link:close");
+			});
+
 			// Add click to use functionality and UI hints if,enabled
 			if (this.settings.clickToUse && container) {
 				timeline.timeline?.setOptions({
