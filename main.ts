@@ -43,7 +43,6 @@ export default class ChronosPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.vault.on("rename", async (file, oldPath) => {
-				console.log({ file, oldPath });
 				await this._updateWikiLinks(oldPath, file.path);
 			}),
 		);
@@ -138,7 +137,6 @@ export default class ChronosPlugin extends Plugin {
 				const itemId = event.item;
 				if (itemId) {
 					const item = timeline.items?.find((i) => i.id === itemId);
-					console.log("clink", item?.cLink);
 					if (item?.cLink) {
 						// Get the target element to show hover on
 						const targetEl = event.event.target as HTMLElement;
