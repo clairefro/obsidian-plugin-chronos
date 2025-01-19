@@ -90,6 +90,9 @@
 	color: var(--text-on-accent-inverted);
 }
 
+.chronos-timeline-container .vis-range.with-caps {
+	border-radius: 50px !important;
+}
 /* Link styles*/
 .chronos-timeline-container .is-link {
 	cursor: pointer !important;
@@ -135,6 +138,9 @@
 	display: none;
 }
 
+.chronos-setting-header {
+	color: var(--text-muted);
+}
 .chronos-settings-md-container {
 	min-height: 250px;
 	width: 100%;
@@ -143,7 +149,8 @@
 	border: 1px solid var(--interactive-border-color);
 	background-color: var(--color-base-20);
 	border-radius: 5px;
-	font-family: "monospace";
+	font-family: var(--font-monospace), "Source Code Pro", "Courier New",
+		monospace;
 }
 
 .vis-label {

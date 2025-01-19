@@ -24,6 +24,7 @@ export interface ChronosPluginSettings {
 	key?: string;
 	align: "left" | "center" | "right";
 	clickToUse: boolean;
+	roundRanges: boolean;
 }
 
 export type Group = { id: number; content: string };

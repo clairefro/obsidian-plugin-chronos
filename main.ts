@@ -24,12 +24,12 @@ import { DEFAULT_LOCALE, PEPPER } from "./constants";
 import { ChronosTimeline } from "./lib/ChronosTimeline";
 import { decrypt, encrypt } from "./util/vanillaEncrypt";
 import { GenAi } from "./lib/ai/GenAi";
-import { Timeline } from "vis-timeline";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	selectedLocale: DEFAULT_LOCALE,
 	align: "left",
 	clickToUse: false,
+	roundRanges: false,
 };
 
 export default class ChronosPlugin extends Plugin {
@@ -434,6 +434,11 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			);
 		});
 
+		containerEl.createEl("h2", {
+			text: "Display settings",
+			cls: "chronos-setting-header",
+		});
+
 		new Setting(containerEl)
 			.setName("Select locale")
 			.setDesc("Choose a locale for displaying dates")
@@ -467,7 +472,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						if (value) {
 							new Notice(
-								"Newly rendered timelines will require clicking first to interact",
+								"Refresh rendering of timlines for change to take effect",
 							);
 						}
 						this.plugin.settings.clickToUse = value;
@@ -475,6 +480,24 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					}),
 			);
 
+		new Setting(containerEl)
+			.setName("Round endcaps on ranges")
+			.setDesc(
+				"Adds rounding to ranged events to make start and end clear",
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(this.plugin.settings.roundRanges)
+					.onChange(async (value) => {
+						if (value) {
+							new Notice(
+								"Refresh rendering of timlines for change to take effect",
+							);
+						}
+						this.plugin.settings.roundRanges = value;
+						await this.plugin.saveSettings();
+					}),
+			);
 		new Setting(containerEl)
 			.setName("Item alignment")
 			.setDesc(
@@ -491,6 +514,11 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		containerEl.createEl("h2", {
+			text: "AI settings",
+			cls: "chronos-setting-header",
+		});
 
 		new Setting(containerEl)
 			.setName("OpenAI API key")
@@ -516,7 +544,10 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl).setName("Cheatsheet").setHeading();
+		containerEl.createEl("h2", {
+			text: "Cheatsheet",
+			cls: "chronos-setting-header",
+		});
 
 		const textarea = containerEl.createEl("textarea", {
 			cls: "chronos-settings-md-container",
