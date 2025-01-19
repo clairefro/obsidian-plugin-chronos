@@ -1,168 +1,180 @@
 /* Maximize user's custom theme in styling */
 
 :root {
-  --chronos-semi-gray: hsla(0, 0%, 50%, 0.15);
-  --chronos-opacity: 0.2;
+	--chronos-semi-gray: hsla(0, 0%, 50%, 0.15);
+	--chronos-opacity: 0.2;
 }
 
 .workspace-leaf-content[data-type="chronos-timeline"] .view-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
 }
 
 .chronos-timeline-container {
-  background-color: var(--background-secondary);
-  position: relative;
+	background-color: var(--background-secondary);
+	position: relative;
 }
 
 .chronos-timeline-container .chronos-timeline-refit-button {
-  position: absolute;
-  bottom: 2px;
-  right: 5px;
-  padding: 2px 5px;
-  background-color: transparent;
-  border: none;
-  box-shadow: none;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: 99;
-  color: var(--icon-color) !important;
+	position: absolute;
+	bottom: 2px;
+	right: 5px;
+	padding: 2px 5px;
+	background-color: transparent;
+	border: none;
+	box-shadow: none;
+	border-radius: 5px;
+	cursor: pointer;
+	z-index: 99;
+	color: var(--icon-color) !important;
 }
 
 .chronos-timeline-container .chronos-timeline-refit-button:hover {
-  background-color: var(--chronos-semi-gray);
-  fill: currentColor;
+	background-color: var(--chronos-semi-gray);
+	fill: currentColor;
 }
 
 .chronos-timeline-container .chronos-timeline-refit-button svg {
-  fill: currentColor;
-  width: 16px;
+	fill: currentColor;
+	width: 16px;
+	border-radius: 0;
 }
 
 .chronos-error-message-container {
-  padding: 1rem 1.5rem;
+	padding: 1rem 1.5rem;
+}
+
+.vis-timeline {
+	border: 2px solid transparent !important;
+	border-radius: 0 !important;
+	cursor: default;
+}
+
+.vis-timeline.vis-active {
+	border-color: hsla(var(--color-accent-hsl), 0.5) !important;
+	border-radius: 0 !important;
 }
 
 .vis-label {
-  color: var(--color-base-100) !important;
+	color: var(--color-base-100) !important;
 }
 
 .vis-custom-time,
 .vis-custom-time-marker {
-  color: var(--color-base-00) !important;
-  background-color: var(--color-base-70) !important;
+	color: var(--color-base-00) !important;
+	background-color: var(--color-base-70) !important;
 }
 
 .chronos-timeline-container .vis-item.vis-background {
-  background-color: hsla(var(--color-accent-hsl), 0.2);
-  color: var(--text-on-primary);
+	background-color: hsla(var(--color-accent-hsl), 0.2);
+	color: var(--text-on-primary);
 }
 
 .chronos-timeline-container .vis-item.vis-selected {
-  border-color: var(--color-base-70);
-  background-color: var(--color-base-70) !important;
-  color: var(--color-base-00) !important;
+	border-color: var(--color-base-70);
+	background-color: var(--color-base-70) !important;
+	color: var(--color-base-00) !important;
 }
 
 .chronos-timeline-container .vis-item {
-  border-radius: var(--radius-s) !important;
-  border-color: var(--color-accent);
+	border-radius: var(--radius-s) !important;
+	border-color: var(--color-accent);
 }
 
 .chronos-timeline-container .vis-box,
 .chronos-timeline-container .vis-range {
-  cursor: default;
-  border-color: transparent;
-  background-color: var(--interactive-accent);
-  color: var(--text-on-accent-inverted);
+	cursor: default;
+	border-color: transparent;
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent-inverted);
 }
 
 /* Link styles*/
 .chronos-timeline-container .is-link {
-  cursor: pointer !important;
+	cursor: pointer !important;
 }
 
 .chronos-timeline-container .is-link .vis-item-content {
-  text-transform: none !important;
-  text-decoration: underline !important;
-  text-decoration-line: underline !important;
-  text-decoration-style: solid !important;
-  text-decoration-color: currentColor !important;
-  text-underline-offset: 5px !important;
+	text-transform: none !important;
+	text-decoration: underline !important;
+	text-decoration-line: underline !important;
+	text-decoration-style: solid !important;
+	text-decoration-color: currentColor !important;
+	text-underline-offset: 5px !important;
 }
 
 .chronos-timeline-container .vis-item-content {
-  text-decoration: inherit !important;
+	text-decoration: inherit !important;
 }
 
 .chronos-timeline-container .vis-point {
-  cursor: default;
+	cursor: default;
 }
 
 .chronos-timeline-container .vis-text {
-  color: var(--text-normal) !important;
+	color: var(--text-normal) !important;
 }
 
 .chronos-timeline-container .vis-dot,
 .chronos-timeline-container .vis-line {
-  background-color: var(--interactive-accent) !important;
-  color: var(--interactive-accent) !important;
+	background-color: var(--interactive-accent) !important;
+	color: var(--interactive-accent) !important;
 }
 
 /* Ensure code editor button is always on top and easy to find with pointer, 
    in chronos blocks only as to not interfer with normal Obsidian behavior 
  */
 .block-language-chronos ~ .edit-block-button {
-  z-index: 999;
-  cursor: pointer !important;
+	z-index: 999;
+	cursor: pointer !important;
 }
 
 .vis-custom-time[title]::after {
-  content: attr(title);
-  display: none;
+	content: attr(title);
+	display: none;
 }
 
 .chronos-settings-md-container {
-  min-height: 250px;
-  width: 100%;
-  overflow-y: auto;
-  padding: 10px;
-  border: 1px solid var(--interactive-border-color);
-  background-color: var(--color-base-20);
-  border-radius: 5px;
-  font-family: "monospace";
+	min-height: 250px;
+	width: 100%;
+	overflow-y: auto;
+	padding: 10px;
+	border: 1px solid var(--interactive-border-color);
+	background-color: var(--color-base-20);
+	border-radius: 5px;
+	font-family: "monospace";
 }
 
 .vis-label {
-  color: var(--text-muted) !important;
+	color: var(--text-muted) !important;
 }
 
 .chronos-timeline-container .vis-text {
-  color: var(--text-muted) !important;
+	color: var(--text-muted) !important;
 }
 
 .chronos-timeline-container
-  :is(
-    .vis-timeline,
-    .vis-panel.vis-center,
-    .vis-panel.vis-left,
-    .vis-panel.vis-right,
-    .vis-panel.vis-top,
-    .vis-panel.vis-bottom
-  ) {
-  border-color: var(--color-base-40);
+	:is(
+		.vis-timeline,
+		.vis-panel.vis-center,
+		.vis-panel.vis-left,
+		.vis-panel.vis-right,
+		.vis-panel.vis-top,
+		.vis-panel.vis-bottom
+	) {
+	border-color: var(--color-base-40);
 }
 
 .chronos-timeline-container .vis-time-axis .vis-grid.vis-major {
-  border-color: var(--color-base-50);
+	border-color: var(--color-base-50);
 }
 
 .chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
-  border-color: var(--color-base-35);
+	border-color: var(--color-base-35);
 }
 
 .chronos-timeline-container .vis-foreground > .vis-group,
 .chronos-timeline-container .vis-labelset > .vis-label {
-  border-bottom-color: var(--color-base-40);
+	border-bottom-color: var(--color-base-40);
 }
