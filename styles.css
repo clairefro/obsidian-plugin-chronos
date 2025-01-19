@@ -92,6 +92,8 @@
 
 .chronos-timeline-container .vis-range.with-caps {
 	border-radius: 50px !important;
+	/* adjust padding to accomdate border radius */
+	padding-left: 8px;
 }
 /* Link styles*/
 .chronos-timeline-container .is-link {
