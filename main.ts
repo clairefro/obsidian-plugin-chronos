@@ -8,6 +8,7 @@ import {
 	TFile,
 	MarkdownView,
 	setTooltip,
+	moment
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -52,6 +53,9 @@ export default class ChronosPlugin extends Plugin {
 			"chronos",
 			this._renderChronosBlock.bind(this),
 		);
+
+		// to correct unwanted change of locale
+		moment.locale(DEFAULT_LOCALE);
 
 		this.addCommand({
 			id: "insert-timeline-blank",
