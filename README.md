@@ -11,7 +11,7 @@ Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) librar
 ## Features
 
 - Portable plain text data
-- Text-to-timeline with AI
+- Text-to-timeline (with additional opt-in AI features)
 - Note linking
 - Grouping
 - Colors

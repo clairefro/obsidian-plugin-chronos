@@ -187,3 +187,7 @@
 .chronos-timeline-container .vis-labelset > .vis-label {
 	border-bottom-color: var(--color-base-40);
 }
+
+.ai-setting.is-disabled {
+	display: none;
+}

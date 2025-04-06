@@ -1,6 +1,6 @@
 {
 	"name": "chronos",
-	"version": "1.2.1",
+	"version": "1.2.2",
 	"description": "Render interactive timelines in your notes from markdown",
 	"main": "main.js",
 	"scripts": {
@@ -20,7 +20,7 @@
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
-		"esbuild": "0.17.3",
+		"esbuild": "^0.25.2",
 		"obsidian": "latest",
 		"prettier": "^3.4.2",
 		"tslib": "2.4.0",
