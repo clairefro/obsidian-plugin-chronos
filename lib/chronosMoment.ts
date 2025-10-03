@@ -1,4 +1,4 @@
-import { ChronosPluginSettings } from "types";
+import { ChronosPluginSettings } from "../types";
 import { moment } from "vis-timeline/standalone";
 
 // Create a cloned instance to avoid pollution global moment settings
