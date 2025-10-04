@@ -14,6 +14,7 @@ import { smartDateRange } from "./smartDateRange";
 import { ChronosMdParser } from "./ChronosMdParser";
 import { orderFunctionBuilder } from "./flags";
 import { chronosMoment } from "./chronosMoment";
+import { getKnownLocales } from "./knownLocales";
 
 const MS_UNTIL_REFIT = 100;
 
@@ -28,12 +29,16 @@ export class ChronosTimeline {
 	private parser: ChronosMdParser;
 	private callbacks:
 		| {
-				onItemClick?: (item: any, event: Event) => void;
-				onTimelineClick?: (event: Event) => void;
-				onItemDoubleClick?: (item: any, event: Event) => void;
+				setTooltip?: (el: Element, text: string) => void;
 		  }
 		| undefined;
 	private cssRootClass: string | undefined;
+	// Per-instance knownLocales list. Initialized from settings.knownLocales or
+	// the module defaults. Hosts may update this per-instance without mutating
+	// module-level state.
+	private knownLocales: string[];
+	// Tooltip setter used by the class (injected or fallback)
+	private setTooltip: (el: Element, text: string) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private eventHandlers: { [key: string]: (event: any) => void } = {};
 	items: ChronosDataItem[] | undefined;
@@ -50,7 +55,31 @@ export class ChronosTimeline {
 		this.parser = new ChronosMdParser(this.settings.selectedLocale);
 		this.callbacks = callbacks;
 		this.cssRootClass = cssRootClass;
+		// Initialize per-instance knownLocales from settings if present, else fall back
+		// to the module defaults.
+		this.knownLocales =
+			this.settings?.knownLocales && this.settings.knownLocales.length
+				? [...this.settings.knownLocales]
+				: getKnownLocales();
 		// cssRootClass will be applied after render to the visible container element
+		// Initialize tooltip setter: prefer injected callback, fallback to local helper
+		this.setTooltip =
+			(this.callbacks && this.callbacks.setTooltip) || setTooltipFallback;
+	}
+
+	/**
+	 * Return a copy of the per-instance known locales list.
+	 */
+	getKnownLocales(): string[] {
+		return [...this.knownLocales];
+	}
+
+	/**
+	 * Update the per-instance known locales list. Does not change module-level
+	 * defaults. To persist across restarts, update plugin settings accordingly.
+	 */
+	setKnownLocales(locales: string[]) {
+		this.knownLocales = [...locales];
 	}
 
 	render(source: string) {
@@ -154,28 +183,7 @@ export class ChronosTimeline {
 		this._createRefitButton(timeline);
 		this._handleZoomWorkaround(timeline, groups);
 
-		// Attach host callbacks if provided
-		if (this.callbacks) {
-			if (this.callbacks.onTimelineClick) {
-				this.container.addEventListener("click", (e) =>
-					this.callbacks!.onTimelineClick!(e),
-				);
-			}
-			if (this.callbacks.onItemClick) {
-				timeline.on("click", (props: any) => {
-					const ds = new DataSet(this.items ?? []);
-					const item = ds.get(props.item);
-					this.callbacks!.onItemClick!(item, props.event);
-				});
-			}
-			if (this.callbacks.onItemDoubleClick) {
-				timeline.on("doubleClick", (props: any) => {
-					const ds = new DataSet(this.items ?? []);
-					const item = ds.get(props.item);
-					this.callbacks!.onItemDoubleClick!(item, props.event);
-				});
-			}
-		}
+		// Hosts should attach timeline event handlers directly using timeline.on(...)
 
 		this.timeline = timeline;
 
@@ -244,7 +252,7 @@ export class ChronosTimeline {
 			) as unknown as ChronosDataSetDataItem;
 			if (item) {
 				const text = `${item.content} (${smartDateRange(item.start.toISOString(), item.end?.toISOString() ?? null, this.settings.selectedLocale)})${item.cDescription ? " \n " + item.cDescription : ""}`;
-				setTooltipFallback(event.event.target, text);
+				this.setTooltip(event.event.target, text);
 			}
 		});
 	}
@@ -258,7 +266,7 @@ export class ChronosTimeline {
 		const svgElement = svgDoc.documentElement;
 
 		refitButton.appendChild(document.importNode(svgElement, true));
-		setTooltipFallback(refitButton, "Fit all");
+		this.setTooltip(refitButton, "Fit all");
 		refitButton.addEventListener("click", () => timeline.fit());
 
 		this.container.appendChild(refitButton);
@@ -284,7 +292,7 @@ export class ChronosTimeline {
 						.replace(/^.*?:/, "")
 						.trim();
 				}
-				setTooltipFallback(m as HTMLElement, text);
+				this.setTooltip(m as HTMLElement, text);
 
 				const observer = new MutationObserver((mutationsList) => {
 					for (const mutation of mutationsList) {

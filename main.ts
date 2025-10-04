@@ -13,7 +13,7 @@ import {
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
-import { knownLocales } from "./libs/chronos/knownLocales";
+import { getKnownLocales } from "./libs/chronos/knownLocales";
 import {
 	cheatsheet,
 	templateAdvanced,
@@ -122,6 +122,7 @@ export default class ChronosPlugin extends Plugin {
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
+			callbacks: { setTooltip },
 		});
 
 		try {
@@ -447,7 +448,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const supportedLocalesNativeDisplayNames: Intl.DisplayNames[] = [];
 
 		// get locales SUPPORTED by the user's environment, based off list of possible locales
-		knownLocales.forEach((locale) => {
+		getKnownLocales().forEach((locale) => {
 			if (Intl.DateTimeFormat.supportedLocalesOf(locale).length) {
 				supportedLocales.push(locale);
 			}

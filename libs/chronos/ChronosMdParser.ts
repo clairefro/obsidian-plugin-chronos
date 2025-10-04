@@ -158,7 +158,7 @@ export class ChronosMdParser {
 
 		let style = "";
 		if (color) {
-			style += `background-color: ${this._mapToObsidianColor(color as Color, type === "background" ? Opacity.Opaque : Opacity.Solid)};`;
+			style += `background-color: ${this._mapToThemeColor(color as Color, type === "background" ? Opacity.Opaque : Opacity.Solid)};`;
 		}
 
 		if (type === "point") {
@@ -396,7 +396,12 @@ export class ChronosMdParser {
 		return match ? match[1] : undefined;
 	}
 
-	private _mapToObsidianColor(color: Color, opacity: Opacity) {
+	private _mapToThemeColor(color: Color, opacity: Opacity) {
+		// Allow host to override color mapping via settings.colorMap
+		if (this.settings?.colorMap && this.settings.colorMap[color]) {
+			return this.settings.colorMap[color];
+		}
+
 		const colorMap: Record<string, string> = {
 			red: "red",
 			green: "green",

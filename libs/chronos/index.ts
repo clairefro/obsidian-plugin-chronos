@@ -9,9 +9,7 @@ export type CoreParseOptions = {
 	roundRanges?: boolean;
 	settings?: Partial<ChronosPluginSettings>;
 	callbacks?: {
-		onItemClick?: (item: any, event: Event) => void;
-		onTimelineClick?: (event: Event) => void;
-		onItemDoubleClick?: (item: any, event: Event) => void;
+		setTooltip?: (el: Element, text: string) => void;
 	};
 	cssVars?: Record<string, string>;
 	cssRootClass?: string;
