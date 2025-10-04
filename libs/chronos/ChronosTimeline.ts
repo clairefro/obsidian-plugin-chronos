@@ -1,6 +1,6 @@
 import { Timeline, TimelineOptions } from "vis-timeline";
 import { DataSet } from "vis-timeline/standalone";
-import crosshairsSvg from "../../assets/icons/crosshairs.svg";
+import crosshairsSvg from "./assets/icons/crosshairs.svg";
 import {
 	Marker,
 	Group,
@@ -26,15 +26,31 @@ export class ChronosTimeline {
 	private container: HTMLElement;
 	private settings: ChronosPluginSettings;
 	private parser: ChronosMdParser;
+	private callbacks:
+		| {
+				onItemClick?: (item: any, event: Event) => void;
+				onTimelineClick?: (event: Event) => void;
+				onItemDoubleClick?: (item: any, event: Event) => void;
+		  }
+		| undefined;
+	private cssRootClass: string | undefined;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	private eventHandlers: { [key: string]: (event: any) => void } = {};
 	items: ChronosDataItem[] | undefined;
 	timeline: Timeline | undefined;
 
-	constructor({ container, settings }: ChronosTimelineConstructor) {
+	constructor({
+		container,
+		settings,
+		callbacks,
+		cssRootClass,
+	}: ChronosTimelineConstructor) {
 		this.container = container;
 		this.settings = settings;
 		this.parser = new ChronosMdParser(this.settings.selectedLocale);
+		this.callbacks = callbacks;
+		this.cssRootClass = cssRootClass;
+		// cssRootClass will be applied after render to the visible container element
 	}
 
 	render(source: string) {
@@ -119,11 +135,47 @@ export class ChronosTimeline {
 			options.verticalScroll = true;
 		}
 
+		// Apply cssRootClass to the visible container element if provided
+		if (this.cssRootClass) {
+			const containerEl = this.container.querySelector(
+				".chronos-timeline-container",
+			) as HTMLElement | null;
+			if (containerEl) {
+				containerEl.classList.add(this.cssRootClass);
+			} else {
+				// fallback: add to container itself
+				this.container.classList.add(this.cssRootClass);
+			}
+		}
+
 		const timeline = this._createTimeline(items, groups, options);
 		this._addMarkers(timeline, markers);
 		this._setupTooltip(timeline, items);
 		this._createRefitButton(timeline);
 		this._handleZoomWorkaround(timeline, groups);
+
+		// Attach host callbacks if provided
+		if (this.callbacks) {
+			if (this.callbacks.onTimelineClick) {
+				this.container.addEventListener("click", (e) =>
+					this.callbacks!.onTimelineClick!(e),
+				);
+			}
+			if (this.callbacks.onItemClick) {
+				timeline.on("click", (props: any) => {
+					const ds = new DataSet(this.items ?? []);
+					const item = ds.get(props.item);
+					this.callbacks!.onItemClick!(item, props.event);
+				});
+			}
+			if (this.callbacks.onItemDoubleClick) {
+				timeline.on("doubleClick", (props: any) => {
+					const ds = new DataSet(this.items ?? []);
+					const item = ds.get(props.item);
+					this.callbacks!.onItemDoubleClick!(item, props.event);
+				});
+			}
+		}
 
 		this.timeline = timeline;
 

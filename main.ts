@@ -13,7 +13,7 @@ import {
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
-import { knownLocales } from "./util/knownLocales";
+import { knownLocales } from "./libs/chronos/knownLocales";
 import {
 	cheatsheet,
 	templateAdvanced,

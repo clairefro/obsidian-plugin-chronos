@@ -60,4 +60,11 @@ export type ConstructItemParams = {
 export type ChronosTimelineConstructor = {
 	container: HTMLElement;
 	settings: ChronosPluginSettings;
+	// Optional runtime hooks and styling overrides for host environments
+	callbacks?: {
+		onItemClick?: (item: any, event: Event) => void;
+		onTimelineClick?: (event: Event) => void;
+		onItemDoubleClick?: (item: any, event: Event) => void;
+	};
+	cssRootClass?: string; // optional root class to scope injected styles
 };

@@ -64,8 +64,6 @@ export class ChronosMdParser {
 		const markers = this.markers;
 		const groups = this.groups;
 
-		console.log({ items, markers, groups, flags });
-
 		return { items, markers, groups, flags };
 	}
 
@@ -107,8 +105,8 @@ export class ChronosMdParser {
 				,
 				,
 				,
-				color,
 				,
+				color,
 				,
 				groupName,
 				content,
