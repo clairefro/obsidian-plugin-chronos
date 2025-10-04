@@ -30,11 +30,6 @@ export interface ChronosPluginSettings {
 	// Optional mapping from color name to CSS value for host environments.
 	// If provided, these values will be used instead of theme CSS variables.
 	colorMap?: Record<string, string>;
-	// Optional per-plugin persisted override for available locales. If provided,
-	// this list will be used to populate locale dropdowns and to determine
-	// support in environments where Intl.DateTimeFormat.supportedLocalesOf
-	// is checked.
-	knownLocales?: string[];
 }
 
 export type Group = { id: number; content: string };

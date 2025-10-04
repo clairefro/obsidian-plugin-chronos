@@ -14,7 +14,6 @@ import { smartDateRange } from "./smartDateRange";
 import { ChronosMdParser } from "./ChronosMdParser";
 import { orderFunctionBuilder } from "./flags";
 import { chronosMoment } from "./chronosMoment";
-import { getKnownLocales } from "./knownLocales";
 
 const MS_UNTIL_REFIT = 100;
 
@@ -33,10 +32,6 @@ export class ChronosTimeline {
 		  }
 		| undefined;
 	private cssRootClass: string | undefined;
-	// Per-instance knownLocales list. Initialized from settings.knownLocales or
-	// the module defaults. Hosts may update this per-instance without mutating
-	// module-level state.
-	private knownLocales: string[];
 	// Tooltip setter used by the class (injected or fallback)
 	private setTooltip: (el: Element, text: string) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,31 +50,10 @@ export class ChronosTimeline {
 		this.parser = new ChronosMdParser(this.settings.selectedLocale);
 		this.callbacks = callbacks;
 		this.cssRootClass = cssRootClass;
-		// Initialize per-instance knownLocales from settings if present, else fall back
-		// to the module defaults.
-		this.knownLocales =
-			this.settings?.knownLocales && this.settings.knownLocales.length
-				? [...this.settings.knownLocales]
-				: getKnownLocales();
 		// cssRootClass will be applied after render to the visible container element
 		// Initialize tooltip setter: prefer injected callback, fallback to local helper
 		this.setTooltip =
 			(this.callbacks && this.callbacks.setTooltip) || setTooltipFallback;
-	}
-
-	/**
-	 * Return a copy of the per-instance known locales list.
-	 */
-	getKnownLocales(): string[] {
-		return [...this.knownLocales];
-	}
-
-	/**
-	 * Update the per-instance known locales list. Does not change module-level
-	 * defaults. To persist across restarts, update plugin settings accordingly.
-	 */
-	setKnownLocales(locales: string[]) {
-		this.knownLocales = [...locales];
 	}
 
 	render(source: string) {

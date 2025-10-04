@@ -85,19 +85,4 @@ const ltrLocales = [
 	"zu",
 ];
 
-const defaultKnownLocales = [...ltrLocales, ...rtlLocales].sort();
-
-// Mutable runtime list so hosts can override available locales.
-let currentKnownLocales = [...defaultKnownLocales];
-
-export function getKnownLocales(): string[] {
-	return [...currentKnownLocales];
-}
-
-export function setKnownLocales(locales: string[]) {
-	currentKnownLocales = [...locales];
-}
-
-export function resetKnownLocales() {
-	currentKnownLocales = [...defaultKnownLocales];
-}
+export const knownLocales = [...ltrLocales, ...rtlLocales].sort();
