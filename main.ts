@@ -21,7 +21,7 @@ import {
 	templateBlank,
 } from "./util/snippets";
 import { DEFAULT_LOCALE, PEPPER } from "./constants";
-import { ChronosTimeline } from "./lib/ChronosTimeline";
+import { ChronosTimeline } from "./libs/chronos/ChronosTimeline";
 import { decrypt, encrypt } from "./util/vanillaEncrypt";
 import { GenAi } from "./lib/ai/GenAi";
 
@@ -38,7 +38,7 @@ export default class ChronosPlugin extends Plugin {
 	settings: ChronosPluginSettings;
 
 	async onload() {
-		console.log("Loading Chronos Timeline Plugin...");
+		console.log("Loading Chronos Timeline Plugin....");
 
 		this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));

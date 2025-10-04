@@ -1,7 +1,6 @@
-import { setTooltip } from "obsidian";
 import { Timeline, TimelineOptions } from "vis-timeline";
-import { DataSet, moment } from "vis-timeline/standalone";
-import crosshairsSvg from "../assets/icons/crosshairs.svg";
+import { DataSet } from "vis-timeline/standalone";
+import crosshairsSvg from "../../assets/icons/crosshairs.svg";
 import {
 	Marker,
 	Group,
@@ -9,14 +8,19 @@ import {
 	ChronosTimelineConstructor,
 	ChronosDataItem,
 	ChronosDataSetDataItem,
-} from "../types";
-import { enDatestrToISO } from "../util/enDateStrToISO";
-import { smartDateRange } from "../util/smartDateRange";
+} from "./types";
+import { enDateStrToISO } from "./enDateStrToISO";
+import { smartDateRange } from "./smartDateRange";
 import { ChronosMdParser } from "./ChronosMdParser";
 import { orderFunctionBuilder } from "./flags";
 import { chronosMoment } from "./chronosMoment";
 
 const MS_UNTIL_REFIT = 100;
+
+function setTooltipFallback(el: Element, text: string) {
+	// simple tooltip fallback using title attribute for portability
+	(el as HTMLElement).setAttribute("title", text);
+}
 
 export class ChronosTimeline {
 	private container: HTMLElement;
@@ -39,45 +43,19 @@ export class ChronosTimeline {
 				source,
 				this.settings,
 			);
-
-			const options = this._getTimelineOptions();
-
-			// Handle flags
-			if (flags?.orderBy) {
-				options.order = orderFunctionBuilder(flags);
-			}
-
-			const hasDefaultViewFlag =
-				flags?.defaultView?.start && flags?.defaultView?.end;
-
-			if (hasDefaultViewFlag) {
-				options.start = flags?.defaultView?.start;
-				options.end = flags?.defaultView?.end;
-			}
-
-			if (flags?.noToday) {
-				options.showCurrentTime = false;
-			}
-			if (flags?.height) {
-				options.height = `${flags.height}px`;
-				options.verticalScroll = true;
-			}
-
-			const timeline = this._createTimeline(items, groups, options);
-			this._addMarkers(timeline, markers);
-			this._setupTooltip(timeline, items);
-			this._createRefitButton(timeline);
-			// for whatever reason, timelines with groups render wonky on first paint and can be remedied by zooming in an out...
-			this._handleZoomWorkaround(timeline, groups);
-
-			this.timeline = timeline;
-
-			// Ensure all items are visible by default
-			!hasDefaultViewFlag &&
-				setTimeout(() => timeline.fit(), MS_UNTIL_REFIT);
+			this._renderFromResult({ items, markers, groups, flags });
 		} catch (error) {
-			this._handleParseError(error);
+			this._handleParseError(error as Error);
 		}
+	}
+
+	renderParsed(result: {
+		items: ChronosDataItem[];
+		markers: Marker[];
+		groups: Group[];
+		flags: any;
+	}) {
+		this._renderFromResult(result);
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,7 +67,6 @@ export class ChronosTimeline {
 	}
 
 	private _setupEventHandlers(timeline: Timeline) {
-		// Set up event listeners based on the registered handlers
 		Object.keys(this.eventHandlers).forEach((eventType) => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			timeline.on(eventType, (event: any) => {
@@ -100,21 +77,64 @@ export class ChronosTimeline {
 
 	private _getTimelineOptions(): TimelineOptions {
 		return {
-			zoomMax: 2.997972e14, // 9500 years - vis timeline seems to break at larger range
+			zoomMax: 2.997972e14,
 			zoomable: true,
 			selectable: true,
 			minHeight: "200px",
 			align: this.settings.align,
-			// locale: this.settings.selectedLocale,
 			moment: (date: Date) => chronosMoment(date, this.settings),
 		};
 	}
 
+	private _renderFromResult({
+		items,
+		markers,
+		groups,
+		flags,
+	}: {
+		items: ChronosDataItem[];
+		markers: Marker[];
+		groups: Group[];
+		flags: any;
+	}) {
+		const options = this._getTimelineOptions();
+
+		if (flags?.orderBy) {
+			options.order = orderFunctionBuilder(flags);
+		}
+
+		const hasDefaultViewFlag =
+			flags?.defaultView?.start && flags?.defaultView?.end;
+
+		if (hasDefaultViewFlag) {
+			options.start = flags?.defaultView?.start;
+			options.end = flags?.defaultView?.end;
+		}
+
+		if (flags?.noToday) {
+			options.showCurrentTime = false;
+		}
+		if (flags?.height) {
+			options.height = `${flags.height}px`;
+			options.verticalScroll = true;
+		}
+
+		const timeline = this._createTimeline(items, groups, options);
+		this._addMarkers(timeline, markers);
+		this._setupTooltip(timeline, items);
+		this._createRefitButton(timeline);
+		this._handleZoomWorkaround(timeline, groups);
+
+		this.timeline = timeline;
+
+		!hasDefaultViewFlag && setTimeout(() => timeline.fit(), MS_UNTIL_REFIT);
+	}
+
 	private _handleParseError(error: Error) {
-		const errorMsgContainer = this.container.createEl("div", {
-			cls: "chronos-error-message-container",
-		});
+		const errorMsgContainer = document.createElement("div");
+		errorMsgContainer.className = "chronos-error-message-container";
 		errorMsgContainer.innerText = this._formatErrorMessages(error);
+		this.container.appendChild(errorMsgContainer);
 	}
 
 	private _formatErrorMessages(error: Error): string {
@@ -135,9 +155,7 @@ export class ChronosTimeline {
 				items,
 				groups,
 			);
-
 			this.items = updatedItems;
-
 			timeline = new Timeline(
 				this.container,
 				updatedItems,
@@ -157,7 +175,13 @@ export class ChronosTimeline {
 		markers.forEach((marker, index) => {
 			const id = `marker_${index}`;
 			timeline.addCustomTime(new Date(marker.start), id);
-			timeline.setCustomTimeMarker(marker.content, id, true);
+			// vis-timeline supports custom marker labels in some builds; fallback to title set later
+			try {
+				// @ts-ignore
+				timeline.setCustomTimeMarker(marker.content, id, true);
+			} catch (e) {
+				// ignore if method missing in bundled timeline
+			}
 		});
 	}
 
@@ -167,28 +191,25 @@ export class ChronosTimeline {
 				event.item,
 			) as unknown as ChronosDataSetDataItem;
 			if (item) {
-				const text = `${item.content} (${smartDateRange(
-					item.start.toISOString(),
-					item.end?.toISOString() ?? null,
-					this.settings.selectedLocale,
-				)})${item.cDescription ? " \n " + item.cDescription : ""}`;
-				setTooltip(event.event.target, text);
+				const text = `${item.content} (${smartDateRange(item.start.toISOString(), item.end?.toISOString() ?? null, this.settings.selectedLocale)})${item.cDescription ? " \n " + item.cDescription : ""}`;
+				setTooltipFallback(event.event.target, text);
 			}
 		});
 	}
 
 	private _createRefitButton(timeline: Timeline) {
-		const refitButton = this.container.createEl("button", {
-			cls: "chronos-timeline-refit-button",
-		});
+		const refitButton = document.createElement("button");
+		refitButton.className = "chronos-timeline-refit-button";
 
 		const parser = new DOMParser();
 		const svgDoc = parser.parseFromString(crosshairsSvg, "image/svg+xml");
 		const svgElement = svgDoc.documentElement;
 
 		refitButton.appendChild(document.importNode(svgElement, true));
-		setTooltip(refitButton, "Fit all");
+		setTooltipFallback(refitButton, "Fit all");
 		refitButton.addEventListener("click", () => timeline.fit());
+
+		this.container.appendChild(refitButton);
 	}
 
 	private _updateTooltipCustomMarkers() {
@@ -199,7 +220,7 @@ export class ChronosTimeline {
 			if (titleText) {
 				let text = titleText;
 				if (this.settings.selectedLocale === "en") {
-					const enDateISO = enDatestrToISO(titleText);
+					const enDateISO = enDateStrToISO(titleText);
 					text = smartDateRange(
 						enDateISO,
 						null,
@@ -211,7 +232,7 @@ export class ChronosTimeline {
 						.replace(/^.*?:/, "")
 						.trim();
 				}
-				setTooltip(m as HTMLElement, text);
+				setTooltipFallback(m as HTMLElement, text);
 
 				const observer = new MutationObserver((mutationsList) => {
 					for (const mutation of mutationsList) {
@@ -271,9 +292,7 @@ export class ChronosTimeline {
 					2,
 		);
 
-		// zoom out...
 		timeline.setWindow(newStart, newEnd, { animation: true });
-		// zoom back in
 		setTimeout(() => {
 			timeline.setWindow(range.start, range.end, { animation: true });
 		}, 200);

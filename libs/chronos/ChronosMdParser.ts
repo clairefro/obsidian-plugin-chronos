@@ -6,10 +6,10 @@ import {
 	ConstructItemParams,
 	Flags,
 	ChronosPluginSettings,
-} from "../types";
-import { Color, Opacity } from "../enums";
-import { DEFAULT_LOCALE } from "../constants";
-import { toPaddedISOZ, toUTCDate, validateUTCDate } from "../util/utcUtil";
+} from "./types";
+import { Color, Opacity } from "./enums";
+import { DEFAULT_LOCALE } from "./constants";
+import { toPaddedISOZ, toUTCDate, validateUTCDate } from "./utcUtil";
 import { FLAGS_PREFIX } from "./flags";
 
 export class ChronosMdParser {
@@ -36,22 +36,16 @@ export class ChronosMdParser {
 			const lineNumber = i + 1;
 
 			if (line.startsWith("#")) {
-				// Comment (skip)
 				return;
 			} else if (line.startsWith("-")) {
-				// Event
 				this._parseEvent(line, lineNumber);
 			} else if (line.startsWith("@")) {
-				// Period
 				this._parsePeriod(line, lineNumber);
 			} else if (line.startsWith("*")) {
-				// Period
 				this._parsePoint(line, lineNumber);
 			} else if (line.startsWith("=")) {
-				// Marker
 				this._parseMarker(line, lineNumber);
 			} else if (line.startsWith(FLAGS_PREFIX)) {
-				// Flag
 				this._parseFlag(line, lineNumber);
 			} else if (line) {
 				this._addParserError(
@@ -69,6 +63,8 @@ export class ChronosMdParser {
 		const items = this.items;
 		const markers = this.markers;
 		const groups = this.groups;
+
+		console.log({ items, markers, groups, flags });
 
 		return { items, markers, groups, flags };
 	}
@@ -111,8 +107,8 @@ export class ChronosMdParser {
 				,
 				,
 				,
-				,
 				color,
+				,
 				,
 				groupName,
 				content,
@@ -120,10 +116,10 @@ export class ChronosMdParser {
 				description,
 			] = match;
 
-			// get current date for default start/end date
+			console.log({ match });
+
 			const now = new Date().toISOString().split("T")[0];
 
-			// Check for links in content and description - extract the first one
 			const contentLink = content ? this._extractWikiLink(content) : null;
 			const descriptionLink = description
 				? this._extractWikiLink(description)
@@ -147,7 +143,6 @@ export class ChronosMdParser {
 		}
 	}
 
-	// Helper to construct item object with common properties
 	private _constructItem({
 		content,
 		start,
@@ -165,20 +160,15 @@ export class ChronosMdParser {
 
 		let style = "";
 		if (color) {
-			style += `background-color: ${this._mapToObsidianColor(
-				color as Color,
-				type === "background" ? Opacity.Opaque : Opacity.Solid,
-			)};`;
+			style += `background-color: ${this._mapToObsidianColor(color as Color, type === "background" ? Opacity.Opaque : Opacity.Solid)};`;
 		}
 
 		if (type === "point") {
-			// make text readable on bg and colored items
 			style += color
 				? "color: black !important;"
 				: "color: var(--text-normal) !important;";
 		}
 
-		// add link style for points and events with link
 		const isLink = (type === "point" || type === "default") && cLink;
 
 		let classes = "";
@@ -201,7 +191,6 @@ export class ChronosMdParser {
 		};
 	}
 
-	// Refactored _parseEvent method
 	private _parseEvent(line: string, lineNumber: number) {
 		const components = this._parseTimeItem(line, lineNumber);
 
@@ -219,7 +208,7 @@ export class ChronosMdParser {
 
 			this.items.push({
 				...this._constructItem({
-					content: content ? content : "\u00A0", // non-breaking space hack to keep blank items same height as items with title
+					content: content ? content : "\u00A0",
 					start,
 					separator,
 					end,
@@ -280,7 +269,7 @@ export class ChronosMdParser {
 			} = components;
 			this.items.push({
 				...this._constructItem({
-					content: content ? content : "\u00A0", // non-breaking space hack to keep blank items same height as items with title
+					content: content ? content : "\u00A0",
 					start,
 					separator,
 					end: undefined,
@@ -325,7 +314,6 @@ export class ChronosMdParser {
 			case "orderby":
 				this.flags.orderBy = flagContent;
 				break;
-
 			case "defaultview":
 				if (!flagContent.length) {
 					this._addParserError(
@@ -346,7 +334,7 @@ export class ChronosMdParser {
 					this._validateDates(
 						toUTCDate(flagContent[0]).toISOString().split("T")[0],
 						toUTCDate(flagContent[1]).toISOString().split("T")[0],
-						"~", // Hijacking _validateDates function for validation
+						"~",
 						lineNumber,
 					);
 
@@ -359,10 +347,8 @@ export class ChronosMdParser {
 				}
 				break;
 			case "notoday":
-				console.log("no today flag detected");
 				this.flags.noToday = true;
 				break;
-
 			case "height":
 				if (!flagContent.length) {
 					this._addParserError(
@@ -413,7 +399,7 @@ export class ChronosMdParser {
 	}
 
 	private _mapToObsidianColor(color: Color, opacity: Opacity) {
-		const colorMap = {
+		const colorMap: Record<string, string> = {
 			red: "red",
 			green: "green",
 			blue: "blue",

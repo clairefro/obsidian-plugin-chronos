@@ -1,6 +1,5 @@
-import { ChronosDataItem, Flags } from "../../types";
+import { ChronosDataItem, Flags } from "../types";
 import { TimelineOptionsComparisonFunction } from "vis-timeline";
-// can use global moment here since no locale/utc settings needed
 import { moment } from "vis-timeline/standalone";
 
 export const orderFunctionBuilder: (
