@@ -13,13 +13,7 @@ import {
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
-import { getKnownLocales } from "./libs/chronos/knownLocales";
-import {
-	cheatsheet,
-	templateAdvanced,
-	templateBasic,
-	templateBlank,
-} from "./util/snippets";
+import { knownLocales } from "./libs/chronos/knownLocales";
 import { DEFAULT_LOCALE, PEPPER } from "./constants";
 import { ChronosTimeline } from "./libs/chronos/ChronosTimeline";
 import { decrypt, encrypt } from "./util/vanillaEncrypt";
@@ -58,7 +52,10 @@ export default class ChronosPlugin extends Plugin {
 			id: "insert-timeline-blank",
 			name: "Insert timeline (blank)",
 			editorCallback: (editor, _view) => {
-				this._insertSnippet(editor, templateBlank);
+				this._insertSnippet(
+					editor,
+					ChronosTimeline.static.templates.blank,
+				);
 			},
 		});
 
@@ -66,7 +63,10 @@ export default class ChronosPlugin extends Plugin {
 			id: "insert-timeline-basic",
 			name: "Insert timeline example (basic)",
 			editorCallback: (editor, _view) => {
-				this._insertSnippet(editor, templateBasic);
+				this._insertSnippet(
+					editor,
+					ChronosTimeline.static.templates.basic,
+				);
 			},
 		});
 
@@ -74,7 +74,10 @@ export default class ChronosPlugin extends Plugin {
 			id: "insert-timeline-advanced",
 			name: "Insert timeline example (advanced)",
 			editorCallback: (editor, _view) => {
-				this._insertSnippet(editor, templateAdvanced);
+				this._insertSnippet(
+					editor,
+					ChronosTimeline.static.templates.advanced,
+				);
 			},
 		});
 		this.addCommand({
@@ -448,7 +451,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const supportedLocalesNativeDisplayNames: Intl.DisplayNames[] = [];
 
 		// get locales SUPPORTED by the user's environment, based off list of possible locales
-		getKnownLocales().forEach((locale) => {
+		knownLocales.forEach((locale) => {
 			if (Intl.DateTimeFormat.supportedLocalesOf(locale).length) {
 				supportedLocales.push(locale);
 			}
@@ -612,7 +615,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		const textarea = containerEl.createEl("textarea", {
 			cls: "chronos-settings-md-container",
-			text: cheatsheet,
+			text: ChronosTimeline.static.cheatsheet,
 		});
 
 		textarea.readOnly = true;
@@ -622,7 +625,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				.setCta()
 				.onClick(async () => {
 					try {
-						await navigator.clipboard.writeText(cheatsheet);
+						await navigator.clipboard.writeText(
+							ChronosTimeline.static.cheatsheet,
+						);
 						new Notice(
 							"Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax",
 						);

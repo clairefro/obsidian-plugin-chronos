@@ -121,3 +121,8 @@ export type {
 	Flags,
 	ChronosPluginSettings,
 } from "./types";
+
+// Grouped re-exports for a cleaner public API surface
+export * as parser from "./parser";
+export * as ui from "./ui";
+export * as utils from "./utils";

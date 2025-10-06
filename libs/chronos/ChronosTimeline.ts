@@ -14,6 +14,13 @@ import { smartDateRange } from "./smartDateRange";
 import { ChronosMdParser } from "./ChronosMdParser";
 import { orderFunctionBuilder } from "./flags";
 import { chronosMoment } from "./chronosMoment";
+import {
+	cheatsheet,
+	templateBlank,
+	templateBasic,
+	templateAdvanced,
+} from "./snippets";
+import { systemPrompt } from "../../lib/ai/systemPrompt";
 
 const MS_UNTIL_REFIT = 100;
 
@@ -23,6 +30,20 @@ function setTooltipFallback(el: Element, text: string) {
 }
 
 export class ChronosTimeline {
+	// Static collection of named templates/snippets and prompts for hosts to reuse.
+	static static: {
+		cheatsheet: string;
+		templates: Record<string, string>;
+		prompts: { system: string };
+	} = {
+		cheatsheet,
+		templates: {
+			blank: templateBlank,
+			basic: templateBasic,
+			advanced: templateAdvanced,
+		},
+		prompts: { system: systemPrompt },
+	};
 	private container: HTMLElement;
 	private settings: ChronosPluginSettings;
 	private parser: ChronosMdParser;
