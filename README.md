@@ -9,7 +9,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 ![demo](./docs/ex-main-demo.gif)
 
 
-<a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="300px" /></a>
+<a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
 
 ## Features
 
