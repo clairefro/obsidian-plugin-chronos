@@ -81,7 +81,7 @@
 }
 
 .chronos-timeline-container .vis-label {
-	color: var(--color-base-100) !important;
+	color: var(--text-muted) !important;
 }
 
 .chronos-timeline-container .vis-custom-time,
