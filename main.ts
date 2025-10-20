@@ -15,7 +15,16 @@ import { ChronosPluginSettings } from "./types";
 import { TextModal } from "./components/TextModal";
 import { knownLocales } from "./util/knownLocales";
 import { DEFAULT_LOCALE, PEPPER } from "./constants";
-import { ChronosTimeline } from "chronos-timeline-md";
+
+// HACKY IMPORT TO ACCOMODATE SYMLINKS WHEN NEEDED
+import * as ChronosLib from "chronos-timeline-md";
+const ChronosTimeline: any =
+	(ChronosLib as any).ChronosTimeline ??
+	(ChronosLib as any).default ??
+	(ChronosLib as any);
+// Debug: uncomment to inspect what was loaded if needed
+// console.debug('Chronos lib exports:', ChronosLib);
+
 import { decrypt, encrypt } from "./util/vanillaEncrypt";
 import { GenAi } from "./lib/ai/GenAi";
 
@@ -35,6 +44,7 @@ export default class ChronosPlugin extends Plugin {
 		console.log("Loading Chronos Timeline Plugin....");
 
 		this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
+
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
 
 		this.registerEvent(
@@ -87,7 +97,10 @@ export default class ChronosPlugin extends Plugin {
 	onunload() {}
 
 	async loadSettings() {
-		this.settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) };
+		this.settings = {
+			...DEFAULT_SETTINGS,
+			...(await this.loadData()),
+		};
 	}
 
 	async saveSettings() {
@@ -122,7 +135,7 @@ export default class ChronosPlugin extends Plugin {
 		try {
 			timeline.render(source);
 			// handle note linking
-			timeline.on("mouseDown", (event) => {
+			timeline.on("mouseDown", (event: any) => {
 				const now = performance.now();
 				if (now - lastEventTime < THROTTLE_MS) {
 					event.event.stopImmediatePropagation();
@@ -141,7 +154,9 @@ export default class ChronosPlugin extends Plugin {
 					const itemId = event.item;
 					if (!itemId) return;
 
-					const item = timeline.items?.find((i) => i.id === itemId);
+					const item = timeline.items?.find(
+						(i: any) => i.id === itemId,
+					);
 					if (!item?.cLink) return;
 
 					// Check for middle click or CMD+click (Mac)
@@ -157,10 +172,12 @@ export default class ChronosPlugin extends Plugin {
 			});
 
 			// Add hover preview for linked notes
-			timeline.on("itemover", async (event) => {
+			timeline.on("itemover", async (event: any) => {
 				const itemId = event.item;
 				if (itemId) {
-					const item = timeline.items?.find((i) => i.id === itemId);
+					const item = timeline.items?.find(
+						(i: any) => i.id === itemId,
+					);
 					if (item?.cLink) {
 						// Get the target element to show hover on
 						const targetEl = event.event.target as HTMLElement;
@@ -188,7 +205,7 @@ export default class ChronosPlugin extends Plugin {
 					clickToUse: this.settings.clickToUse,
 				});
 
-				timeline.on("mouseOver", (e) => {
+				timeline.on("mouseOver", (e: any) => {
 					if (
 						this.settings.clickToUse &&
 						!container.querySelectorAll(".vis-active").length
