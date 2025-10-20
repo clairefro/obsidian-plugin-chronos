@@ -1,6 +1,6 @@
 {
 	"name": "chronos",
-	"version": "2.0.2",
+	"version": "2.0.3",
 	"description": "Render interactive timelines in your notes from markdown",
 	"main": "main.js",
 	"scripts": {
