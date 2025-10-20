@@ -13,9 +13,9 @@ import {
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
-import { knownLocales } from "./libs/chronos/knownLocales";
+import { knownLocales } from "./util/knownLocales";
 import { DEFAULT_LOCALE, PEPPER } from "./constants";
-import { ChronosTimeline } from "./libs/chronos/ChronosTimeline";
+import { ChronosTimeline } from "chronos-timeline-md";
 import { decrypt, encrypt } from "./util/vanillaEncrypt";
 import { GenAi } from "./lib/ai/GenAi";
 
@@ -52,10 +52,7 @@ export default class ChronosPlugin extends Plugin {
 			id: "insert-timeline-blank",
 			name: "Insert timeline (blank)",
 			editorCallback: (editor, _view) => {
-				this._insertSnippet(
-					editor,
-					ChronosTimeline.static.templates.blank,
-				);
+				this._insertSnippet(editor, ChronosTimeline.templates.blank);
 			},
 		});
 
@@ -63,10 +60,7 @@ export default class ChronosPlugin extends Plugin {
 			id: "insert-timeline-basic",
 			name: "Insert timeline example (basic)",
 			editorCallback: (editor, _view) => {
-				this._insertSnippet(
-					editor,
-					ChronosTimeline.static.templates.basic,
-				);
+				this._insertSnippet(editor, ChronosTimeline.templates.basic);
 			},
 		});
 
@@ -74,10 +68,7 @@ export default class ChronosPlugin extends Plugin {
 			id: "insert-timeline-advanced",
 			name: "Insert timeline example (advanced)",
 			editorCallback: (editor, _view) => {
-				this._insertSnippet(
-					editor,
-					ChronosTimeline.static.templates.advanced,
-				);
+				this._insertSnippet(editor, ChronosTimeline.templates.advanced);
 			},
 		});
 		this.addCommand({
@@ -615,7 +606,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		const textarea = containerEl.createEl("textarea", {
 			cls: "chronos-settings-md-container",
-			text: ChronosTimeline.static.cheatsheet,
+			text: ChronosTimeline.cheatsheet,
 		});
 
 		textarea.readOnly = true;
@@ -626,7 +617,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				.onClick(async () => {
 					try {
 						await navigator.clipboard.writeText(
-							ChronosTimeline.static.cheatsheet,
+							ChronosTimeline.cheatsheet,
 						);
 						new Notice(
 							"Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax",
