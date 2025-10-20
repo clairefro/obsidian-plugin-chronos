@@ -1,8 +1,62 @@
-/* Maximize user's custom theme in styling */
-
-:root {
+/* OVERRIDE CHRONOS DEAFULT SETTINGS FOR OBSIDIAN */
+/* Chronos theme variables mapped to Obsidian theme vars */
+.chronos-timeline-container {
+	/* neutrals / misc */
 	--chronos-semi-gray: hsla(0, 0%, 50%, 0.15);
 	--chronos-opacity: 0.2;
+
+	/* backgrounds & surfaces */
+	--chronos-bg-primary: var(--background-primary);
+	--chronos-bg-secondary: var(--background-secondary);
+
+	/* text */
+	--chronos-text-normal: var(--text-normal);
+	--chronos-text-muted: var(--text-muted);
+	--chronos-text-on-accent: var(--text-on-accent);
+	--chronos-bg-text: var(--text-on-primary);
+
+	/* accent / interactive */
+	--chronos-accent: var(--interactive-accent);
+	--chronos-accent-hover: var(--interactive-accent-hover);
+	--chronos-accent-alpha: hsl(
+		var(--accent-h) var(--accent-s) var(--accent-l) / 0.2
+	);
+	--chronos-interactive: var(--interactive-accent);
+	--chronos-interactive-hover: var(--interactive-accent-hover);
+
+	/* borders / focus */
+	--chronos-border: var(--text-muted);
+	--chronos-border-active: rgba(3, 102, 214, 0.5);
+
+	/* radius / icons */
+	--chronos-radius: 6px;
+	--chronos-radius-small: 3px;
+	--chronos-icon-color: var(--text-muted);
+
+	/* palette */
+	--chronos-color-red: var(--color-red);
+	--chronos-color-red-rgb: var(--color-red-rgb);
+
+	--chronos-color-green: var(--color-green);
+	--chronos-color-green-rgb: var(--color-green-rgb);
+
+	--chronos-color-blue: var(--color-blue);
+	--chronos-color-blue-rgb: var(--color-blue-rgb);
+
+	--chronos-color-yellow: var(--color-yellow);
+	--chronos-color-yellow-rgb: var(--color-yellow-rgb);
+
+	--chronos-color-orange: var(--color-orange);
+	--chronos-color-orange-rgb: var(--color-orange-rgb);
+
+	--chronos-color-purple: var(--color-purple);
+	--chronos-color-purple-rgb: var(--color-purple-rgb);
+
+	--chronos-color-pink: var(--color-pink);
+	--chronos-color-pink-rgb: var(--color-pink-rgb);
+
+	--chronos-color-cyan: var(--color-cyan);
+	--chronos-color-cyan-rgb: var(--color-cyan-rgb);
 }
 
 .workspace-leaf-content[data-type="chronos-timeline"] .view-content {
@@ -11,57 +65,27 @@
 	gap: 2rem;
 }
 
-.chronos-timeline-container {
-	background-color: var(--background-secondary);
-	position: relative;
-}
-
-.chronos-timeline-container .chronos-timeline-refit-button {
-	position: absolute;
-	bottom: 2px;
-	right: 5px;
-	padding: 2px 5px;
-	background-color: transparent;
-	border: none;
-	box-shadow: none;
-	border-radius: 5px;
-	cursor: pointer;
-	z-index: 99;
-	color: var(--icon-color) !important;
-}
-
-.chronos-timeline-container .chronos-timeline-refit-button:hover {
-	background-color: var(--chronos-semi-gray);
-	fill: currentColor;
-}
-
-.chronos-timeline-container .chronos-timeline-refit-button svg {
-	fill: currentColor;
-	width: 16px;
-	border-radius: 0;
-}
-
 .chronos-error-message-container {
 	padding: 1rem 1.5rem;
 }
 
-.vis-timeline {
+.chronos-timeline-container .vis-timeline {
 	border: 2px solid transparent !important;
 	border-radius: 0 !important;
 	cursor: default;
 }
 
-.vis-timeline.vis-active {
+.chronos-timeline-container .vis-timeline.vis-active {
 	border-color: hsla(var(--color-accent-hsl), 0.5) !important;
 	border-radius: 0 !important;
 }
 
-.vis-label {
+.chronos-timeline-container .vis-label {
 	color: var(--color-base-100) !important;
 }
 
-.vis-custom-time,
-.vis-custom-time-marker {
+.chronos-timeline-container .vis-custom-time,
+.chronos-timeline-container .vis-custom-time-marker {
 	color: var(--color-base-00) !important;
 	background-color: var(--color-base-70) !important;
 }
@@ -71,30 +95,11 @@
 	color: var(--text-on-primary);
 }
 
-.chronos-timeline-container .vis-item.vis-selected {
-	border-color: var(--color-base-70);
-	background-color: var(--color-base-70) !important;
-	color: var(--color-base-00) !important;
-}
-
 .chronos-timeline-container .vis-item {
 	border-radius: var(--radius-s) !important;
 	border-color: var(--color-accent);
 }
 
-.chronos-timeline-container .vis-box,
-.chronos-timeline-container .vis-range {
-	cursor: default;
-	border-color: transparent;
-	background-color: var(--interactive-accent);
-	color: var(--text-on-accent-inverted);
-}
-
-.chronos-timeline-container .vis-range.with-caps {
-	border-radius: 50px !important;
-	/* adjust padding to accomdate border radius */
-	padding-left: 8px;
-}
 /* Link styles*/
 .chronos-timeline-container .is-link {
 	cursor: pointer !important;
@@ -111,14 +116,6 @@
 
 .chronos-timeline-container .vis-item-content {
 	text-decoration: inherit !important;
-}
-
-.chronos-timeline-container .vis-point {
-	cursor: default;
-}
-
-.chronos-timeline-container .vis-text {
-	color: var(--text-normal) !important;
 }
 
 .chronos-timeline-container .vis-dot,
@@ -143,6 +140,7 @@
 .chronos-setting-header {
 	color: var(--text-muted);
 }
+
 .chronos-settings-md-container {
 	min-height: 250px;
 	width: 100%;
@@ -153,39 +151,6 @@
 	border-radius: 5px;
 	font-family: var(--font-monospace), "Source Code Pro", "Courier New",
 		monospace;
-}
-
-.vis-label {
-	color: var(--text-muted) !important;
-}
-
-.chronos-timeline-container .vis-text {
-	color: var(--text-muted) !important;
-}
-
-.chronos-timeline-container
-	:is(
-		.vis-timeline,
-		.vis-panel.vis-center,
-		.vis-panel.vis-left,
-		.vis-panel.vis-right,
-		.vis-panel.vis-top,
-		.vis-panel.vis-bottom
-	) {
-	border-color: var(--color-base-40);
-}
-
-.chronos-timeline-container .vis-time-axis .vis-grid.vis-major {
-	border-color: var(--color-base-50);
-}
-
-.chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
-	border-color: var(--color-base-35);
-}
-
-.chronos-timeline-container .vis-foreground > .vis-group,
-.chronos-timeline-container .vis-labelset > .vis-label {
-	border-bottom-color: var(--color-base-40);
 }
 
 .ai-setting.is-disabled {
