@@ -22,6 +22,7 @@ const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+git st
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
 
