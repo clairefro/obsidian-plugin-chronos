@@ -475,6 +475,17 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			);
 		});
 
+		const announceLink = containerEl.createEl("a", {
+			text: "Create and share Chronos Timelines outside of Obsidian ↗",
+		});
+		announceLink.setAttribute(
+			"href",
+			"https://clairefro.github.io/chronos-timeline-md/",
+		);
+		announceLink.setAttribute("target", "_blank");
+		announceLink.setAttribute("rel", "noopener noreferrer");
+		announceLink.className = "chronos-announcement-link";
+
 		containerEl.createEl("h2", {
 			text: "Display settings",
 			cls: "chronos-setting-header",
