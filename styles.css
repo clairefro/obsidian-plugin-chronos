@@ -2,7 +2,7 @@
 /* Chronos theme variables mapped to Obsidian theme vars */
 .chronos-timeline-container {
 	/* neutrals / misc */
-	--chronos-semi-gray: hsla(0, 0%, 50%, 0.15);
+	--chronos-semi-gray: hsla(0, 0%, 50%, 0.4);
 	--chronos-opacity: 0.2;
 
 	/* backgrounds & surfaces */
@@ -98,6 +98,18 @@
 .chronos-timeline-container .vis-item {
 	border-radius: var(--radius-s) !important;
 	border-color: var(--color-accent);
+}
+
+.chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
+	border-color: var(--chronos-semi-gray) !important;
+}
+
+.chronos-timeline-container .vis-minor {
+	color: var(--text-muted) !important;
+}
+
+.chronos-timeline-container .vis-major {
+	color: var(--text-muted) !important;
 }
 
 /* Link styles*/
