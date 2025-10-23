@@ -16,7 +16,7 @@ import { TextModal } from "./components/TextModal";
 import { knownLocales } from "./util/knownLocales";
 import { DEFAULT_LOCALE, PEPPER } from "./constants";
 
-// HACKY IMPORT TO ACCOMODATE SYMLINKS WHEN NEEDED
+// HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
