@@ -18,7 +18,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 - Note linking
 - Grouping
 - Colors
-- (coming soon!) Render timelines anywhere outside Obsidian
+- [Render timelines anywhere](https://clairefro.github.io/chronos-timeline-md) outside Obsidian
 
 ## Quickstart
 
