@@ -256,6 +256,84 @@ export default class ChronosPlugin extends Plugin {
 		attemptSetup();
 	}
 
+	/* Create and setup the width toggle button */
+	private _createWidthToggleButton(container: HTMLElement): {
+		button: HTMLButtonElement;
+		icon: HTMLSpanElement;
+	} {
+		const button = container.createEl("button", {
+			cls: "chronos-width-toggle",
+			attr: { title: "Toggle timeline width" },
+		});
+
+		const icon = button.createEl("span", { text: "⟷" });
+
+		return { button, icon };
+	}
+
+	/* Expand timeline to full editor width */
+	private _expandTimeline(
+		container: HTMLElement,
+		icon: HTMLSpanElement,
+	): boolean {
+		const grandparent = this._getTimelineGrandparent(container);
+		if (!grandparent) return false;
+
+		const editorWidth = this._getCurrentEditorWidth(container);
+		console.log("Expanding - editor width:", editorWidth);
+
+		if (editorWidth <= 0) return false;
+
+		this._updateChronosWidth(container, editorWidth);
+		grandparent.addClass("chronos-width-expanded");
+		icon.textContent = "↔";
+
+		console.log("Successfully expanded timeline");
+		return true;
+	}
+
+	/* Collapse timeline to normal width */
+	private _collapseTimeline(
+		container: HTMLElement,
+		icon: HTMLSpanElement,
+	): void {
+		const grandparent = this._getTimelineGrandparent(container);
+		if (!grandparent) return;
+
+		const editorEl = container.closest(
+			".markdown-source-view",
+		) as HTMLElement;
+		if (editorEl) {
+			editorEl.style.removeProperty("--chronos-editor-width");
+		}
+
+		grandparent.removeClass("chronos-width-expanded");
+		icon.textContent = "⟷";
+
+		console.log("Successfully collapsed timeline");
+	}
+
+	/* Get the timeline's grandparent element for width manipulation */
+	private _getTimelineGrandparent(
+		container: HTMLElement,
+	): HTMLElement | null {
+		const grandparent = container.closest(
+			".cm-lang-chronos.cm-preview-code-block",
+		) as HTMLElement;
+		console.log("Timeline grandparent found:", !!grandparent);
+		return grandparent;
+	}
+
+	/* Trigger timeline refit after width changes */
+	private _refitTimeline(timeline: any): void {
+		setTimeout(() => {
+			if (timeline?.timeline) {
+				timeline.timeline.redraw();
+				timeline.timeline.fit();
+			}
+		}, 300);
+	}
+
 	private _insertTextAfterSelection(editor: Editor, textToInsert: string) {
 		const cursor = editor.getCursor("to");
 		const padding = "\n\n";
@@ -271,66 +349,22 @@ export default class ChronosPlugin extends Plugin {
 			cls: "chronos-timeline-container",
 		});
 
-		// Add floating width toggle button
-		const widthToggleBtn = container.createEl("button", {
-			cls: "chronos-width-toggle",
-			attr: { title: "Toggle timeline width" },
-		});
-
-		const toggleIcon = widthToggleBtn.createEl("span", { text: "⟷" });
-
+		// Create width toggle button
+		const { button: widthToggleBtn, icon: toggleIcon } =
+			this._createWidthToggleButton(container);
 		let isExpanded = false;
 
+		// Clean toggle logic
 		const toggleWidth = () => {
-			const grandparent = container.closest(
-				".cm-lang-chronos.cm-preview-code-block",
-			) as HTMLElement;
-			console.log(
-				"Toggle width called, grandparent found:",
-				!!grandparent,
-			);
-			if (!grandparent) return;
-
 			if (!isExpanded) {
-				// Get current editor width and update grandparent dynamically
-				const editorWidth = this._getCurrentEditorWidth(container);
-				console.log("Expanding - editor width:", editorWidth);
-				if (editorWidth > 0) {
-					// Set CSS custom property on editor element (ancestor)
-					this._updateChronosWidth(container, editorWidth);
-					grandparent.addClass("chronos-width-expanded");
-					toggleIcon.textContent = "↔";
-					isExpanded = true;
-					const editorEl = container.closest(
-						".markdown-source-view",
-					) as HTMLElement;
-					console.log(
-						"Successfully expanded, CSS custom property set to:",
-						editorEl?.style.getPropertyValue(
-							"--chronos-editor-width",
-						),
-					);
-				}
+				isExpanded = this._expandTimeline(container, toggleIcon);
 			} else {
-				console.log("Collapsing width");
-				const editorEl = container.closest(
-					".markdown-source-view",
-				) as HTMLElement;
-				if (editorEl) {
-					editorEl.style.removeProperty("--chronos-editor-width");
-				}
-				grandparent.removeClass("chronos-width-expanded");
-				toggleIcon.textContent = "⟷";
+				this._collapseTimeline(container, toggleIcon);
 				isExpanded = false;
 			}
 
-			// Trigger timeline refit after transition
-			setTimeout(() => {
-				if (timeline?.timeline) {
-					timeline.timeline.redraw();
-					timeline.timeline.fit();
-				}
-			}, 300);
+			// Refit timeline after width change
+			this._refitTimeline(timeline);
 		};
 
 		widthToggleBtn.addEventListener("click", (e) => {
