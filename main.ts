@@ -145,7 +145,7 @@ export default class ChronosPlugin extends Plugin {
 		}
 
 		console.log(
-			"⚠️ No .markdown-source-view element found for width calculation",
+			"No .markdown-source-view element found for width calculation",
 		);
 		return 0;
 	}
@@ -174,19 +174,9 @@ export default class ChronosPlugin extends Plugin {
 
 		// Function to attempt finding the editor element
 		const attemptSetup = (attempt = 1) => {
-			console.log(
-				`Attempt ${attempt} to find .markdown-source-view element`,
-			);
-
 			const editorEl = container.closest(
 				".markdown-source-view",
 			) as HTMLElement;
-
-			console.log(
-				"Found .markdown-source-view element:",
-				!!editorEl,
-				editorEl?.className,
-			);
 
 			if (!editorEl && attempt <= 5) {
 				// Wait and try again - DOM might not be ready
@@ -203,11 +193,6 @@ export default class ChronosPlugin extends Plugin {
 				let parent = container.parentElement;
 				let level = 0;
 				while (parent && level < 10) {
-					console.log(
-						`📋 Parent ${level}:`,
-						parent.className,
-						parent.tagName,
-					);
 					parent = parent.parentElement;
 					level++;
 				}
@@ -239,17 +224,12 @@ export default class ChronosPlugin extends Plugin {
 						const hasExpanded = editorEl.querySelector(
 							".chronos-width-expanded",
 						);
-						console.log("📏 Has expanded blocks:", !!hasExpanded);
 
 						if (hasExpanded && currentWidth > 0) {
 							// Update the CSS custom property so expanded timelines resize
 							editorEl.style.setProperty(
 								"--chronos-editor-width",
 								`${currentWidth}px`,
-							);
-							console.log(
-								"✅ Updated --chronos-editor-width to:",
-								currentWidth,
 							);
 						}
 					}
@@ -258,9 +238,8 @@ export default class ChronosPlugin extends Plugin {
 
 			try {
 				resizeObserver.observe(editorEl);
-				console.log("✅ Successfully observing editor element");
 			} catch (error) {
-				console.error("❌ Failed to observe editor element:", error);
+				console.error("Failed to observe editor element:", error);
 			}
 
 			this.observedEditors.add(editorEl);

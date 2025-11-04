@@ -172,8 +172,8 @@
 /* Width toggle button */
 .chronos-width-toggle {
 	position: absolute;
-	top: 10px;
-	left: 10px;
+	top: 5px;
+	left: 5px;
 	z-index: 1000;
 	color: var(--text-on-accent);
 	background-color: transparent !important;
@@ -182,6 +182,7 @@
 	padding: 6px 8px;
 	cursor: pointer;
 	font-size: 12px;
+	opacity: 0;
 	transition: opacity 0.2s ease;
 	display: flex;
 	align-items: center;
