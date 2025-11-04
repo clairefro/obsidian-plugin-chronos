@@ -276,6 +276,7 @@ export default class ChronosPlugin extends Plugin {
 		container: HTMLElement,
 		icon: HTMLSpanElement,
 	): boolean {
+		/** Grandparent  */
 		const grandparent = this._getTimelineGrandparent(container);
 		if (!grandparent) return false;
 
@@ -300,17 +301,8 @@ export default class ChronosPlugin extends Plugin {
 		const grandparent = this._getTimelineGrandparent(container);
 		if (!grandparent) return;
 
-		const editorEl = container.closest(
-			".markdown-source-view",
-		) as HTMLElement;
-		if (editorEl) {
-			editorEl.style.removeProperty("--chronos-editor-width");
-		}
-
 		grandparent.removeClass("chronos-width-expanded");
 		icon.textContent = "⟷";
-
-		console.log("Successfully collapsed timeline");
 	}
 
 	/* Get the timeline's grandparent element for width manipulation */
