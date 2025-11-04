@@ -140,7 +140,6 @@ export default class ChronosPlugin extends Plugin {
 			".markdown-source-view",
 		) as HTMLElement;
 		if (editorEl) {
-			console.log("Editor width:", editorEl.offsetWidth);
 			return editorEl.offsetWidth;
 		}
 
@@ -160,7 +159,6 @@ export default class ChronosPlugin extends Plugin {
 				"--chronos-editor-width",
 				`${newWidth}px`,
 			);
-			console.log("Set CSS custom property on .markdown-source-view");
 		} else {
 			console.log(
 				"No .markdown-source-view element found for CSS property update",
