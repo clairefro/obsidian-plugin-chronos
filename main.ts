@@ -180,7 +180,6 @@ export default class ChronosPlugin extends Plugin {
 
 			if (!editorEl && attempt <= 5) {
 				// Wait and try again - DOM might not be ready
-				console.log(`DOM not ready, retrying in ${attempt * 100}ms...`);
 				setTimeout(() => attemptSetup(attempt + 1), attempt * 100);
 				return;
 			}
@@ -210,12 +209,6 @@ export default class ChronosPlugin extends Plugin {
 			const resizeObserver = new ResizeObserver((entries) => {
 				for (const entry of entries) {
 					const currentWidth = entry.contentRect.width;
-					console.log(
-						"EDITOR SIZE CHANGED!",
-						lastWidth,
-						"→",
-						currentWidth,
-					);
 
 					if (currentWidth !== lastWidth) {
 						lastWidth = currentWidth;
@@ -246,10 +239,6 @@ export default class ChronosPlugin extends Plugin {
 
 			// Store the observer so we can remove it later
 			(editorEl as any)._chronosResizeObserver = resizeObserver;
-			console.log(
-				"✅ Added ResizeObserver to editor:",
-				editorEl.className,
-			);
 		};
 
 		// Start the attempt process
@@ -281,7 +270,6 @@ export default class ChronosPlugin extends Plugin {
 		if (!grandparent) return false;
 
 		const editorWidth = this._getCurrentEditorWidth(container);
-		console.log("Expanding - editor width:", editorWidth);
 
 		if (editorWidth <= 0) return false;
 
@@ -289,7 +277,6 @@ export default class ChronosPlugin extends Plugin {
 		grandparent.addClass("chronos-width-expanded");
 		icon.textContent = "↔";
 
-		console.log("Successfully expanded timeline");
 		return true;
 	}
 
@@ -312,7 +299,6 @@ export default class ChronosPlugin extends Plugin {
 		const grandparent = container.closest(
 			".cm-lang-chronos.cm-preview-code-block",
 		) as HTMLElement;
-		console.log("Timeline grandparent found:", !!grandparent);
 		return grandparent;
 	}
 
