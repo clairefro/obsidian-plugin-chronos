@@ -168,3 +168,53 @@
 .ai-setting.is-disabled {
 	display: none;
 }
+
+/* Width toggle button */
+.chronos-width-toggle {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	z-index: 1000;
+	color: var(--text-on-accent);
+	background-color: transparent !important;
+	border: none;
+	border-radius: var(--radius-s);
+	padding: 6px 8px;
+	cursor: pointer;
+	font-size: 12px;
+	transition: opacity 0.2s ease;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+	box-shadow: none !important;
+}
+
+.chronos-width-toggle:hover {
+	background-color: var(--chronos-semi-gray) !important;
+}
+
+.chronos-timeline-container:hover .chronos-width-toggle {
+	opacity: 1;
+}
+
+/* Dynamic width using CSS custom property */
+.chronos-width-expanded {
+	width: calc(var(--chronos-editor-width) - 2rem) !important;
+	position: relative;
+	left: 50%;
+	transform: translateX(-50%);
+	transition:
+		width 0.3s ease,
+		left 0.3s ease,
+		transform 0.3s ease;
+	overflow: visible;
+}
+
+/* grandparent of chronos timeline elements - the code block containing it. animates transition on minimize */
+.cm-preview-code-block.cm-lang-chronos {
+	transition:
+		width 0.3s ease,
+		left 0.3s ease,
+		transform 0.3s ease;
+}

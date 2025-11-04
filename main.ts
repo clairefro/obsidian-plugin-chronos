@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 
 export default class ChronosPlugin extends Plugin {
 	settings: ChronosPluginSettings;
+	private observedEditors = new Set<HTMLElement>();
 
 	async onload() {
 		console.log("Loading Chronos Timeline Plugin....");
@@ -95,7 +96,27 @@ export default class ChronosPlugin extends Plugin {
 		});
 	}
 
-	onunload() {}
+	onunload() {
+		// Clean up resize observers
+		console.log(
+			"Cleaning up chronos resize observers, count:",
+			this.observedEditors.size,
+		);
+		this.observedEditors.forEach((editorEl) => {
+			const observer = (editorEl as any)._chronosResizeObserver;
+
+			if (observer) {
+				observer.disconnect();
+				delete (editorEl as any)._chronosResizeObserver;
+				console.log(
+					"Removed resize observer from editor:",
+					editorEl.className,
+				);
+			}
+		});
+		this.observedEditors.clear();
+		console.log("Chronos plugin unloaded, all observers cleaned up");
+	}
 
 	async loadSettings() {
 		this.settings = {
@@ -113,6 +134,149 @@ export default class ChronosPlugin extends Plugin {
 		editor.replaceRange(snippet, cursor);
 	}
 
+	/* Utility method to get current editor width */
+	private _getCurrentEditorWidth(container: HTMLElement): number {
+		const editorEl = container.closest(
+			".markdown-source-view",
+		) as HTMLElement;
+		if (editorEl) {
+			console.log("Editor width:", editorEl.offsetWidth);
+			return editorEl.offsetWidth;
+		}
+
+		console.log(
+			"⚠️ No .markdown-source-view element found for width calculation",
+		);
+		return 0;
+	}
+
+	/* Utility method to update width using CSS custom property on editor element */
+	private _updateChronosWidth(container: HTMLElement, newWidth: number) {
+		const editorEl = container.closest(
+			".markdown-source-view",
+		) as HTMLElement;
+		if (editorEl) {
+			editorEl.style.setProperty(
+				"--chronos-editor-width",
+				`${newWidth}px`,
+			);
+			console.log("Set CSS custom property on .markdown-source-view");
+		} else {
+			console.log(
+				"No .markdown-source-view element found for CSS property update",
+			);
+		}
+	}
+
+	/* Setup ResizeObserver to track editor size changes */
+	private _setupEditorResizeObserver(container: HTMLElement) {
+		console.log("_setupEditorResizeObserver called");
+
+		// Function to attempt finding the editor element
+		const attemptSetup = (attempt = 1) => {
+			console.log(
+				`Attempt ${attempt} to find .markdown-source-view element`,
+			);
+
+			const editorEl = container.closest(
+				".markdown-source-view",
+			) as HTMLElement;
+
+			console.log(
+				"Found .markdown-source-view element:",
+				!!editorEl,
+				editorEl?.className,
+			);
+
+			if (!editorEl && attempt <= 5) {
+				// Wait and try again - DOM might not be ready
+				console.log(`DOM not ready, retrying in ${attempt * 100}ms...`);
+				setTimeout(() => attemptSetup(attempt + 1), attempt * 100);
+				return;
+			}
+
+			if (!editorEl) {
+				console.log(
+					"Could not find .markdown-source-view element after 5 attempts",
+				);
+				// Debug: log the container's ancestors
+				let parent = container.parentElement;
+				let level = 0;
+				while (parent && level < 10) {
+					console.log(
+						`📋 Parent ${level}:`,
+						parent.className,
+						parent.tagName,
+					);
+					parent = parent.parentElement;
+					level++;
+				}
+				return;
+			}
+
+			// skip adding obeserver if already exists
+			if (this.observedEditors.has(editorEl)) {
+				return;
+			}
+
+			let lastWidth = editorEl.offsetWidth;
+
+			// Create ResizeObserver to watch for actual size changes
+			const resizeObserver = new ResizeObserver((entries) => {
+				for (const entry of entries) {
+					const currentWidth = entry.contentRect.width;
+					console.log(
+						"EDITOR SIZE CHANGED!",
+						lastWidth,
+						"→",
+						currentWidth,
+					);
+
+					if (currentWidth !== lastWidth) {
+						lastWidth = currentWidth;
+
+						// Only update if there are expanded chronos blocks in this editor
+						const hasExpanded = editorEl.querySelector(
+							".chronos-width-expanded",
+						);
+						console.log("📏 Has expanded blocks:", !!hasExpanded);
+
+						if (hasExpanded && currentWidth > 0) {
+							// Update the CSS custom property so expanded timelines resize
+							editorEl.style.setProperty(
+								"--chronos-editor-width",
+								`${currentWidth}px`,
+							);
+							console.log(
+								"✅ Updated --chronos-editor-width to:",
+								currentWidth,
+							);
+						}
+					}
+				}
+			});
+
+			try {
+				resizeObserver.observe(editorEl);
+				console.log("✅ Successfully observing editor element");
+			} catch (error) {
+				console.error("❌ Failed to observe editor element:", error);
+			}
+
+			this.observedEditors.add(editorEl);
+
+			// Store the observer so we can remove it later
+			(editorEl as any)._chronosResizeObserver = resizeObserver;
+			console.log(
+				"✅ Added ResizeObserver to editor:",
+				editorEl.className,
+			);
+		};
+
+		// Start the attempt process
+		attemptSetup();
+	}
+
 	private _insertTextAfterSelection(editor: Editor, textToInsert: string) {
 		const cursor = editor.getCursor("to");
 		const padding = "\n\n";
@@ -127,6 +291,76 @@ export default class ChronosPlugin extends Plugin {
 		const container = el.createEl("div", {
 			cls: "chronos-timeline-container",
 		});
+
+		// Add floating width toggle button
+		const widthToggleBtn = container.createEl("button", {
+			cls: "chronos-width-toggle",
+			attr: { title: "Toggle timeline width" },
+		});
+
+		const toggleIcon = widthToggleBtn.createEl("span", { text: "⟷" });
+
+		let isExpanded = false;
+
+		const toggleWidth = () => {
+			const grandparent = container.closest(
+				".cm-lang-chronos.cm-preview-code-block",
+			) as HTMLElement;
+			console.log(
+				"Toggle width called, grandparent found:",
+				!!grandparent,
+			);
+			if (!grandparent) return;
+
+			if (!isExpanded) {
+				// Get current editor width and update grandparent dynamically
+				const editorWidth = this._getCurrentEditorWidth(container);
+				console.log("Expanding - editor width:", editorWidth);
+				if (editorWidth > 0) {
+					// Set CSS custom property on editor element (ancestor)
+					this._updateChronosWidth(container, editorWidth);
+					grandparent.addClass("chronos-width-expanded");
+					toggleIcon.textContent = "↔";
+					isExpanded = true;
+					const editorEl = container.closest(
+						".markdown-source-view",
+					) as HTMLElement;
+					console.log(
+						"Successfully expanded, CSS custom property set to:",
+						editorEl?.style.getPropertyValue(
+							"--chronos-editor-width",
+						),
+					);
+				}
+			} else {
+				console.log("Collapsing width");
+				const editorEl = container.closest(
+					".markdown-source-view",
+				) as HTMLElement;
+				if (editorEl) {
+					editorEl.style.removeProperty("--chronos-editor-width");
+				}
+				grandparent.removeClass("chronos-width-expanded");
+				toggleIcon.textContent = "⟷";
+				isExpanded = false;
+			}
+
+			// Trigger timeline refit after transition
+			setTimeout(() => {
+				if (timeline?.timeline) {
+					timeline.timeline.redraw();
+					timeline.timeline.fit();
+				}
+			}, 300);
+		};
+
+		widthToggleBtn.addEventListener("click", (e) => {
+			e.stopPropagation();
+			toggleWidth();
+		});
+
+		// Setup ResizeObserver to track editor size changes
+		this._setupEditorResizeObserver(container);
 
 		// disable touch event propogation on containainer so sidebars don't interfer on mobile when swiping timeline
 		["touchstart", "touchmove", "touchend"].forEach((evt) => {
