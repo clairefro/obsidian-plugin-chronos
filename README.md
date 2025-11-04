@@ -4,10 +4,9 @@ Render interactive timelines in your Obsidian notes from simple Markdown. Make t
 
 Powered by the [vis-timeline](https://www.npmjs.com/package/vis-timeline) library.
 
-Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md) 
+Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
 ![demo](./docs/ex-main-demo.gif)
-
 
 <a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
 
@@ -369,7 +368,6 @@ Hide the vertical bar that marks today's time
 
 ![notday with flag example](./docs/ex-notoday-with-flag.png)
 
-
 ### HEIGHT flag
 
 Set a fixed height for a given timeline (in pixels).
@@ -447,7 +445,6 @@ The `ORDERBY` flag can be used to specify an ordering
 ````
 
 ![order by color and start date](./docs/ex-order-by-color-start.png)
-
 
 ### DEFAULTVIEW flag
 
@@ -732,6 +729,12 @@ To enter **Edit** mode an update your `chronos` Markdown, hover over the timelin
 Click the **Refit** button (crosshairs icon) in the lower-right corner to adjust all items to fit within the view window.
 
 ![refit example](./docs/ex-refit.png)
+
+## Toggle width
+
+Hover on the timeline and click the width toggle in the upper left to expand the timeline to the width of your editor.
+
+![chronos-width-expand](https://github.com/user-attachments/assets/d7390230-8205-48c4-835f-4b69b40dba4d)
 
 # Localization
 
