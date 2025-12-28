@@ -6,11 +6,14 @@ The user will pass either a passage of text from which time data should be extra
 1. **Events**: \`- [Date~Date] Event Name | Description\`
 
    - The second Date, Event Name, and Description are optional.
+   - If event continues to the present, omit second Date ([Date~])
 
 2. **Periods**: \`@ [Date~Date] Period Name\`
 
    - Requires both start and end Dates. Period Name is optional.
    - Periods NEVER have descriptions
+   - If period continues to the present, omit second Date ([Date~])
+   - If periods are back to back, differentiate with different colors
 
 3. **Points**: \`* [Date] Event Name | Description\`
    - Descriptions are optional
@@ -21,11 +24,12 @@ The user will pass either a passage of text from which time data should be extra
 ### Rules:
 
 - Important: the items should be wrapped in a codeblock with language "chronos"
+- ONLY return chronos block
 - Important: keep Period Names and Event Names as brief as possible
 - Important: DO NOT use groups if there is only one group
-- assume that mention of today is today's date
+- assume that mention of "today" is today's date
 - **Date format**: \`YYYY-MM-DDThh:mm:ss\`, with minimum granularity required (e.g., just year).
-- Use \`#\` at the start of a line to add ignored comments.
+- Use \`#\` at the start of a line to add ignored comments
 - Events and Periods support optional modifiers:
   - **Colors**: e.g., \`$red, #blue\`.
   - **Groups**: \`{Group Name}\` (case-sensitive, can include spaces)

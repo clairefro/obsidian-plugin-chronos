@@ -1,60 +1,36 @@
-import { requestUrl } from "obsidian";
-import { systemPrompt } from "./systemPrompt";
-import { OPENAI_MODEL } from "../../constants";
+import { getProvider } from "./providers/providerFactory";
 
-export interface Message {
-  role: string;
-  content: string;
-}
-
-const SYSTEM_MSG = { role: "system", content: systemPrompt };
-
+/**
+ * High-level GenAi facade. Accepts either (apiKey) or (provider, apiKey).
+ * Keeps the old shape (new GenAi(apiKey)) working, but allows selecting a
+ * provider by name when desired.
+ */
 export class GenAi {
-  private apiKey;
+	private providerName: string;
+	private apiKey: string;
+	private model?: string;
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-  }
+	constructor(arg1: string, arg2?: string, arg3?: string) {
+		if (arg2 === undefined) {
+			// Only apiKey provided
+			this.providerName = "openai";
+			this.apiKey = arg1;
+			this.model = undefined;
+		} else {
+			this.providerName = arg1 || "openai";
+			this.apiKey = arg2;
+			this.model = arg3;
+		}
+	}
 
-  async toChronos(content: string): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error(
-        `No API Key set - ensure you've set an API Key in Chronos Timeline plugin settings`
-      );
-    }
+	async toChronos(content: string): Promise<string> {
+		if (!this.apiKey) throw new Error("No API Key set for AI provider");
 
-    const messages = [SYSTEM_MSG, { role: "user", content }];
-
-    const response = await this._getResponse(messages);
-
-    return response;
-  }
-
-  async _getResponse(messages: Message[]): Promise<string> {
-    const data = {
-      model: OPENAI_MODEL,
-      messages,
-      temperature: 0.8,
-    };
-
-    const url = "https://api.openai.com/v1/chat/completions";
-
-    const headers = {
-      Authorization: `Bearer ${this.apiKey}`,
-      "Content-Type": "application/json",
-    };
-
-    const options = {
-      url,
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: headers as unknown as Record<string, string>,
-    };
-
-    const response: {
-      json: { choices: { message: { content: string } }[] };
-    } = await requestUrl(options);
-
-    return response.json.choices[0].message.content;
-  }
+		const provider = getProvider(
+			this.providerName,
+			this.apiKey,
+			this.model,
+		);
+		return provider.toChronos(content);
+	}
 }
