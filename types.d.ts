@@ -22,6 +22,9 @@ export interface ChronosDataSetDataItem {
 export interface ChronosPluginSettings {
 	selectedLocale: string;
 	key?: string;
+	aiProvider?: string;
+	aiKeys?: Record<string, string>;
+	aiModels?: Record<string, string>;
 	align: "left" | "center" | "right";
 	clickToUse: boolean;
 	roundRanges: boolean;

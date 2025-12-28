@@ -14,7 +14,7 @@ import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
 import { knownLocales } from "./util/knownLocales";
-import { DEFAULT_LOCALE, PEPPER } from "./constants";
+import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS } from "./constants";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
@@ -27,7 +27,6 @@ const ChronosTimeline: any =
 // console.debug('Chronos lib exports:', ChronosLib);
 
 import { decrypt, encrypt } from "./util/vanillaEncrypt";
-import { GenAi } from "./lib/ai/GenAi";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	selectedLocale: DEFAULT_LOCALE,
@@ -46,6 +45,24 @@ export default class ChronosPlugin extends Plugin {
 		console.log("Loading Chronos Timeline Plugin....");
 
 		this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
+
+		// Migrate legacy single `key` into provider-specific `aiKeys.openai` if present
+		if ((this.settings as any).key) {
+			(this.settings as any).aiKeys = {
+				...(this.settings as any).aiKeys,
+				openai:
+					(this.settings as any).aiKeys?.openai ||
+					(this.settings as any).key,
+			};
+			// keep legacy `key` for backward compat but persist migration
+			await this.saveSettings();
+		}
+
+		// Ensure aiModels exists and fill missing providers with defaults
+		(this.settings as any).aiModels = {
+			...(PROVIDER_DEFAULT_MODELS as any),
+			...((this.settings as any).aiModels || {}),
+		};
 
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
 
@@ -98,20 +115,12 @@ export default class ChronosPlugin extends Plugin {
 
 	onunload() {
 		// Clean up resize observers
-		console.log(
-			"Cleaning up chronos resize observers, count:",
-			this.observedEditors.size,
-		);
 		this.observedEditors.forEach((editorEl) => {
 			const observer = (editorEl as any)._chronosResizeObserver;
 
 			if (observer) {
 				observer.disconnect();
 				delete (editorEl as any)._chronosResizeObserver;
-				console.log(
-					"Removed resize observer from editor:",
-					editorEl.className,
-				);
 			}
 		});
 		this.observedEditors.clear();
@@ -168,8 +177,6 @@ export default class ChronosPlugin extends Plugin {
 
 	/* Setup ResizeObserver to track editor size changes */
 	private _setupEditorResizeObserver(container: HTMLElement) {
-		console.log("_setupEditorResizeObserver called");
-
 		// Function to attempt finding the editor element
 		const attemptSetup = (attempt = 1) => {
 			const editorEl = container.closest(
@@ -562,7 +569,24 @@ export default class ChronosPlugin extends Plugin {
 			return;
 		}
 		// open loading modal
-		const loadingModal = new TextModal(this.app, `Working on it....`);
+		const provider = (this.settings as any).aiProvider || "openai"; // backwards compatibility: OpenAI used to be sole provider
+
+		const apiKey = this._getApiKey(provider);
+		if (!apiKey) {
+			new Notice(
+				"No API Key found. Please add an API key in Chronos Timeline Plugin Settings",
+			);
+			return;
+		}
+
+		const model =
+			(this.settings as any).aiModels?.[provider] ||
+			(PROVIDER_DEFAULT_MODELS as any)[provider];
+
+		const loadingModal = new TextModal(
+			this.app,
+			`Working on it.... (Provider: ${provider}, Model: ${model})`,
+		);
 		loadingModal.open();
 		try {
 			const chronos = await this._textToChronos(selection);
@@ -577,13 +601,25 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private async _textToChronos(selection: string): Promise<string | void> {
-		if (!this.settings.key) {
+		// Determine provider (if settings include selection) otherwise default to openai
+		const provider = (this.settings as any).aiProvider || "openai"; // backwards compatibility: OpenAI used to be sole provider
+
+		const apiKey = this._getApiKey(provider);
+		if (!apiKey) {
 			new Notice(
-				"No API Key found. Please add an OpenAI API key in Chronos Timeline Plugin Settings",
+				"No API Key found. Please add an API key in Chronos Timeline Plugin Settings",
 			);
 			return;
 		}
-		const res = await new GenAi(this._getApiKey()).toChronos(selection);
+
+		const model =
+			(this.settings as any).aiModels?.[provider] ||
+			(PROVIDER_DEFAULT_MODELS as any)[provider];
+
+		const { GenAi } = await import("./lib/ai/GenAi.js");
+		const res = await new GenAi(provider, apiKey, model).toChronos(
+			selection,
+		);
 		return res;
 	}
 
@@ -591,8 +627,11 @@ export default class ChronosPlugin extends Plugin {
 		return editor ? editor.getSelection() : "";
 	}
 
-	private _getApiKey() {
-		return decrypt(this.settings.key || "", PEPPER);
+	private _getApiKey(provider: string = "openai") {
+		// prefer provider-specific stored keys
+		const keys = (this.settings as any).aiKeys || {};
+		const enc = keys[provider] || (this.settings as any).key || "";
+		return decrypt(enc, PEPPER);
 	}
 
 	private async _updateWikiLinks(oldPath: string, newPath: string) {
@@ -838,30 +877,120 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
-			.setName("OpenAI API key")
-			.addText((text) =>
-				text
-					.setPlaceholder("Enter your OpenAI API Key")
-					.setValue(
-						this.plugin.settings.key
-							? decrypt(this.plugin.settings.key, PEPPER)
-							: "",
-					)
-					.onChange(async (value) => {
-						if (!value.trim()) {
-							this.plugin.settings.key = "";
-						} else {
-							this.plugin.settings.key = encrypt(
-								value.trim(),
-								PEPPER,
-							);
-						}
+		// AI provider settings only shown when AI features are enabled
+		if (this.plugin.settings.useAI) {
+			new Setting(containerEl)
+				.setName("AI Provider")
+				.setDesc(
+					"Choose which AI provider to use for timeline generation",
+				)
+				.addDropdown((dropdown) => {
+					dropdown.addOption("openai", "OpenAI");
+					dropdown.addOption("gemini", "Gemini (Google)");
+					const saved =
+						(this.plugin.settings as any).aiProvider || "openai";
+					dropdown.setValue(saved);
+					dropdown.onChange(async (value) => {
+						(this.plugin.settings as any).aiProvider = value;
 						await this.plugin.saveSettings();
-					}),
-			)
-			.setClass("ai-setting")
-			.setDisabled(!this.plugin.settings.useAI);
+						this.display();
+					});
+				});
+
+			const currentProvider =
+				(this.plugin.settings as any).aiProvider || "openai";
+
+			// Allow editing the model used for this provider (defaults applied on load)
+			const configuredModel =
+				(this.plugin.settings as any).aiModels?.[currentProvider] ||
+				(PROVIDER_DEFAULT_MODELS as any)[currentProvider] ||
+				"";
+
+			const defaultModel =
+				(PROVIDER_DEFAULT_MODELS as any)[currentProvider] || "";
+
+			// Build the Model setting and only show the "Use recommended model" button
+			// when the configured model differs from the provider default. Re-render
+			// the settings UI on change so the button can appear/disappear dynamically.
+			const modelSetting = new Setting(containerEl)
+				.setName("Model")
+				.setDesc("Model used for the selected provider")
+				.setClass("ai-setting");
+
+			// add "Use default model" button
+			if (configuredModel !== defaultModel) {
+				modelSetting.addButton((btn) => {
+					btn.setButtonText(`Use ${defaultModel} (recommended)`)
+						.setTooltip(
+							`Replace with recommended model: ${defaultModel}`,
+						)
+						.setCta() // Apply Obsidian theme accent color
+						.onClick(async () => {
+							(this.plugin.settings as any).aiModels = {
+								...(this.plugin.settings as any).aiModels,
+								[currentProvider]: defaultModel,
+							};
+							await this.plugin.saveSettings();
+							// Update text field and hide button without re-rendering the entire settings UI
+							const textField =
+								modelSetting.settingEl.querySelector("input");
+							if (textField) {
+								textField.value = defaultModel;
+							}
+							btn.buttonEl.style.display = "none";
+						});
+				});
+			}
+
+			modelSetting.addText((t) => {
+				t.setValue(configuredModel).onChange(async (value) => {
+					const trimmed = value.trim();
+					(this.plugin.settings as any).aiModels = {
+						...(this.plugin.settings as any).aiModels,
+						[currentProvider]: trimmed,
+					};
+					await this.plugin.saveSettings();
+					// Update button visibility without re-rendering the entire settings UI
+					const button =
+						modelSetting.settingEl.querySelector("button");
+					if (button) {
+						button.style.display =
+							trimmed === defaultModel ? "none" : "";
+					}
+				});
+			});
+
+			new Setting(containerEl)
+				.setName(`API Key for ${currentProvider}`)
+				.addText((text) => {
+					const enc =
+						(this.plugin.settings as any).aiKeys?.[
+							currentProvider
+						] || "";
+					const dec = enc ? decrypt(enc, PEPPER) : "";
+					text.setPlaceholder(`Enter your ${currentProvider} API key`)
+						.setValue(dec)
+						.onChange(async (value) => {
+							if (!value.trim()) {
+								if ((this.plugin.settings as any).aiKeys) {
+									delete (this.plugin.settings as any).aiKeys[
+										currentProvider
+									];
+								}
+							} else {
+								(this.plugin.settings as any).aiKeys = {
+									...(this.plugin.settings as any).aiKeys,
+									[currentProvider]: encrypt(
+										value.trim(),
+										PEPPER,
+									),
+								};
+							}
+							await this.plugin.saveSettings();
+						});
+				})
+				.setClass("ai-setting");
+		}
 
 		containerEl.createEl("h2", {
 			text: "Cheatsheet",
