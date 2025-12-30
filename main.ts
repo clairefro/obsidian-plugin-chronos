@@ -6,6 +6,7 @@ import {
 	Notice,
 	Editor,
 	TFile,
+	TFolder,
 	MarkdownView,
 	setTooltip,
 } from "obsidian";
@@ -13,8 +14,9 @@ import {
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
+import { FolderListModal } from "./components/FolderListModal";
 import { knownLocales } from "./util/knownLocales";
-import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS } from "./constants";
+import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS, DETECTION_PATTERN } from "./constants";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
@@ -77,6 +79,22 @@ export default class ChronosPlugin extends Plugin {
 			this._renderChronosBlock.bind(this),
 		);
 
+		this.registerMarkdownPostProcessor((element, context) => {
+            console.log("md postprocessor", element);
+			const inlineCodes = element.querySelectorAll('code');
+
+            inlineCodes.forEach((codeEl) => {
+                if (codeEl.closest('pre')) return; // Skip fenced code blocks
+
+                // Optionally, detect special prefix to distinguish variants
+                if (codeEl.textContent?.startsWith('chronos ')) {
+                    codeEl.classList.add('inline-alt-code');
+                    // Optionally remove the prefix from display
+                    codeEl.textContent = codeEl.textContent.replace(/^chronos\s*/, '').trim();
+                }
+            });
+        });
+
 		this.addCommand({
 			id: "insert-timeline-blank",
 			name: "Insert timeline (blank)",
@@ -100,6 +118,15 @@ export default class ChronosPlugin extends Plugin {
 				this._insertSnippet(editor, ChronosTimeline.templates.advanced);
 			},
 		});
+
+		this.addCommand({
+			id: "generate-timeline-folder",
+			name: "Generate timeline from folder",
+			editorCallback: (editor, _view) => {
+				this._generateTimelineFromFolder(editor);
+			},
+		});
+
 		this.addCommand({
 			id: "generate-timeline-ai",
 			name: "Generate timeline with AI",
@@ -328,6 +355,8 @@ export default class ChronosPlugin extends Plugin {
 		let lastEventTime = 0;
 		const THROTTLE_MS = 500;
 
+		console.log("postprocessor fenced code chronos");
+
 		const container = el.createEl("div", {
 			cls: "chronos-timeline-container",
 		});
@@ -376,7 +405,9 @@ export default class ChronosPlugin extends Plugin {
 		});
 
 		try {
-			timeline.render(source);
+			// const source_fmt = source.replace("[[", "").replace("]]","");
+			const source_fmt = source;
+			timeline.render(source_fmt);
 			// handle note linking
 			timeline.on("mouseDown", (event: any) => {
 				const now = performance.now();
@@ -400,6 +431,7 @@ export default class ChronosPlugin extends Plugin {
 					const item = timeline.items?.find(
 						(i: any) => i.id === itemId,
 					);
+					console.log("item", item);
 					if (!item?.cLink) return;
 
 					// Check for middle click or CMD+click (Mac)
@@ -552,6 +584,53 @@ export default class ChronosPlugin extends Plugin {
 		);
 
 		return headingLine !== -1 ? headingLine : 0;
+	}
+
+	private async _generateTimelineFromFolder(editor: Editor) {
+		new FolderListModal(
+			this.app,
+			this.app.vault.getAllFolders(),
+			(f: TFolder) => {
+			const children = f.children;
+			let extracted: string[] = [];
+
+			const tasks: Promise<string[]>[] = children
+			.filter((file: TFile) => file instanceof TFile)
+			.map((file: TFile) =>
+			{
+				return this.app.vault.cachedRead(file as TFile)
+				.then((text) => {
+					new Notice(`Read ${file.name}`);
+
+					const rex_match = [];
+					let current_match;
+					while ((current_match = DETECTION_PATTERN.exec(text)) !== null)
+					{
+						console.log(current_match);
+						rex_match.push(current_match[1] as string);
+					}
+
+					// const rex_match = text.match(DETECTION_PATTERN) ?? [];
+					console.log(rex_match)
+					return rex_match.map(text => `- ${text}`);
+				})
+				.catch((error) => {
+					new Notice(`Error while processing ${file.name}`);
+					return [];
+				});
+			});
+
+			Promise.allSettled(tasks)
+			.then((results) =>{
+				results.forEach((result) =>
+				{
+					if(result.status === "fulfilled")
+						extracted = extracted.concat(result.value);
+				});
+				this._insertSnippet(editor, (ChronosTimeline.templates.blank).replace(/^\s*$/m, extracted.join("\n")));
+			});
+			}
+			).open();
 	}
 
 	private async _generateTimelineWithAi(editor: Editor) {
