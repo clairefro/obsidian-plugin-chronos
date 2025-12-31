@@ -80,17 +80,22 @@ export default class ChronosPlugin extends Plugin {
 		);
 
 		this.registerMarkdownPostProcessor((element, context) => {
-            console.log("md postprocessor", element);
 			const inlineCodes = element.querySelectorAll('code');
 
             inlineCodes.forEach((codeEl) => {
                 if (codeEl.closest('pre')) return; // Skip fenced code blocks
 
-                // Optionally, detect special prefix to distinguish variants
 				let match;
                 if ((match = DETECTION_PATTERN_HTML.exec(codeEl.textContent ?? "")) !== null) {
-					console.log(match);
-                    codeEl.textContent = match[1];
+                    const date_match = /\[.*?\]/.exec(match[1]);
+					codeEl.textContent = (date_match == null) ? "Chronos Error format..." : new Date(date_match[0].slice(1,-1))
+																							.toLocaleDateString(
+																								this.settings.selectedLocale,
+																							{
+																								month: "short",
+																								day: "2-digit",
+																								year: "2-digit",
+																							});
                 }
             });
         });
@@ -405,9 +410,7 @@ export default class ChronosPlugin extends Plugin {
 		});
 
 		try {
-			// const source_fmt = source.replace("[[", "").replace("]]","");
-			const source_fmt = source;
-			timeline.render(source_fmt);
+			timeline.render(source);
 			// handle note linking
 			timeline.on("mouseDown", (event: any) => {
 				const now = performance.now();
