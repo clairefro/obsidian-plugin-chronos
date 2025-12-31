@@ -16,7 +16,7 @@ import { ChronosPluginSettings } from "./types";
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
 import { knownLocales } from "./util/knownLocales";
-import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS, DETECTION_PATTERN } from "./constants";
+import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS, DETECTION_PATTERN_TEXT, DETECTION_PATTERN_HTML } from "./constants";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
@@ -87,10 +87,10 @@ export default class ChronosPlugin extends Plugin {
                 if (codeEl.closest('pre')) return; // Skip fenced code blocks
 
                 // Optionally, detect special prefix to distinguish variants
-                if (codeEl.textContent?.startsWith('chronos ')) {
-                    codeEl.classList.add('inline-alt-code');
-                    // Optionally remove the prefix from display
-                    codeEl.textContent = codeEl.textContent.replace(/^chronos\s*/, '').trim();
+				let match;
+                if ((match = DETECTION_PATTERN_HTML.exec(codeEl.textContent ?? "")) !== null) {
+					console.log(match);
+                    codeEl.textContent = match[1];
                 }
             });
         });
@@ -591,46 +591,44 @@ export default class ChronosPlugin extends Plugin {
 			this.app,
 			this.app.vault.getAllFolders(),
 			(f: TFolder) => {
-			const children = f.children;
-			let extracted: string[] = [];
+				const children = f.children;
+				let extracted: Set<string> = new Set<string>();
 
-			const tasks: Promise<string[]>[] = children
-			.filter((file: TFile) => file instanceof TFile)
-			.map((file: TFile) =>
-			{
-				return this.app.vault.cachedRead(file as TFile)
-				.then((text) => {
-					new Notice(`Read ${file.name}`);
-
-					const rex_match = [];
-					let current_match;
-					while ((current_match = DETECTION_PATTERN.exec(text)) !== null)
-					{
-						console.log(current_match);
-						rex_match.push(current_match[1] as string);
-					}
-
-					// const rex_match = text.match(DETECTION_PATTERN) ?? [];
-					console.log(rex_match)
-					return rex_match.map(text => `- ${text}`);
-				})
-				.catch((error) => {
-					new Notice(`Error while processing ${file.name}`);
-					return [];
-				});
-			});
-
-			Promise.allSettled(tasks)
-			.then((results) =>{
-				results.forEach((result) =>
+				const tasks: Promise<string[]>[] = children
+				.filter((file: TFile) => file instanceof TFile)
+				.map((file: TFile) =>
 				{
-					if(result.status === "fulfilled")
-						extracted = extracted.concat(result.value);
+					return this.app.vault.cachedRead(file as TFile)
+					.then((text) => {
+						new Notice(`Read ${file.name}`);
+
+						const rex_match = [];
+						let current_match;
+						while ((current_match = DETECTION_PATTERN_TEXT.exec(text)) !== null)
+						{
+							console.log(current_match);
+							rex_match.push(current_match[1] as string);
+						}
+
+						return rex_match.map(text => `- ${text}`);
+					})
+					.catch((error) => {
+						new Notice(`Error while processing ${file.name}`);
+						return [];
+					});
 				});
-				this._insertSnippet(editor, (ChronosTimeline.templates.blank).replace(/^\s*$/m, extracted.join("\n")));
-			});
+
+				Promise.allSettled(tasks)
+				.then((results) =>{
+					results.forEach((result) =>
+					{
+						if(result.status === "fulfilled")
+							result.value.forEach(item => extracted.add(item));
+					});
+					this._insertSnippet(editor, (ChronosTimeline.templates.blank).replace(/^\s*$/m, [...extracted].join("\n")));
+				});
 			}
-			).open();
+		).open();
 	}
 
 	private async _generateTimelineWithAi(editor: Editor) {
