@@ -16,7 +16,14 @@ import { ChronosPluginSettings } from "./types";
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
 import { knownLocales } from "./util/knownLocales";
-import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS, DETECTION_PATTERN_TEXT, DETECTION_PATTERN_HTML } from "./constants";
+import {
+	DEFAULT_LOCALE,
+	PEPPER,
+	PROVIDER_DEFAULT_MODELS,
+	DETECTION_PATTERN_TEXT,
+	DETECTION_PATTERN_HTML,
+	DETECTION_PATTERN_CODEBLOCK,
+} from "./constants";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
@@ -80,25 +87,34 @@ export default class ChronosPlugin extends Plugin {
 		);
 
 		this.registerMarkdownPostProcessor((element, context) => {
-			const inlineCodes = element.querySelectorAll('code');
+			const inlineCodes = element.querySelectorAll("code");
 
-            inlineCodes.forEach((codeEl) => {
-                if (codeEl.closest('pre')) return; // Skip fenced code blocks
+			inlineCodes.forEach((codeEl) => {
+				if (codeEl.closest("pre")) return; // Skip fenced code blocks
 
 				let match;
-                if ((match = DETECTION_PATTERN_HTML.exec(codeEl.textContent ?? "")) !== null) {
-                    const date_match = /\[.*?\]/.exec(match[1]);
-					codeEl.textContent = (date_match == null) ? "Chronos Error format..." : new Date(date_match[0].slice(1,-1))
-																							.toLocaleDateString(
-																								this.settings.selectedLocale,
-																							{
-																								month: "short",
-																								day: "2-digit",
-																								year: "2-digit",
-																							});
-                }
-            });
-        });
+				if (
+					(match = DETECTION_PATTERN_HTML.exec(
+						codeEl.textContent ?? "",
+					)) !== null
+				) {
+					const date_match = /\[.*?\]/.exec(match[1]);
+					codeEl.textContent =
+						date_match == null
+							? "Chronos Error format..."
+							: new Date(
+									date_match[0].slice(1, -1),
+								).toLocaleDateString(
+									this.settings.selectedLocale,
+									{
+										month: "short",
+										day: "2-digit",
+										year: "2-digit",
+									},
+								);
+				}
+			});
+		});
 
 		this.addCommand({
 			id: "insert-timeline-blank",
@@ -360,8 +376,6 @@ export default class ChronosPlugin extends Plugin {
 		let lastEventTime = 0;
 		const THROTTLE_MS = 500;
 
-		console.log("postprocessor fenced code chronos");
-
 		const container = el.createEl("div", {
 			cls: "chronos-timeline-container",
 		});
@@ -598,39 +612,79 @@ export default class ChronosPlugin extends Plugin {
 				let extracted: Set<string> = new Set<string>();
 
 				const tasks: Promise<string[]>[] = children
-				.filter((file: TFile) => file instanceof TFile)
-				.map((file: TFile) =>
-				{
-					return this.app.vault.cachedRead(file as TFile)
-					.then((text) => {
-						new Notice(`Read ${file.name}`);
+					.filter((file: TFile) => file instanceof TFile)
+					.map((file: TFile) => {
+						return this.app.vault
+							.cachedRead(file as TFile)
+							.then((text) => {
+								new Notice(`Read ${file.name}`);
 
-						const rex_match = [];
-						let current_match;
-						while ((current_match = DETECTION_PATTERN_TEXT.exec(text)) !== null)
-						{
-							console.log(current_match);
-							rex_match.push(current_match[1] as string);
-						}
+								const rex_match: string[] = [];
+								let current_match;
 
-						return rex_match.map(text => `- ${text}`);
-					})
-					.catch((error) => {
-						new Notice(`Error while processing ${file.name}`);
-						return [];
+								// Extract inline chronos blocks (need to add - prefix)
+								const inlineMatches = [];
+								while (
+									(current_match =
+										DETECTION_PATTERN_TEXT.exec(text)) !==
+									null
+								) {
+									console.log(current_match);
+									inlineMatches.push(
+										current_match[1] as string,
+									);
+								}
+
+								// Extract full chronos code blocks (already have prefixes)
+								while (
+									(current_match =
+										DETECTION_PATTERN_CODEBLOCK.exec(
+											text,
+										)) !== null
+								) {
+									// Extract all non-blank, non-comment lines from the code block
+									const blockContent = current_match[1];
+									const lines = blockContent.split("\n");
+									lines.forEach((line) => {
+										const trimmed = line.trim();
+										// Include any line that isn't blank and doesn't start with #
+										if (
+											trimmed &&
+											!trimmed.startsWith("#")
+										) {
+											rex_match.push(trimmed);
+										}
+									});
+								}
+
+								// Add - prefix only to inline matches, then combine all
+								return [
+									...inlineMatches.map((text) => `- ${text}`),
+									...rex_match,
+								];
+							})
+							.catch((error) => {
+								new Notice(
+									`Error while processing ${file.name}`,
+								);
+								return [];
+							});
 					});
-				});
 
-				Promise.allSettled(tasks)
-				.then((results) =>{
-					results.forEach((result) =>
-					{
-						if(result.status === "fulfilled")
-							result.value.forEach(item => extracted.add(item));
+				Promise.allSettled(tasks).then((results) => {
+					results.forEach((result) => {
+						if (result.status === "fulfilled")
+							result.value.forEach((item) => extracted.add(item));
 					});
-					this._insertSnippet(editor, (ChronosTimeline.templates.blank).replace(/^\s*$/m, [...extracted].join("\n")));
+					this._insertSnippet(
+						editor,
+						ChronosTimeline.templates.blank.replace(
+							/^\s*$/m,
+							[...extracted].join("\n"),
+						),
+					);
 				});
-			}
+			},
 		).open();
 	}
 
