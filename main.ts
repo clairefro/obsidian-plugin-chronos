@@ -166,9 +166,6 @@ export default class ChronosPlugin extends Plugin {
 			return editorEl.offsetWidth;
 		}
 
-		console.log(
-			"No .markdown-source-view element found for width calculation",
-		);
 		return 0;
 	}
 
@@ -181,10 +178,6 @@ export default class ChronosPlugin extends Plugin {
 			editorEl.style.setProperty(
 				"--chronos-editor-width",
 				`${newWidth}px`,
-			);
-		} else {
-			console.log(
-				"No .markdown-source-view element found for CSS property update",
 			);
 		}
 	}
@@ -758,7 +751,6 @@ export default class ChronosPlugin extends Plugin {
 
 		// If same version, skip
 		if (lastSeenVersion === currentVersion) {
-			console.log("[Chronos] Same version, skipping changelog");
 			return;
 		}
 
@@ -768,13 +760,7 @@ export default class ChronosPlugin extends Plugin {
 			currentVersion,
 		);
 
-		console.log(
-			"[Chronos] Found unseen changelogs:",
-			unseenChangelogs.length,
-		);
-
 		if (unseenChangelogs.length > 0) {
-			console.log("[Chronos] Opening changelog modal");
 			// Show changelog modal
 			await this._showChangelogNote(unseenChangelogs);
 			// Update last seen version after successfully showing
