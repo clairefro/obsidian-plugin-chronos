@@ -668,19 +668,25 @@ export default class ChronosPlugin extends Plugin {
 								const rex_match: string[] = [];
 								let current_match;
 
-								// Extract inline chronos blocks (need to add - prefix)
+								// Extract inline chronos blocks (check for indicators)
 								const inlineMatches = [];
 								while (
 									(current_match =
 										DETECTION_PATTERN_TEXT.exec(text)) !==
 									null
 								) {
+									const content = current_match[1] as string;
+									const trimmed = content.trim();
+									// Check if already has an indicator or add "-" (Event) by deafult
+									const hasIndicator = /^[-@*~]/.test(
+										trimmed,
+									);
 									inlineMatches.push(
-										current_match[1] as string,
+										hasIndicator ? trimmed : `- ${trimmed}`,
 									);
 								}
 
-								// Extract full chronos code blocks (already have prefixes)
+								// Extract full chronos code blocks (check for indicators)
 								while (
 									(current_match =
 										DETECTION_PATTERN_CODEBLOCK.exec(
@@ -692,21 +698,27 @@ export default class ChronosPlugin extends Plugin {
 									const lines = blockContent.split("\n");
 									lines.forEach((line) => {
 										const trimmed = line.trim();
-										// Include any line that isn't blank and doesn't start with #
+										// Include any line that isn't blank, doesn't start with #, and doesn't start with > (flags)
 										if (
 											trimmed &&
-											!trimmed.startsWith("#")
+											!trimmed.startsWith("#") &&
+											!trimmed.startsWith(">")
 										) {
-											rex_match.push(trimmed);
+											// Check if line already has an indicator (-, @, *, etc)
+											const hasIndicator = /^[-@*~]/.test(
+												trimmed,
+											);
+											rex_match.push(
+												hasIndicator
+													? trimmed
+													: `- ${trimmed}`,
+											);
 										}
 									});
 								}
 
-								// Add - prefix only to inline matches, then combine all
-								return [
-									...inlineMatches.map((text) => `- ${text}`),
-									...rex_match,
-								];
+								// Combine all matches (already have prefixes applied)
+								return [...inlineMatches, ...rex_match];
 							})
 							.catch((_error) => {
 								new Notice(
@@ -770,10 +782,14 @@ export default class ChronosPlugin extends Plugin {
 				for (const match of codeBlockMatches) {
 					const blockContent = match[1];
 					const lines = blockContent.split("\n");
-					// Check if there's at least one non-blank, non-comment line
+					// Check if there's at least one non-blank, non-comment, non-flag line
 					const hasContent = lines.some((line) => {
 						const trimmed = line.trim();
-						return trimmed && !trimmed.startsWith("#");
+						return (
+							trimmed &&
+							!trimmed.startsWith("#") &&
+							!trimmed.startsWith(">")
+						);
 					});
 					if (hasContent) {
 						return true;
