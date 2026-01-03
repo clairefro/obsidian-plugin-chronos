@@ -467,8 +467,6 @@ export default class ChronosPlugin extends Plugin {
 
 				// Stop event immediately
 				if (event.event instanceof MouseEvent) {
-					// logEventDetails(event.event, "Timeline MouseDown");
-
 					event.event.stopImmediatePropagation();
 					event.event.preventDefault();
 
