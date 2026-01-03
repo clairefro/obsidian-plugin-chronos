@@ -357,10 +357,16 @@ export default class ChronosPlugin extends Plugin {
 			this._refitTimeline(timeline);
 		};
 
-		widthToggleBtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			toggleWidth();
-		});
+		widthToggleBtn.addEventListener(
+			"click",
+			(e) => {
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+				e.preventDefault();
+				toggleWidth();
+			},
+			true,
+		);
 
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
