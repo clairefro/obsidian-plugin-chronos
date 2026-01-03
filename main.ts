@@ -753,6 +753,10 @@ export default class ChronosPlugin extends Plugin {
 							heightFlag + itemsArray.join("\n"),
 						),
 					);
+
+					new Notice(
+						`Combined ${itemsArray.length} Chronos item${itemsArray.length !== 1 ? "s" : ""} found in folder "${folderName}"`,
+					);
 				});
 			}).open();
 		} catch (error) {
