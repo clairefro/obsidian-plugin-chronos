@@ -77,7 +77,7 @@ export default class ChronosPlugin extends Plugin {
 
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
 
-		// Initialize folder cache in background
+		// Initialize folder cache in background to track which folders contain chronos blocks
 		this._initializeFolderCache();
 
 		this.registerEvent(
@@ -812,7 +812,7 @@ export default class ChronosPlugin extends Plugin {
 	private async _recheckFolder(folder: TFolder): Promise<void> {
 		const hasChronos = await this._folderContainsChronos(folder);
 		this.folderChronosCache.set(folder.path, hasChronos);
-		
+
 		// Also recheck parent folders
 		let current = folder.parent;
 		while (current) {
@@ -906,11 +906,6 @@ export default class ChronosPlugin extends Plugin {
 		const files = this.app.vault.getMarkdownFiles();
 
 		const updatedFiles = [];
-		console.log(
-			`Checking files for 'chronos' blocks to see whether there is a need to update links to ${this._normalizePath(
-				newPath,
-			)}...`,
-		);
 		for (const file of files) {
 			const content = await this.app.vault.read(file);
 			const hasChronosBlock = /```(?:\s*)chronos/.test(content);
@@ -929,7 +924,6 @@ export default class ChronosPlugin extends Plugin {
 				}
 			}
 		}
-		console.log(`Done checking files with 'chronos' blocks.`);
 		if (updatedFiles.length) {
 			console.log(
 				`Updated links to ${this._normalizePath(newPath)} in ${
