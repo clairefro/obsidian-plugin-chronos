@@ -221,7 +221,7 @@
 }
 
 .chronos-changelog-view {
-	padding: 2rem;
+	padding: 1.5rem !important;
 	overflow-y: auto;
 }
 
