@@ -732,11 +732,16 @@ export default class ChronosPlugin extends Plugin {
 						return;
 					}
 
+					// Add height flag if more than 26 items
+					const itemsArray = [...extracted];
+					const heightFlag =
+						itemsArray.length > 26 ? "> HEIGHT 300\n" : "";
+
 					this._insertSnippet(
 						editor,
 						ChronosTimeline.templates.blank.replace(
 							/^\s*$/m,
-							[...extracted].join("\n"),
+							heightFlag + itemsArray.join("\n"),
 						),
 					);
 				});
