@@ -49,6 +49,8 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 export default class ChronosPlugin extends Plugin {
 	settings: ChronosPluginSettings;
 	private observedEditors = new Set<HTMLElement>();
+	private folderChronosCache = new Map<string, boolean>();
+	private cacheInitialized = false;
 
 	async onload() {
 		console.log("Loading Chronos Timeline Plugin....");
@@ -75,9 +77,37 @@ export default class ChronosPlugin extends Plugin {
 
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
 
+		// Initialize folder cache in background
+		this._initializeFolderCache();
+
 		this.registerEvent(
 			this.app.vault.on("rename", async (file, oldPath) => {
 				await this._updateWikiLinks(oldPath, file.path);
+			}),
+		);
+
+		// Invalidate cache when files are modified, created, or deleted
+		this.registerEvent(
+			this.app.vault.on("modify", (file) => {
+				if (file instanceof TFile && file.extension === "md") {
+					this._invalidateFolderCache(file.parent);
+				}
+			}),
+		);
+
+		this.registerEvent(
+			this.app.vault.on("create", (file) => {
+				if (file instanceof TFile && file.extension === "md") {
+					this._invalidateFolderCache(file.parent);
+				}
+			}),
+		);
+
+		this.registerEvent(
+			this.app.vault.on("delete", (file) => {
+				if (file instanceof TFile && file.extension === "md") {
+					this._invalidateFolderCache(file.parent);
+				}
 			}),
 		);
 
@@ -604,25 +634,23 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private async _generateTimelineFromFolder(editor: Editor) {
-		// Show loading notice while scanning
-		const scanningNotice = new Notice(
-			"Scanning folders for chronos items...",
-			0, // persist notice until hidden
-		);
+		// Ensure cache is initialized
+		if (!this.cacheInitialized) {
+			const notice = new Notice(
+				"Scanning folders for chronos items...",
+				0,
+			);
+			await this._initializeFolderCache();
+			notice.hide();
+		}
 
 		try {
-			// Filter folders to only show those containing chronos content
+			// Use cached results to filter folders
 			const allFolders = this.app.vault.getAllFolders();
-			const foldersWithChronos: TFolder[] = [];
-
-			for (const folder of allFolders) {
-				const hasChronos = await this._folderContainsChronos(folder);
-				if (hasChronos) {
-					foldersWithChronos.push(folder);
-				}
-			}
-
-			scanningNotice.hide();
+			const foldersWithChronos = allFolders.filter((folder) => {
+				const cached = this.folderChronosCache.get(folder.path);
+				return cached === true;
+			});
 
 			if (foldersWithChronos.length === 0) {
 				new Notice("No folders contain chronos items (yet!)");
@@ -714,7 +742,6 @@ export default class ChronosPlugin extends Plugin {
 				});
 			}).open();
 		} catch (error) {
-			scanningNotice.hide();
 			new Notice("Error scanning for chronos items");
 			console.error("Error in _generateTimelineFromFolder:", error);
 		}
@@ -757,6 +784,42 @@ export default class ChronosPlugin extends Plugin {
 		}
 
 		return false;
+	}
+
+	private async _initializeFolderCache(): Promise<void> {
+		if (this.cacheInitialized) return;
+
+		const allFolders = this.app.vault.getAllFolders();
+		for (const folder of allFolders) {
+			const hasChronos = await this._folderContainsChronos(folder);
+			this.folderChronosCache.set(folder.path, hasChronos);
+		}
+		this.cacheInitialized = true;
+	}
+
+	private _invalidateFolderCache(folder: TFolder | null): void {
+		if (!folder) return;
+		// Remove this folder and all parent folders from cache
+		let current: TFolder | null = folder;
+		while (current) {
+			this.folderChronosCache.delete(current.path);
+			current = current.parent;
+		}
+		// Re-scan invalidated folders in background
+		this._recheckFolder(folder);
+	}
+
+	private async _recheckFolder(folder: TFolder): Promise<void> {
+		const hasChronos = await this._folderContainsChronos(folder);
+		this.folderChronosCache.set(folder.path, hasChronos);
+		
+		// Also recheck parent folders
+		let current = folder.parent;
+		while (current) {
+			const parentHasChronos = await this._folderContainsChronos(current);
+			this.folderChronosCache.set(current.path, parentHasChronos);
+			current = current.parent;
+		}
 	}
 
 	private async _generateTimelineWithAi(editor: Editor) {
