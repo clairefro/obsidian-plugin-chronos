@@ -608,6 +608,7 @@ export default class ChronosPlugin extends Plugin {
 			this.app,
 			this.app.vault.getAllFolders(),
 			(f: TFolder) => {
+				const folderName = f.name;
 				const children = f.children;
 				let extracted: Set<string> = new Set<string>();
 
@@ -676,6 +677,14 @@ export default class ChronosPlugin extends Plugin {
 						if (result.status === "fulfilled")
 							result.value.forEach((item) => extracted.add(item));
 					});
+
+					if (extracted.size === 0) {
+						new Notice(
+							`No chronos items found in folder ${folderName}`,
+						);
+						return;
+					}
+
 					this._insertSnippet(
 						editor,
 						ChronosTimeline.templates.blank.replace(
