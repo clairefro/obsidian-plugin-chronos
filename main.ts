@@ -604,10 +604,32 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private async _generateTimelineFromFolder(editor: Editor) {
-		new FolderListModal(
-			this.app,
-			this.app.vault.getAllFolders(),
-			(f: TFolder) => {
+		// Show loading notice while scanning
+		const scanningNotice = new Notice(
+			"Scanning folders for chronos items...",
+			0, // persist notice until hidden
+		);
+
+		try {
+			// Filter folders to only show those containing chronos content
+			const allFolders = this.app.vault.getAllFolders();
+			const foldersWithChronos: TFolder[] = [];
+
+			for (const folder of allFolders) {
+				const hasChronos = await this._folderContainsChronos(folder);
+				if (hasChronos) {
+					foldersWithChronos.push(folder);
+				}
+			}
+
+			scanningNotice.hide();
+
+			if (foldersWithChronos.length === 0) {
+				new Notice("No folders contain chronos items (yet!)");
+				return;
+			}
+
+			new FolderListModal(this.app, foldersWithChronos, (f: TFolder) => {
 				const folderName = f.name;
 				const children = f.children;
 				let extracted: Set<string> = new Set<string>();
@@ -674,7 +696,7 @@ export default class ChronosPlugin extends Plugin {
 						if (result.status === "fulfilled")
 							result.value.forEach((item) => extracted.add(item));
 					});
-
+					// likely will not hit this edge case
 					if (extracted.size === 0) {
 						new Notice(
 							`No chronos items found in folder ${folderName}`,
@@ -690,8 +712,51 @@ export default class ChronosPlugin extends Plugin {
 						),
 					);
 				});
-			},
-		).open();
+			}).open();
+		} catch (error) {
+			scanningNotice.hide();
+			new Notice("Error scanning for chronos items");
+			console.error("Error in _generateTimelineFromFolder:", error);
+		}
+	}
+
+	private async _folderContainsChronos(folder: TFolder): Promise<boolean> {
+		const children = folder.children.filter(
+			(file) => file instanceof TFile,
+		) as TFile[];
+
+		for (const file of children) {
+			try {
+				const text = await this.app.vault.cachedRead(file);
+
+				// Check for inline chronos blocks
+				if (DETECTION_PATTERN_TEXT.test(text)) {
+					return true;
+				}
+
+				// Check for full chronos code blocks with non-empty content
+				const codeBlockMatches = text.matchAll(
+					DETECTION_PATTERN_CODEBLOCK,
+				);
+				for (const match of codeBlockMatches) {
+					const blockContent = match[1];
+					const lines = blockContent.split("\n");
+					// Check if there's at least one non-blank, non-comment line
+					const hasContent = lines.some((line) => {
+						const trimmed = line.trim();
+						return trimmed && !trimmed.startsWith("#");
+					});
+					if (hasContent) {
+						return true;
+					}
+				}
+			} catch (error) {
+				// Skip files that can't be read
+				continue;
+			}
+		}
+
+		return false;
 	}
 
 	private async _generateTimelineWithAi(editor: Editor) {
