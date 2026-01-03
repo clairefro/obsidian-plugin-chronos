@@ -6,9 +6,14 @@ import {
 
 export class CacheUtils {
 	plugin: any; // ChronosPlugin
+	cachePath: string;
 
 	constructor(plugin: any) {
 		this.plugin = plugin;
+		const pluginDir = this.plugin.app.plugins.getPluginFolder(
+			this.plugin.manifest.id,
+		);
+		this.cachePath = `${pluginDir}/cache.json`;
 	}
 
 	async loadCache(): Promise<void> {
@@ -19,23 +24,20 @@ export class CacheUtils {
 		}
 
 		try {
-			const cachedData = await this.plugin.loadData();
-			if (cachedData && cachedData.fileChronosCache) {
-				this.plugin.fileChronosCache = new Map(
-					cachedData.fileChronosCache,
-				);
-				this.plugin.folderChronosCache = new Map(
-					cachedData.folderChronosCache,
-				);
-				this.plugin.cacheInitialized = true;
-				console.log("[INFO] Cache loaded successfully.");
-			} else {
-				console.log("[INFO] No cache found. Initializing new cache.");
-				await this.initializeFolderCache();
-			}
+			const cacheData = await this.plugin.app.vault.adapter.read(
+				this.cachePath,
+			);
+			const parsed = JSON.parse(cacheData);
+			this.plugin.fileChronosCache = new Map(
+				parsed.fileChronosCache || [],
+			);
+			this.plugin.folderChronosCache = new Map(
+				parsed.folderChronosCache || [],
+			);
+			this.plugin.cacheInitialized = true;
+			console.log("[INFO] Cache loaded successfully.");
 		} catch (error) {
-			console.error("[ERROR] Failed to load cache:", error);
-			console.log("[INFO] Initializing new cache due to error.");
+			console.log("[INFO] No cache found. Initializing new cache.");
 			await this.initializeFolderCache();
 		}
 	}
@@ -47,9 +49,7 @@ export class CacheUtils {
 		}
 
 		try {
-			const currentData = (await this.plugin.loadData()) || {};
 			const dataToSave = {
-				...currentData,
 				fileChronosCache: Array.from(
 					this.plugin.fileChronosCache.entries(),
 				),
@@ -57,7 +57,10 @@ export class CacheUtils {
 					this.plugin.folderChronosCache.entries(),
 				),
 			};
-			await this.plugin.saveData(dataToSave);
+			await this.plugin.app.vault.adapter.write(
+				this.cachePath,
+				JSON.stringify(dataToSave, null, 2),
+			);
 			console.log("[INFO] Cache saved successfully.");
 		} catch (error) {
 			console.error("[ERROR] Failed to save cache:", error);
