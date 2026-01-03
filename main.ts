@@ -478,7 +478,6 @@ export default class ChronosPlugin extends Plugin {
 					const item = timeline.items?.find(
 						(i: any) => i.id === itemId,
 					);
-					console.log("item", item);
 					if (!item?.cLink) return;
 
 					// Check for middle click or CMD+click (Mac)
