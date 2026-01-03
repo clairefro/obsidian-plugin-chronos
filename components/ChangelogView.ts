@@ -138,7 +138,7 @@ export class ChangelogView extends ItemView {
 		});
 		await MarkdownRenderer.render(
 			this.app,
-			"Need a skilled Obsidian plugin developer? I'm taking on freelance projects during pregnancy. [Reach out!](https://clairefro.dev/)",
+			"Need a custom Obsidian plugin? I'm taking on freelance work during pregnancy. [Reach out!](https://clairefro.dev/)",
 			hireMeDiv,
 			"",
 			this as any,

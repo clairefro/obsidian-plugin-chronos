@@ -832,6 +832,19 @@ export default class ChronosPlugin extends Plugin {
 				);
 
 				if (comparisonToLast > 0 && comparisonToCurrent <= 0) {
+					// Check if this is a patch release (x.x.non-zero)
+					const isPatchRelease = this._isPatchRelease(version);
+					const hasIncludeComment = release.body
+						?.trim()
+						.toLowerCase()
+						.replace(/\s+/g, "")
+						.startsWith("<!--include-->");
+
+					// Skip patch releases unless they have the <!-- include --> comment
+					if (isPatchRelease && !hasIncludeComment) {
+						continue;
+					}
+
 					unseenEntries.push({
 						version,
 						date: release.published_at,
@@ -845,8 +858,8 @@ export default class ChronosPlugin extends Plugin {
 				return new Date(b.date).getTime() - new Date(a.date).getTime();
 			});
 
-			// Limit to 15 most recent releases
-			return unseenEntries.slice(0, 15);
+			// Limit to 6 most recent releases
+			return unseenEntries.slice(0, 6);
 		} catch (error) {
 			console.error(
 				"[Chronos] Error fetching changelogs from GitHub:",
@@ -895,6 +908,13 @@ export default class ChronosPlugin extends Plugin {
 		}
 
 		return 0;
+	}
+
+	private _isPatchRelease(version: string): boolean {
+		// Parse version as x.x.x
+		const parts = version.split(".").map(Number);
+		// It's a patch release if the third number (patch) is non-zero
+		return parts.length >= 3 && parts[2] > 0;
 	}
 }
 
