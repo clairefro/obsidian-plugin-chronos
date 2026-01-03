@@ -618,8 +618,6 @@ export default class ChronosPlugin extends Plugin {
 						return this.app.vault
 							.cachedRead(file as TFile)
 							.then((text) => {
-								new Notice(`Read ${file.name}`);
-
 								const rex_match: string[] = [];
 								let current_match;
 
@@ -630,7 +628,6 @@ export default class ChronosPlugin extends Plugin {
 										DETECTION_PATTERN_TEXT.exec(text)) !==
 									null
 								) {
-									console.log(current_match);
 									inlineMatches.push(
 										current_match[1] as string,
 									);
@@ -664,7 +661,7 @@ export default class ChronosPlugin extends Plugin {
 									...rex_match,
 								];
 							})
-							.catch((error) => {
+							.catch((_error) => {
 								new Notice(
 									`Error while processing ${file.name}`,
 								);
