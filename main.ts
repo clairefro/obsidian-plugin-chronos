@@ -724,7 +724,7 @@ export default class ChronosPlugin extends Plugin {
 						if (result.status === "fulfilled")
 							result.value.forEach((item) => extracted.add(item));
 					});
-					// likely will not hit this edge case
+					// likely will not hit this edge case because folders are scanned for chronos - but fallback
 					if (extracted.size === 0) {
 						new Notice(
 							`No chronos items found in folder ${folderName}`,
