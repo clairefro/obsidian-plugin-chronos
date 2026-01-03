@@ -10,7 +10,7 @@ const PEPPER = "drpepper";
 
 const DETECTION_PATTERN_TEXT = /`+chronos\s+(.*?)`+/g;
 const DETECTION_PATTERN_HTML = /^chronos\s+(.*?)$/;
-const DETECTION_PATTERN_CODEBLOCK = /```chronos([\s\S]*?)```/g;
+const DETECTION_PATTERN_CODEBLOCK = /```chronos\s*\n([\s\S]*?)```/g;
 
 export {
 	DEFAULT_LOCALE,
