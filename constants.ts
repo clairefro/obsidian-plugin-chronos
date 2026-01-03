@@ -8,9 +8,9 @@ const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
 const OPENAI_MODEL = PROVIDER_DEFAULT_MODELS.openai;
 const PEPPER = "drpepper";
 
-const DETECTION_PATTERN_TEXT = /`+chronos\s+(.*?)`+/g;
-const DETECTION_PATTERN_HTML = /^chronos\s+(.*?)$/;
-const DETECTION_PATTERN_CODEBLOCK = /```chronos\s*\n([\s\S]*?)```/g;
+const DETECTION_PATTERN_TEXT = /`+chronos\s+(.*?)`+/gi;
+const DETECTION_PATTERN_HTML = /^chronos\s+(.*?)$/i;
+const DETECTION_PATTERN_CODEBLOCK = /```chronos\s*\n([\s\S]*?)```/gi;
 
 export {
 	DEFAULT_LOCALE,
