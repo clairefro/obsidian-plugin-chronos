@@ -229,6 +229,6 @@
 		transform 0.3s ease;
 }
 
-.chronos-folder-list-modal-item-count {
+.chronos-folder-list-modal-muted-text {
 	color: var(--text-muted);
 }

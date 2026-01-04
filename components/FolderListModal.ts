@@ -39,7 +39,7 @@ export class FolderListModal extends SuggestModal<TFolder> {
 		}
 
 		el.createEl("div").innerHTML =
-			`${prefix}${folder.path} <span class="chronos-folder-list-modal-item-count">(${count} ${itemText})</span>`;
+			`<span class="chronos-folder-list-modal-muted-text">${prefix}</span>${folder.path} <span class="chronos-folder-list-modal-muted-text">(${count} ${itemText})</span>`;
 	}
 
 	onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent) {
