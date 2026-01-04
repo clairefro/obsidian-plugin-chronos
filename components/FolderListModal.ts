@@ -18,18 +18,21 @@ export class FolderListModal extends SuggestModal<TFolder> {
 	}
 
 	getSuggestions(query: string): TFolder[] {
-		return this.folders.filter((folder) =>
-			folder.path.toLowerCase().includes(query.toLowerCase()),
-		);
+		return this.folders
+			.filter((folder) =>
+				folder.path.toLowerCase().includes(query.toLowerCase()),
+			)
+			.sort((a, b) => a.path.localeCompare(b.path));
 	}
 
 	renderSuggestion(folder: TFolder, el: HTMLElement) {
 		const count = this.folderCounts.get(folder.path) || 0;
 		const itemText = count === 1 ? "item" : "items";
-		el.createEl("div", { text: `${folder.path} (${count} ${itemText})` });
+		el.createEl("div").innerHTML =
+			`${folder.path} <span class="chronos-folder-list-modal-item-count">(${count} ${itemText})</span>`;
 	}
 
-	onChooseSuggestion(folder: TFolder, evt: MouseEvent | KeyboardEvent) {
+	onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent) {
 		this.suggestionCallback(folder);
 	}
 }

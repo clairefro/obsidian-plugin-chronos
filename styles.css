@@ -228,3 +228,7 @@
 		left 0.3s ease,
 		transform 0.3s ease;
 }
+
+.chronos-folder-list-modal-item-count {
+	color: var(--text-muted);
+}
