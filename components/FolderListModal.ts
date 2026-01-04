@@ -28,8 +28,18 @@ export class FolderListModal extends SuggestModal<TFolder> {
 	renderSuggestion(folder: TFolder, el: HTMLElement) {
 		const count = this.folderCounts.get(folder.path) || 0;
 		const itemText = count === 1 ? "item" : "items";
+
+		// Calculate indentation based on folder depth
+		const depth = folder.path.split("/").length;
+
+		// Create tree-like prefix
+		let prefix = "";
+		if (depth > 1) {
+			prefix = "    ".repeat(depth - 2) + "└─ ";
+		}
+
 		el.createEl("div").innerHTML =
-			`${folder.path} <span class="chronos-folder-list-modal-item-count">(${count} ${itemText})</span>`;
+			`${prefix}${folder.path} <span class="chronos-folder-list-modal-item-count">(${count} ${itemText})</span>`;
 	}
 
 	onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent) {
