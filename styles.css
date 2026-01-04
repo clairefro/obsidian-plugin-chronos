@@ -232,3 +232,209 @@
 .chronos-folder-list-modal-muted-text {
 	color: var(--text-muted);
 }
+
+.chronos-changelog-view {
+	padding: 1.5rem !important;
+	overflow-y: auto;
+}
+
+.chronos-changelog-title {
+	margin-bottom: 0.5rem;
+	color: var(--text-normal);
+}
+
+.chronos-changelog-disclaimer {
+	font-size: 0.85em;
+	color: var(--text-muted);
+	padding-bottom: 0.5rem;
+	font-style: italic;
+}
+
+.chronos-changelog-releases-link {
+	display: block;
+	font-size: 0.9em;
+	color: var(--text-accent);
+	text-decoration: none;
+	margin-bottom: 1rem;
+}
+
+.chronos-changelog-releases-link:hover {
+	text-decoration: underline;
+	color: var(--text-accent-hover);
+}
+
+.chronos-changelog-separator {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 1rem 0;
+}
+
+.chronos-changelog-entry {
+	margin-bottom: 2rem;
+}
+
+.chronos-changelog-entry:last-child {
+	margin-bottom: 0;
+}
+
+.chronos-changelog-header {
+	font-size: 1.2rem;
+	font-weight: bold;
+	color: var(--interactive-accent);
+	margin-bottom: 1rem;
+}
+
+.chronos-changelog-content {
+	line-height: 1.6;
+	color: var(--text-normal);
+}
+
+.chronos-changelog-content h2,
+.chronos-changelog-content h3,
+.chronos-changelog-content h4 {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+	color: var(--text-normal);
+}
+
+.chronos-changelog-content h2 {
+	font-size: 1.2em;
+}
+
+.chronos-changelog-content h3 {
+	font-size: 1.1em;
+}
+
+.chronos-changelog-content ul,
+.chronos-changelog-content ol {
+	margin-left: 1.5rem;
+	margin-bottom: 0.5rem;
+	padding-left: 0.5rem;
+	list-style-position: outside;
+}
+
+.chronos-changelog-content ul {
+	list-style-type: disc;
+}
+
+.chronos-changelog-content ol {
+	list-style-type: decimal;
+}
+
+.chronos-changelog-content li {
+	margin-bottom: 0.3rem;
+	color: var(--text-normal);
+	display: list-item;
+}
+
+.chronos-changelog-content p {
+	margin-bottom: 0.5rem;
+	color: var(--text-normal);
+}
+
+.chronos-changelog-content code {
+	background: var(--background-secondary);
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 0.9em;
+	font-family: var(--font-monospace);
+}
+
+.chronos-changelog-content pre {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin: 1rem 0;
+	padding: 1rem;
+	overflow-x: auto;
+	position: relative;
+}
+
+.chronos-changelog-content pre code {
+	background: transparent;
+	padding: 0;
+	border-radius: 0;
+	font-size: 0.85em;
+	font-family: var(--font-monospace);
+}
+
+.chronos-changelog-content .copy-code-button {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	cursor: pointer;
+}
+
+.chronos-changelog-content strong {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+.chronos-changelog-content img {
+	margin: 2rem 0;
+	border: 1px solid var(--text-muted);
+	border-radius: var(--radius-s);
+}
+
+.chronos-changelog-support {
+	margin-top: 1rem;
+	padding-bottom: 4rem;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.chronos-changelog-support-text {
+	color: var(--text-muted);
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+.chronos-changelog-support a {
+	display: inline-block;
+}
+
+.chronos-changelog-support img {
+	border: none;
+	margin: 0;
+	transition: transform 0.2s ease;
+}
+
+.chronos-changelog-support img:hover {
+	transform: scale(1.05);
+}
+
+.chronos-changelog-hire-text {
+	margin-top: 1rem;
+	text-align: center;
+	color: var(--text-muted);
+	font-style: italic;
+	font-size: 0.85em;
+}
+
+.chronos-changelog-hire-text a {
+	color: var(--text-accent);
+	text-decoration: none;
+}
+
+.chronos-changelog-hire-text a:hover {
+	text-decoration: underline;
+}
+
+.chronos-releases-link {
+	margin-top: 0rem;
+	margin-bottom: 1rem;
+	padding-left: 1rem;
+}
+
+.chronos-releases-link a {
+	color: var(--text-accent);
+	text-decoration: none;
+}
+
+.chronos-releases-link a:hover {
+	text-decoration: underline;
+}

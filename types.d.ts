@@ -30,6 +30,8 @@ export interface ChronosPluginSettings {
 	roundRanges: boolean;
 	useUtc: boolean;
 	useAI: boolean;
+	lastSeenVersion?: string;
+	showChangelogOnUpdate?: boolean;
 }
 
 export type Group = { id: number; content: string };

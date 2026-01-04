@@ -7,12 +7,15 @@ import {
 	Editor,
 	TFile,
 	TFolder,
+	MarkdownView,
+	setTooltip,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
+import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./components/ChangelogView";
 import { knownLocales } from "./util/knownLocales";
 import { CacheUtils } from "./util/CacheUtils";
 import { FileUtils } from "./util/FileUtils";
@@ -44,6 +47,7 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	roundRanges: false,
 	useUtc: true,
 	useAI: true,
+	showChangelogOnUpdate: true,
 };
 
 export default class ChronosPlugin extends Plugin {
@@ -55,11 +59,23 @@ export default class ChronosPlugin extends Plugin {
 	async onload() {
 		console.log("Loading Chronos Timeline Plugin....");
 
-		const loadedData = (await this.loadData()) || {};
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, loadedData);
+		this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
 
-		// If no data.json exists, create it with defaults
-		if (!loadedData || Object.keys(loadedData).length === 0) {
+		// Register the changelog view
+		this.registerView(
+			CHANGELOG_VIEW_TYPE,
+			(leaf) => new ChangelogView(leaf, []),
+		);
+
+		// Migrate legacy single `key` into provider-specific `aiKeys.openai` if present
+		if ((this.settings as any).key) {
+			(this.settings as any).aiKeys = {
+				...(this.settings as any).aiKeys,
+				openai:
+					(this.settings as any).aiKeys?.openai ||
+					(this.settings as any).key,
+			};
+			// keep legacy `key` for backward compat but persist migration
 			await this.saveSettings();
 		}
 
@@ -183,6 +199,11 @@ export default class ChronosPlugin extends Plugin {
 				}
 			},
 		});
+
+		// Check for new versions and show changelog
+		this.app.workspace.onLayoutReady(async () => {
+			await this._checkAndShowChangelog();
+		});
 	}
 
 	onunload() {
@@ -232,9 +253,6 @@ export default class ChronosPlugin extends Plugin {
 			return editorEl.offsetWidth;
 		}
 
-		console.log(
-			"No .markdown-source-view element found for width calculation",
-		);
 		return 0;
 	}
 
@@ -247,10 +265,6 @@ export default class ChronosPlugin extends Plugin {
 			editorEl.style.setProperty(
 				"--chronos-editor-width",
 				`${newWidth}px`,
-			);
-		} else {
-			console.log(
-				"No .markdown-source-view element found for CSS property update",
 			);
 		}
 	}
@@ -423,10 +437,16 @@ export default class ChronosPlugin extends Plugin {
 			this._refitTimeline(timeline);
 		};
 
-		widthToggleBtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			toggleWidth();
-		});
+		widthToggleBtn.addEventListener(
+			"click",
+			(e) => {
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+				e.preventDefault();
+				toggleWidth();
+			},
+			true,
+		);
 
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
@@ -753,6 +773,200 @@ export default class ChronosPlugin extends Plugin {
 			console.error("Error in _generateTimelineFromFolder:", error);
 		}
 	}
+
+	// Changelog methods
+	private async _checkAndShowChangelog(): Promise<void> {
+		// Skip if user disabled changelog notifications
+		if (this.settings.showChangelogOnUpdate === false) {
+			return;
+		}
+
+		const currentVersion = this.manifest.version;
+		const lastSeenVersion = this.settings.lastSeenVersion;
+
+		// If no lastSeenVersion, show the current version's changelog (first install)
+		if (!lastSeenVersion) {
+			const unseenChangelogs = await this._getUnseenChangelogs(
+				"0.0.0", // Get all changelogs up to current version
+				currentVersion,
+			);
+
+			if (unseenChangelogs.length > 0) {
+				await this._showChangelogNote(unseenChangelogs);
+				// Set lastSeenVersion to current after successfully showing
+				this.settings.lastSeenVersion = currentVersion;
+				await this.saveSettings();
+			}
+			return;
+		}
+
+		// If same version, skip
+		if (lastSeenVersion === currentVersion) {
+			return;
+		}
+
+		// Get unseen changelogs
+		const unseenChangelogs = await this._getUnseenChangelogs(
+			lastSeenVersion,
+			currentVersion,
+		);
+
+		if (unseenChangelogs.length > 0) {
+			// Show changelog modal
+			await this._showChangelogNote(unseenChangelogs);
+			// Update last seen version after successfully showing
+			this.settings.lastSeenVersion = currentVersion;
+			await this.saveSettings();
+		}
+	}
+
+	private async _showChangelogNote(
+		entries: { version: string; date: string; content: string }[],
+	): Promise<void> {
+		// Don't create view if no entries
+		if (!entries || entries.length === 0) {
+			return;
+		}
+
+		// Check if a changelog view is already open
+		const existingLeaves =
+			this.app.workspace.getLeavesOfType(CHANGELOG_VIEW_TYPE);
+
+		if (existingLeaves.length > 0) {
+			// Close existing views first
+			for (const leaf of existingLeaves) {
+				leaf.detach();
+			}
+		}
+
+		// Create a new leaf and open the changelog view
+		const leaf = this.app.workspace.getLeaf("tab");
+
+		await leaf.setViewState({
+			type: CHANGELOG_VIEW_TYPE,
+			active: true,
+		});
+
+		// Update the view with the new entries
+		const view = leaf.view as ChangelogView;
+		if (view) {
+			(view as any).entries = entries;
+			await view.onOpen();
+		}
+	}
+
+	private async _getUnseenChangelogs(
+		lastSeenVersion: string,
+		currentVersion: string,
+	): Promise<{ version: string; date: string; content: string }[]> {
+		try {
+			const releases = await this._fetchGitHubReleases();
+
+			const unseenEntries: {
+				version: string;
+				date: string;
+				content: string;
+			}[] = [];
+
+			for (const release of releases) {
+				// Extract version from tag (e.g., "v3.0.0" or "3.0.0")
+				const version = release.tag_name.replace(/^v/, "");
+
+				// Include if version is greater than lastSeenVersion and <= currentVersion
+				const comparisonToLast = this._compareVersions(
+					version,
+					lastSeenVersion,
+				);
+				const comparisonToCurrent = this._compareVersions(
+					version,
+					currentVersion,
+				);
+
+				if (comparisonToLast > 0 && comparisonToCurrent <= 0) {
+					// Check if this is a patch release (x.x.non-zero)
+					const isPatchRelease = this._isPatchRelease(version);
+					const hasIncludeComment = release.body
+						?.trim()
+						.toLowerCase()
+						.replace(/\s+/g, "")
+						.startsWith("<!--include-->");
+
+					// Skip patch releases unless they have the <!-- include --> comment
+					if (isPatchRelease && !hasIncludeComment) {
+						continue;
+					}
+
+					unseenEntries.push({
+						version,
+						date: release.published_at,
+						content: release.body || "No release notes available.",
+					});
+				}
+			}
+
+			// Sort by published date descending (newest first)
+			unseenEntries.sort((a, b) => {
+				return new Date(b.date).getTime() - new Date(a.date).getTime();
+			});
+
+			// Limit to 6 most recent releases
+			return unseenEntries.slice(0, 6);
+		} catch (error) {
+			console.error(
+				"[Chronos] Error fetching changelogs from GitHub:",
+				error,
+			);
+			// Silently fail - don't show notice to user
+			return [];
+		}
+	}
+
+	private async _fetchGitHubReleases(): Promise<any[]> {
+		const url =
+			"https://api.github.com/repos/clairefro/obsidian-plugin-chronos/releases";
+
+		try {
+			const response = await fetch(url, {
+				headers: {
+					Accept: "application/vnd.github.v3+json",
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error(
+					`GitHub API returned ${response.status}: ${response.statusText}`,
+				);
+			}
+
+			const releases = await response.json();
+			return releases;
+		} catch (error) {
+			console.error("[Chronos] Failed to fetch GitHub releases:", error);
+			throw error;
+		}
+	}
+
+	private _compareVersions(v1: string, v2: string): number {
+		const parts1 = v1.split(".").map(Number);
+		const parts2 = v2.split(".").map(Number);
+
+		for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
+			const part1 = parts1[i] || 0;
+			const part2 = parts2[i] || 0;
+
+			if (part1 > part2) return 1;
+			if (part1 < part2) return -1;
+		}
+
+		return 0;
+	}
+
+	private _isPatchRelease(version: string): boolean {
+		// Parse version as x.x.x
+		const parts = version.split(".").map(Number);
+		// It's a patch release if the third number (patch) is non-zero
+		return parts.length >= 3 && parts[2] > 0;
+	}
 }
 
 class ChronosPluginSettingTab extends PluginSettingTab {
@@ -897,6 +1111,39 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		containerEl.createEl("h2", {
+			text: "Updates & Notifications",
+			cls: "chronos-setting-header",
+		});
+
+		new Setting(containerEl)
+			.setName("Show changelog on update")
+			.setDesc(
+				'Display "What\'s New" modal when the plugin is updated to a new version',
+			)
+			.addToggle((toggle) =>
+				toggle
+					.setValue(
+						this.plugin.settings.showChangelogOnUpdate ?? true,
+					)
+					.onChange(async (value) => {
+						this.plugin.settings.showChangelogOnUpdate = value;
+						await this.plugin.saveSettings();
+					}),
+			);
+
+		// Add link to GitHub releases
+		const releasesLinkDiv = containerEl.createDiv({
+			cls: "chronos-releases-link",
+		});
+
+		const releasesLink = releasesLinkDiv.createEl("a", {
+			text: "View full release history",
+			href: "https://github.com/clairefro/obsidian-plugin-chronos/releases",
+		});
+		releasesLink.setAttr("target", "_blank");
+		releasesLink.setAttr("rel", "noopener noreferrer");
 
 		containerEl.createEl("h2", {
 			text: "AI settings",
