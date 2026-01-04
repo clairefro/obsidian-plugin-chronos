@@ -14,9 +14,19 @@ import {
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
+import { FolderListModal } from "./components/FolderListModal";
 import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./components/ChangelogView";
 import { knownLocales } from "./util/knownLocales";
-import { DEFAULT_LOCALE, PEPPER, PROVIDER_DEFAULT_MODELS } from "./constants";
+import { CacheUtils } from "./util/CacheUtils";
+import { FileUtils } from "./util/FileUtils";
+import {
+	DEFAULT_LOCALE,
+	PEPPER,
+	PROVIDER_DEFAULT_MODELS,
+	DETECTION_PATTERN_TEXT,
+	DETECTION_PATTERN_HTML,
+	DETECTION_PATTERN_CODEBLOCK,
+} from "./constants";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
@@ -43,6 +53,8 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 export default class ChronosPlugin extends Plugin {
 	settings: ChronosPluginSettings;
 	private observedEditors = new Set<HTMLElement>();
+	private cacheUtils: CacheUtils;
+	private fileUtils: FileUtils;
 
 	async onload() {
 		console.log("Loading Chronos Timeline Plugin....");
@@ -67,17 +79,45 @@ export default class ChronosPlugin extends Plugin {
 			await this.saveSettings();
 		}
 
-		// Ensure aiModels exists and fill missing providers with defaults
-		(this.settings as any).aiModels = {
-			...(PROVIDER_DEFAULT_MODELS as any),
-			...((this.settings as any).aiModels || {}),
-		};
+		this.cacheUtils = new CacheUtils(this);
+		this.fileUtils = new FileUtils(this);
+
+		// Load persistent cache or initialize if it doesn't exist
+		await this.cacheUtils.loadCache();
 
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
 
+		// Initialize folder cache in background to track which folders contain chronos blocks
+		this.cacheUtils.initializeFolderCache();
+
 		this.registerEvent(
 			this.app.vault.on("rename", async (file, oldPath) => {
-				await this._updateWikiLinks(oldPath, file.path);
+				await this.fileUtils.updateWikiLinks(oldPath, file.path);
+			}),
+		);
+
+		// Invalidate cache when files are modified, created, or deleted
+		this.registerEvent(
+			this.app.vault.on("modify", (file) => {
+				if (file instanceof TFile && file.extension === "md") {
+					this.cacheUtils.invalidateFolderCache(file.parent);
+				}
+			}),
+		);
+
+		this.registerEvent(
+			this.app.vault.on("create", (file) => {
+				if (file instanceof TFile && file.extension === "md") {
+					this.cacheUtils.invalidateFolderCache(file.parent);
+				}
+			}),
+		);
+
+		this.registerEvent(
+			this.app.vault.on("delete", (file) => {
+				if (file instanceof TFile && file.extension === "md") {
+					this.cacheUtils.invalidateFolderCache(file.parent);
+				}
 			}),
 		);
 
@@ -85,6 +125,36 @@ export default class ChronosPlugin extends Plugin {
 			"chronos",
 			this._renderChronosBlock.bind(this),
 		);
+
+		this.registerMarkdownPostProcessor((element, context) => {
+			const inlineCodes = element.querySelectorAll("code");
+
+			inlineCodes.forEach((codeEl) => {
+				if (codeEl.closest("pre")) return; // Skip fenced code blocks
+
+				let match;
+				if (
+					(match = DETECTION_PATTERN_HTML.exec(
+						codeEl.textContent ?? "",
+					)) !== null
+				) {
+					const date_match = /\[.*?\]/.exec(match[1]);
+					codeEl.textContent =
+						date_match == null
+							? "Chronos Error format..."
+							: new Date(
+									date_match[0].slice(1, -1),
+								).toLocaleDateString(
+									this.settings.selectedLocale,
+									{
+										month: "short",
+										day: "2-digit",
+										year: "2-digit",
+									},
+								);
+				}
+			});
+		});
 
 		this.addCommand({
 			id: "insert-timeline-blank",
@@ -109,6 +179,15 @@ export default class ChronosPlugin extends Plugin {
 				this._insertSnippet(editor, ChronosTimeline.templates.advanced);
 			},
 		});
+
+		this.addCommand({
+			id: "generate-timeline-folder",
+			name: "Generate timeline from folder",
+			editorCallback: (editor, _view) => {
+				this._generateTimelineFromFolder(editor);
+			},
+		});
+
 		this.addCommand({
 			id: "generate-timeline-ai",
 			name: "Generate timeline with AI",
@@ -149,12 +228,20 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	async saveSettings() {
-		await this.saveData(this.settings);
+		const currentData = (await this.loadData()) || {};
+		const dataToSave = { ...currentData, ...this.settings };
+		await this.saveData(dataToSave);
 	}
 
 	private _insertSnippet(editor: Editor, snippet: string) {
 		const cursor = editor.getCursor();
 		editor.replaceRange(snippet, cursor);
+	}
+
+	private _insertTextAfterSelection(editor: Editor, textToInsert: string) {
+		const cursor = editor.getCursor("to");
+		const padding = "\n\n";
+		editor.replaceRange(padding + textToInsert, cursor);
 	}
 
 	/* Utility method to get current editor width */
@@ -277,7 +364,6 @@ export default class ChronosPlugin extends Plugin {
 		container: HTMLElement,
 		icon: HTMLSpanElement,
 	): boolean {
-		/** Grandparent  */
 		const grandparent = this._getTimelineGrandparent(container);
 		if (!grandparent) return false;
 
@@ -322,12 +408,6 @@ export default class ChronosPlugin extends Plugin {
 				timeline.timeline.fit();
 			}
 		}, 300);
-	}
-
-	private _insertTextAfterSelection(editor: Editor, textToInsert: string) {
-		const cursor = editor.getCursor("to");
-		const padding = "\n\n";
-		editor.replaceRange(padding + textToInsert, cursor);
 	}
 
 	private _renderChronosBlock(source: string, el: HTMLElement) {
@@ -385,7 +465,6 @@ export default class ChronosPlugin extends Plugin {
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
-			callbacks: { setTooltip },
 		});
 
 		try {
@@ -402,8 +481,6 @@ export default class ChronosPlugin extends Plugin {
 
 				// Stop event immediately
 				if (event.event instanceof MouseEvent) {
-					// logEventDetails(event.event, "Timeline MouseDown");
-
 					event.event.stopImmediatePropagation();
 					event.event.preventDefault();
 
@@ -423,7 +500,10 @@ export default class ChronosPlugin extends Plugin {
 
 					const shouldOpenInNewLeaf =
 						isMiddleClick || isCmdClick || isShiftClick;
-					this._openFileFromWikiLink(item.cLink, shouldOpenInNewLeaf);
+					this.fileUtils.openFileFromWikiLink(
+						item.cLink,
+						shouldOpenInNewLeaf,
+					);
 				}
 			});
 
@@ -466,105 +546,15 @@ export default class ChronosPlugin extends Plugin {
 						this.settings.clickToUse &&
 						!container.querySelectorAll(".vis-active").length
 					) {
-						setTooltip(container, "Click to use");
+						// Tooltip removed due to deprecation
 					} else {
-						setTooltip(container, "");
+						// Tooltip removed due to deprecation
 					}
 				});
 			}
 		} catch (error) {
 			console.log(error);
 		}
-	}
-
-	async _openFileFromWikiLink(wikiLink: string, openInNewLeaf = false) {
-		const cleanedLink = wikiLink.replace(/^\[\[|\]\]$/g, "");
-
-		// Check if the link contains a section/heading
-		const [filename, section] = cleanedLink.split("#");
-		const [path, alias] = cleanedLink.split("|");
-
-		const pathNoHeader = path.split("#")[0];
-
-		try {
-			const file =
-				// 1. Try with file finder and match based on full path or alias
-				this.app.vault
-					.getFiles()
-					.find(
-						(file) =>
-							file.path === pathNoHeader + ".md" ||
-							file.path === pathNoHeader ||
-							file.basename === pathNoHeader,
-					) ||
-				// 2. Try matching by basename (case-insensitive)
-				this.app.vault
-					.getFiles()
-					.find(
-						(file) =>
-							file.basename.toLowerCase() ===
-							alias?.toLowerCase(),
-					) ||
-				null; // Return null if no match is found
-			if (file) {
-				let leaf = this.app.workspace.getLeaf(false); // open in current leaf by default
-				if (openInNewLeaf) {
-					// apparently getLeaf("tab") opens the link in a new tab
-					leaf = this.app.workspace.getLeaf("tab");
-				}
-				const line = section
-					? await this._findLineForHeading(file, section)
-					: 0;
-
-				await leaf.openFile(file, {
-					active: true,
-					// If a section is specified, try to scroll to that heading
-					state: {
-						focus: true,
-						line,
-					},
-				});
-
-				/* set cursor to heading if present */
-				line &&
-					setTimeout(() => {
-						const editor =
-							this.app.workspace.getActiveViewOfType(
-								MarkdownView,
-							)?.editor;
-
-						if (editor && line != null) {
-							editor.setCursor(line + 30);
-						}
-					}, 100);
-			} else {
-				const msg = `Linked note not found: ${filename}`;
-				console.warn(msg);
-				new Notice(msg);
-			}
-		} catch (error) {
-			const msg = `Error opening file: ${error.message}`;
-			console.error(msg);
-			new Notice(msg);
-		}
-	}
-
-	// Helper method to find the line number for a specific heading
-	private async _findLineForHeading(
-		file: TFile,
-		heading: string,
-	): Promise<number | undefined> {
-		const fileContent = await this.app.vault.read(file);
-		const lines = fileContent.split("\n");
-
-		// Find the line number of the heading
-		const headingLine = lines.findIndex(
-			(line) =>
-				line.trim().replace("#", "").trim().toLowerCase() ===
-				heading.toLowerCase(),
-		);
-
-		return headingLine !== -1 ? headingLine : 0;
 	}
 
 	private async _generateTimelineWithAi(editor: Editor) {
@@ -636,10 +626,6 @@ export default class ChronosPlugin extends Plugin {
 		return res;
 	}
 
-	private _getCurrentSelectedText(editor: Editor): string {
-		return editor ? editor.getSelection() : "";
-	}
-
 	private _getApiKey(provider: string = "openai") {
 		// prefer provider-specific stored keys
 		const keys = (this.settings as any).aiKeys || {};
@@ -647,86 +633,145 @@ export default class ChronosPlugin extends Plugin {
 		return decrypt(enc, PEPPER);
 	}
 
-	private async _updateWikiLinks(oldPath: string, newPath: string) {
-		const files = this.app.vault.getMarkdownFiles();
+	private _getCurrentSelectedText(editor: Editor): string {
+		return editor ? editor.getSelection() : "";
+	}
 
-		const updatedFiles = [];
-		console.log(
-			`Checking files for 'chronos' blocks to see whether there is a need to update links to ${this._normalizePath(
-				newPath,
-			)}...`,
-		);
-		for (const file of files) {
-			const content = await this.app.vault.read(file);
-			const hasChronosBlock = /```(?:\s*)chronos/.test(content);
-			if (hasChronosBlock) {
-				const updatedContent = this._updateLinksInChronosBlocks(
-					content,
-					oldPath,
-					newPath,
+	// Ensure latest data is fetched before inserting combined timeline
+	private async _generateTimelineFromFolder(editor: Editor) {
+		try {
+			const allFolders = this.app.vault.getAllFolders();
+			const foldersWithChronos = allFolders.filter((folder) => {
+				const cached = this.cacheUtils.folderChronosCache.get(
+					folder.path,
 				);
+				return (cached ?? 0) > 0;
+			});
 
-				if (updatedContent !== content) {
-					console.log("UPDATING ", file.path);
-					updatedFiles.push(file.path);
-
-					await this.app.vault.modify(file, updatedContent);
-				}
+			if (foldersWithChronos.length === 0) {
+				new Notice("No folders contain chronos items (yet!)");
+				return;
 			}
+
+			new FolderListModal(
+				this.app,
+				foldersWithChronos,
+				async (f: TFolder) => {
+					const folderPath = f.path;
+
+					// Update cache for the selected folder and its children
+					await this.cacheUtils.updateFolderCache(f);
+
+					// Recursively get all files in this folder and subfolders
+					const allFiles = this.fileUtils.getAllFilesInFolder(f);
+					let extracted: string[] = []; // Keep the name as `extracted`
+
+					const tasks: Promise<string[]>[] = allFiles
+						.filter((file: TFile) => file.extension === "md")
+						.map((file: TFile) => {
+							return this.app.vault
+								.cachedRead(file as TFile)
+								.then((text) => {
+									const rex_match: string[] = [];
+									let current_match;
+
+									// Extract inline chronos blocks (check for indicators)
+									const inlineMatches = [];
+									while (
+										(current_match =
+											DETECTION_PATTERN_TEXT.exec(
+												text,
+											)) !== null
+									) {
+										const content =
+											current_match[1] as string;
+										const trimmed = content.trim();
+										const hasIndicator = /^[-@*~]/.test(
+											trimmed,
+										);
+										inlineMatches.push(
+											hasIndicator
+												? trimmed
+												: `- ${trimmed}`,
+										);
+									}
+
+									// Extract full chronos code blocks (check for indicators)
+									while (
+										(current_match =
+											DETECTION_PATTERN_CODEBLOCK.exec(
+												text,
+											)) !== null
+									) {
+										// Extract all non-blank, non-comment lines from the code block
+										const blockContent = current_match[1];
+										const lines = blockContent.split("\n");
+										lines.forEach((line) => {
+											const trimmed = line.trim();
+											// Include any line that isn't blank, doesn't start with #, and doesn't start with > (flags)
+											if (
+												trimmed &&
+												!trimmed.startsWith("#") &&
+												!trimmed.startsWith(">")
+											) {
+												// Check if line already has an indicator (-, @, *, etc)
+												const hasIndicator =
+													/^[-@*~]/.test(trimmed);
+												rex_match.push(
+													hasIndicator
+														? trimmed
+														: `- ${trimmed}`,
+												);
+											}
+										});
+									}
+
+									// Combine all matches (already have prefixes applied)
+									return [...inlineMatches, ...rex_match];
+								})
+								.catch((_error) => {
+									new Notice(
+										`Error while processing ${file.name}`,
+									);
+									return [];
+								});
+						});
+
+					await Promise.allSettled(tasks).then((results) => {
+						results.forEach((result) => {
+							if (result.status === "fulfilled") {
+								extracted = extracted.concat(result.value);
+							}
+						});
+						if (extracted.length === 0) {
+							new Notice(
+								`No chronos items found in ${folderPath}`,
+							);
+							return;
+						}
+
+						const heightFlag =
+							extracted.length > 26 ? "> HEIGHT 300\n" : "";
+
+						this._insertSnippet(
+							editor,
+							ChronosTimeline.templates.blank.replace(
+								/^\s*$/m,
+								heightFlag + extracted.join("\n"),
+							),
+						);
+
+						new Notice(
+							`Combined ${extracted.length} Chronos item${extracted.length !== 1 ? "s" : ""} found in ${folderPath}`,
+						);
+					});
+				},
+				this.cacheUtils.folderChronosCache,
+			).open();
+		} catch (error) {
+			new Notice("Error scanning for chronos items");
+			console.error("Error in _generateTimelineFromFolder:", error);
 		}
-		console.log(`Done checking files with 'chronos' blocks.`);
-		if (updatedFiles.length) {
-			console.log(
-				`Updated links to ${this._normalizePath(newPath)} in ${
-					updatedFiles.length
-				} files: `,
-				updatedFiles,
-			);
-		}
-	}
-
-	private _updateLinksInChronosBlocks(
-		content: string,
-		oldPath: string,
-		newPath: string,
-	): string {
-		const codeFenceRegex = /```(?:\s*)chronos([\s\S]*?)```/g;
-		let match: RegExpExecArray | null;
-		let modifiedContent = content;
-
-		while ((match = codeFenceRegex.exec(content)) !== null) {
-			const originalFence = match[0];
-			const fenceContent = match[1];
-
-			const normalizedOldPath = this._normalizePath(oldPath);
-			const normalizedNewPath = this._normalizePath(newPath);
-
-			// Replace wiki links inside the code fence
-			const updatedFenceContent = fenceContent.replace(
-				new RegExp(
-					`\\[\\[${this._escapeRegExp(normalizedOldPath)}\\]\\]`,
-					"g",
-				),
-				`[[${normalizedNewPath}]]`,
-			);
-
-			// Replace the entire code fence in the content
-			modifiedContent = modifiedContent.replace(
-				originalFence,
-				`\`\`\`chronos${updatedFenceContent}\`\`\``,
-			);
-		}
-
-		return modifiedContent;
-	}
-
-	private _normalizePath(path: string) {
-		// strip aliases and .md extension
-		return path.replace(/(\|.+$)|(\.md$)/g, "");
-	}
-
-	private _escapeRegExp(string: string): string {
-		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	}
 
 	// Changelog methods
@@ -936,6 +981,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 
 		containerEl.empty();
+		containerEl.addClass("chronos-settings");
 
 		const supportedLocales: string[] = [];
 		const supportedLocalesNativeDisplayNames: Intl.DisplayNames[] = [];
@@ -967,6 +1013,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		announceLink.setAttribute("target", "_blank");
 		announceLink.setAttribute("rel", "noopener noreferrer");
 		announceLink.className = "chronos-announcement-link";
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
 
 		containerEl.createEl("h2", {
 			text: "Display settings",
@@ -1244,23 +1293,26 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		textarea.readOnly = true;
 
-		new Setting(containerEl).addButton((btn) => {
-			btn.setButtonText("Copy cheatsheet")
-				.setCta()
-				.onClick(async () => {
-					try {
-						await navigator.clipboard.writeText(
-							ChronosTimeline.cheatsheet,
-						);
-						new Notice(
-							"Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax",
-						);
-					} catch (err) {
-						console.error("Failed to copy cheatsheet:", err);
-						new Notice("Failed to copy cheatsheet");
-					}
-				});
+		containerEl.createEl("br");
+
+		const copyButton = containerEl.createEl("button", {
+			text: "Copy cheatsheet",
 		});
+		copyButton.classList.add("mod-cta");
+		copyButton.addEventListener("click", async () => {
+			try {
+				await navigator.clipboard.writeText(ChronosTimeline.cheatsheet);
+				new Notice(
+					"Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax",
+				);
+			} catch (err) {
+				console.error("Failed to copy cheatsheet:", err);
+				new Notice("Failed to copy cheatsheet");
+			}
+		});
+
+		containerEl.createEl("br");
+		containerEl.createEl("br");
 
 		const link = document.createElement("a");
 		link.textContent = "Learn more";
