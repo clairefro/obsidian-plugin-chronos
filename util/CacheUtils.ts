@@ -5,72 +5,62 @@ import {
 } from "../constants";
 
 export class CacheUtils {
-	plugin: any; // ChronosPlugin
+	plugin: any; // Chronos Plugin - avoiding importing type due to circular import
+	pluginsDir: string;
+	pluginDir: string;
 	cachePath: string;
+	fileChronosCache = new Map<string, number>();
+	folderChronosCache = new Map<string, number>();
+	cacheInitialized = false;
 
 	constructor(plugin: any) {
 		this.plugin = plugin;
-		const pluginDir = this.plugin.app.plugins.getPluginFolder(
+		this.pluginsDir = this.plugin.app.plugins.getPluginFolder(
 			this.plugin.manifest.id,
 		);
-		this.cachePath = `${pluginDir}/cache.json`;
+		this.pluginDir = `${this.pluginsDir}/${this.plugin.manifest.id}`;
+		this.cachePath = `${this.pluginDir}/cache.json`;
 	}
 
 	async loadCache(): Promise<void> {
-		if (!this.plugin.settings.usePersistentCache) {
-			this.plugin.cacheInitialized = true;
-			console.log("[INFO] Persistent cache disabled. Skipping load.");
-			return;
-		}
-
 		try {
 			const cacheData = await this.plugin.app.vault.adapter.read(
 				this.cachePath,
 			);
 			const parsed = JSON.parse(cacheData);
-			this.plugin.fileChronosCache = new Map(
-				parsed.fileChronosCache || [],
-			);
-			this.plugin.folderChronosCache = new Map(
-				parsed.folderChronosCache || [],
-			);
-			this.plugin.cacheInitialized = true;
-			console.log("[INFO] Cache loaded successfully.");
+			this.fileChronosCache = new Map(parsed.fileChronosCache || []);
+			this.folderChronosCache = new Map(parsed.folderChronosCache || []);
+			this.cacheInitialized = true;
 		} catch (error) {
-			console.log("[INFO] No cache found. Initializing new cache.");
 			await this.initializeFolderCache();
 		}
 	}
 
 	async saveCache(): Promise<void> {
-		if (!this.plugin.settings.usePersistentCache) {
-			console.log("[INFO] Persistent cache disabled. Skipping save.");
-			return;
-		}
-
 		try {
+			await this.plugin.app.vault.adapter.mkdir(this.pluginDir, {
+				recursive: true,
+			});
+
 			const dataToSave = {
 				fileChronosCache: Array.from(
-					this.plugin.fileChronosCache.entries(),
-				),
+					this.fileChronosCache.entries(),
+				).filter(([_path, count]) => count > 0), // Only save files with items
 				folderChronosCache: Array.from(
-					this.plugin.folderChronosCache.entries(),
-				),
+					this.folderChronosCache.entries(),
+				).filter(([_path, count]) => count > 0), // Only save folders with items
 			};
 			await this.plugin.app.vault.adapter.write(
 				this.cachePath,
 				JSON.stringify(dataToSave, null, 2),
 			);
-			console.log("[INFO] Cache saved successfully.");
 		} catch (error) {
 			console.error("[ERROR] Failed to save cache:", error);
 		}
 	}
 
 	async initializeFolderCache(): Promise<void> {
-		if (this.plugin.cacheInitialized) return;
-
-		console.log("[INFO] Initializing cache...");
+		if (this.cacheInitialized) return;
 
 		// Cache individual file counts
 		const allFiles = this.plugin.app.vault
@@ -78,19 +68,18 @@ export class CacheUtils {
 			.filter((file: TFile) => this.shouldIndexFile(file));
 		for (const file of allFiles) {
 			const count = await this.countChronosInFile(file);
-			this.plugin.fileChronosCache.set(file.path, count);
+			this.fileChronosCache.set(file.path, count);
 		}
 
 		// Cache folder counts (recursive)
 		const allFolders = this.plugin.app.vault.getAllFolders();
 		for (const folder of allFolders) {
 			const count = await this.folderContainsChronos(folder);
-			this.plugin.folderChronosCache.set(folder.path, count);
+			this.folderChronosCache.set(folder.path, count);
 		}
 
-		this.plugin.cacheInitialized = true;
+		this.cacheInitialized = true;
 		await this.saveCache(); // Save cache after initialization
-		console.log("[INFO] Cache initialization complete.");
 	}
 
 	async countChronosInFile(file: TFile): Promise<number> {
@@ -174,13 +163,13 @@ export class CacheUtils {
 		) as TFile[];
 
 		for (const file of files) {
-			const oldCount = this.plugin.fileChronosCache.get(file.path) || 0;
+			const oldCount = this.fileChronosCache.get(file.path) || 0;
 			const newCount = await this.countChronosInFile(file);
 			const delta = newCount - oldCount;
 
 			if (delta !== 0) {
 				// Update file cache
-				this.plugin.fileChronosCache.set(file.path, newCount);
+				this.fileChronosCache.set(file.path, newCount);
 				totalDelta += delta;
 			}
 		}
@@ -190,9 +179,9 @@ export class CacheUtils {
 			let current: TFolder | null = folder;
 			while (current) {
 				const currentCount =
-					this.plugin.folderChronosCache.get(current.path) || 0;
+					this.folderChronosCache.get(current.path) || 0;
 				const newCount = Math.max(0, currentCount + totalDelta);
-				this.plugin.folderChronosCache.set(current.path, newCount);
+				this.folderChronosCache.set(current.path, newCount);
 				current = current.parent;
 			}
 		}
@@ -207,7 +196,7 @@ export class CacheUtils {
 
 		for (const file of files) {
 			const count = await this.countChronosInFile(file);
-			this.plugin.fileChronosCache.set(file.path, count);
+			this.fileChronosCache.set(file.path, count);
 		}
 
 		// Update folder cache recursively
@@ -218,23 +207,22 @@ export class CacheUtils {
 		let totalCount = 0;
 		for (const childFolder of childFolders) {
 			await this.updateFolderCache(childFolder);
-			totalCount +=
-				this.plugin.folderChronosCache.get(childFolder.path) || 0;
+			totalCount += this.folderChronosCache.get(childFolder.path) || 0;
 		}
 
 		// Add counts from files in the current folder
 		totalCount += files.reduce((sum, file) => {
-			return sum + (this.plugin.fileChronosCache.get(file.path) || 0);
+			return sum + (this.fileChronosCache.get(file.path) || 0);
 		}, 0);
 
-		this.plugin.folderChronosCache.set(folder.path, totalCount);
+		this.folderChronosCache.set(folder.path, totalCount);
 	}
 
 	shouldIndexFile(file: TFile): boolean {
 		// Ignore hidden files and folders at root (starting with .), like .git and .obsidian
 		if (file.path.startsWith(".")) return false;
 
-		// Ignore files in node_modules at vault root
+		// Ignore files in node_modules at vault root (if they exist for some catastrophic reason)
 		if (file.path.startsWith("node_modules/")) return false;
 
 		// Only index markdown files

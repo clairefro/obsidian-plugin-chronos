@@ -7,7 +7,6 @@ import {
 	Editor,
 	TFile,
 	TFolder,
-	setTooltip,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -45,15 +44,11 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	roundRanges: false,
 	useUtc: true,
 	useAI: true,
-	usePersistentCache: true,
 };
 
 export default class ChronosPlugin extends Plugin {
 	settings: ChronosPluginSettings;
 	private observedEditors = new Set<HTMLElement>();
-	private folderChronosCache = new Map<string, number>();
-	private fileChronosCache = new Map<string, number>();
-	private cacheInitialized = false;
 	private cacheUtils: CacheUtils;
 	private fileUtils: FileUtils;
 
@@ -450,7 +445,6 @@ export default class ChronosPlugin extends Plugin {
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
-			callbacks: { setTooltip },
 		});
 
 		try {
@@ -532,9 +526,9 @@ export default class ChronosPlugin extends Plugin {
 						this.settings.clickToUse &&
 						!container.querySelectorAll(".vis-active").length
 					) {
-						setTooltip(container, "Click to use");
+						// Tooltip removed due to deprecation
 					} else {
-						setTooltip(container, "");
+						// Tooltip removed due to deprecation
 					}
 				});
 			}
@@ -628,7 +622,9 @@ export default class ChronosPlugin extends Plugin {
 		try {
 			const allFolders = this.app.vault.getAllFolders();
 			const foldersWithChronos = allFolders.filter((folder) => {
-				const cached = this.folderChronosCache.get(folder.path);
+				const cached = this.cacheUtils.folderChronosCache.get(
+					folder.path,
+				);
 				return (cached ?? 0) > 0;
 			});
 
@@ -750,7 +746,7 @@ export default class ChronosPlugin extends Plugin {
 						);
 					});
 				},
-				this.folderChronosCache,
+				this.cacheUtils.folderChronosCache,
 			).open();
 		} catch (error) {
 			new Notice("Error scanning for chronos items");
@@ -899,23 +895,6 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					.onChange(async (value: "left" | "center" | "right") => {
 						this.plugin.settings.align = value;
 						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Use persistent cache")
-			.setDesc(
-				"Cache Chronos item counts to speed up folder scanning. Disable for very large vaults to reduce memory/file size.",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.usePersistentCache)
-					.onChange(async (value) => {
-						this.plugin.settings.usePersistentCache = value;
-						await this.plugin.saveSettings();
-						new Notice(
-							"Reload the plugin for cache changes to take effect.",
-						);
 					}),
 			);
 

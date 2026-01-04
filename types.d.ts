@@ -30,7 +30,6 @@ export interface ChronosPluginSettings {
 	roundRanges: boolean;
 	useUtc: boolean;
 	useAI: boolean;
-	usePersistentCache: boolean;
 }
 
 export type Group = { id: number; content: string };
