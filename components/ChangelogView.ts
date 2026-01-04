@@ -10,10 +10,22 @@ interface ChangelogEntry {
 
 export class ChangelogView extends ItemView {
 	private entries: ChangelogEntry[];
+	private settings: {
+		showChangelogOnUpdate: boolean;
+		onToggleNotification: (newValue: boolean) => Promise<void>;
+	};
 
-	constructor(leaf: WorkspaceLeaf, entries: ChangelogEntry[]) {
+	constructor(
+		leaf: WorkspaceLeaf,
+		entries: ChangelogEntry[],
+		settings: {
+			showChangelogOnUpdate: boolean;
+			onToggleNotification: (newValue: boolean) => Promise<void>;
+		},
+	) {
 		super(leaf);
 		this.entries = entries;
+		this.settings = settings;
 	}
 
 	getViewType(): string {
@@ -39,14 +51,6 @@ export class ChangelogView extends ItemView {
 			cls: "chronos-changelog-title",
 		});
 
-		// Add disclaimer
-		const disclaimer = container.createDiv({
-			cls: "chronos-changelog-disclaimer",
-		});
-		disclaimer.setText(
-			"You can disable these notifications in your Chronos Timeline settings",
-		);
-
 		// Add link to all release notes
 		const releaseLink = container.createEl("a", {
 			text: "See full release history",
@@ -55,6 +59,31 @@ export class ChangelogView extends ItemView {
 		});
 		releaseLink.setAttr("target", "_blank");
 		releaseLink.setAttr("rel", "noopener noreferrer");
+
+		// Add a checkbox to toggle notifications
+		const checkboxContainer = container.createDiv({
+			cls: "chronos-changelog-checkbox-container",
+		});
+
+		const checkbox = checkboxContainer.createEl("input", {
+			type: "checkbox",
+			cls: "chronos-changelog-checkbox",
+		});
+		checkbox.checked = this.settings.showChangelogOnUpdate;
+
+		const label = checkboxContainer.createEl("label", {
+			text: "Show notable new features on updates (you can also change this in settings)",
+			cls: "chronos-changelog-checkbox-label",
+		});
+		label.setAttr("for", "chronos-changelog-checkbox");
+
+		checkbox.addEventListener("change", () => {
+			const newValue = checkbox.checked;
+			this.settings.showChangelogOnUpdate = newValue;
+			if (this.settings.onToggleNotification) {
+				this.settings.onToggleNotification(newValue);
+			}
+		});
 
 		// Add separator between header and content
 		container.createEl("hr", {
@@ -117,20 +146,15 @@ export class ChangelogView extends ItemView {
 		});
 
 		// Create Buy Me a Coffee button
-		const bmcLink = supportMsg.createEl("a", {
-			href: "https://www.buymeacoffee.com/clairefro",
-		});
-		bmcLink.setAttr("target", "_blank");
-		bmcLink.setAttr("rel", "noopener noreferrer");
+		const bmcStyledLink = document.createElement("a");
+		bmcStyledLink.href = "https://www.buymeacoffee.com/clairefro";
+		bmcStyledLink.target = "_blank";
+		bmcStyledLink.rel = "noopener noreferrer";
+		bmcStyledLink.textContent = "🍠 Buy me a potato";
+		bmcStyledLink.className = "bmc-styled-link";
+		bmcStyledLink.tabIndex = 0;
 
-		const bmcImg = bmcLink.createEl("img", {
-			attr: {
-				src: "https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png",
-				alt: "Buy Me A Coffee",
-			},
-		});
-		bmcImg.style.height = "60px";
-		bmcImg.style.width = "217px";
+		supportMsg.appendChild(bmcStyledLink);
 
 		// Add hire me message
 		const hireMeDiv = supportMsg.createDiv({

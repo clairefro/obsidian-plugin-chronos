@@ -7,8 +7,6 @@ import {
 	Editor,
 	TFile,
 	TFolder,
-	MarkdownView,
-	setTooltip,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -62,12 +60,21 @@ export default class ChronosPlugin extends Plugin {
 		this.settings = (await this.loadData()) || DEFAULT_SETTINGS;
 
 		// Register the changelog view
+		// Pass settings and callback to ChangelogView
 		this.registerView(
 			CHANGELOG_VIEW_TYPE,
-			(leaf) => new ChangelogView(leaf, []),
+			(leaf) =>
+				new ChangelogView(leaf, [], {
+					showChangelogOnUpdate:
+						this.settings.showChangelogOnUpdate ?? true,
+					onToggleNotification: async (newValue: boolean) => {
+						this.settings.showChangelogOnUpdate = newValue;
+						await this.saveSettings();
+					},
+				}),
 		);
 
-		// Migrate legacy single `key` into provider-specific `aiKeys.openai` if present
+		// Migrate legacy single `key` into provider-specific `aiKeys.openai`, if present
 		if ((this.settings as any).key) {
 			(this.settings as any).aiKeys = {
 				...(this.settings as any).aiKeys,
@@ -909,8 +916,8 @@ export default class ChronosPlugin extends Plugin {
 				return new Date(b.date).getTime() - new Date(a.date).getTime();
 			});
 
-			// Limit to 6 most recent releases
-			return unseenEntries.slice(0, 6);
+			// Limit to 4 most recent releases
+			return unseenEntries.slice(0, 4);
 		} catch (error) {
 			console.error(
 				"[Chronos] Error fetching changelogs from GitHub:",

@@ -243,13 +243,6 @@
 	color: var(--text-normal);
 }
 
-.chronos-changelog-disclaimer {
-	font-size: 0.85em;
-	color: var(--text-muted);
-	padding-bottom: 0.5rem;
-	font-style: italic;
-}
-
 .chronos-changelog-releases-link {
 	display: block;
 	font-size: 0.9em;
@@ -437,4 +430,44 @@
 
 .chronos-releases-link a:hover {
 	text-decoration: underline;
+}
+
+.chronos-changelog-checkbox-container {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: smaller;
+	color: var(--text-muted);
+}
+
+.chronos-changelog-checkbox {
+	cursor: pointer;
+}
+
+.bmc-styled-link {
+	display: inline-block;
+	padding: 12px 18px;
+	background-color: #ffdd00;
+	color: #000000;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	font-size: 24px;
+	text-decoration: none;
+	border-radius: 8px;
+	border: 1px solid #000000;
+	cursor: pointer;
+	transition:
+		transform 0.2s ease,
+		background-color 0.2s ease;
+}
+
+.bmc-styled-link:focus,
+.chronos-changelog-checkbox:focus,
+.chronos-changelog-hire-text a:focus {
+	outline: 2px solid var(--text-accent);
+	outline-offset: 4px;
+}
+.bmc-styled-link:hover {
+	transform: scale(1.05);
+	text-decoration: none;
+	color: #000000;
 }
