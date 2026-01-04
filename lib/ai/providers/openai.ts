@@ -44,7 +44,6 @@ export class OpenAIProvider implements AIProviderInterface {
 		const usesOldSchema = OLD_SCHEMA_MODELS.some((prefix) =>
 			this.model.startsWith(prefix),
 		);
-		console.log({ usesOldSchema });
 		let data: any;
 		let url: string;
 

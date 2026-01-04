@@ -1,27 +1,48 @@
 import { App, Notice, SuggestModal, TFolder } from "obsidian";
 
 export class FolderListModal extends SuggestModal<TFolder> {
-  folders: TFolder[];
-  suggestionCallback: (f: TFolder) => void;
-  
-  constructor(app: App, _text: TFolder[], suggestionCallback: (f: TFolder) => void) {
-    super(app);
-    this.folders = _text;
-    this.suggestionCallback = suggestionCallback;
-  }
+	folders: TFolder[];
+	suggestionCallback: (f: TFolder) => void;
+	folderCounts: Map<string, number>;
 
-  getSuggestions(query: string): TFolder[] {
-      return this.folders.filter((folder) =>
-      folder.name.toLowerCase().includes(query.toLowerCase())
-    );
-  }
+	constructor(
+		app: App,
+		_text: TFolder[],
+		suggestionCallback: (f: TFolder) => void,
+		folderCounts?: Map<string, number>,
+	) {
+		super(app);
+		this.folders = _text;
+		this.suggestionCallback = suggestionCallback;
+		this.folderCounts = folderCounts || new Map();
+	}
 
-  renderSuggestion(folder: TFolder, el: HTMLElement) {
-    el.createEl('div', { text: folder.name });
-  }
+	getSuggestions(query: string): TFolder[] {
+		return this.folders
+			.filter((folder) =>
+				folder.path.toLowerCase().includes(query.toLowerCase()),
+			)
+			.sort((a, b) => a.path.localeCompare(b.path));
+	}
 
-  onChooseSuggestion(folder: TFolder, evt: MouseEvent | KeyboardEvent) {
-    new Notice(`Selected ${folder.name}`);
-    this.suggestionCallback(folder);
-  }
+	renderSuggestion(folder: TFolder, el: HTMLElement) {
+		const count = this.folderCounts.get(folder.path) || 0;
+		const itemText = count === 1 ? "item" : "items";
+
+		// Calculate indentation based on folder depth
+		const depth = folder.path.split("/").length;
+
+		// Create tree-like prefix
+		let prefix = "";
+		if (depth > 1) {
+			prefix = "    ".repeat(depth - 2) + "└─ ";
+		}
+
+		el.createEl("div").innerHTML =
+			`<span class="chronos-folder-list-modal-muted-text">${prefix}</span>${folder.path} <span class="chronos-folder-list-modal-muted-text">(${count} ${itemText})</span>`;
+	}
+
+	onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent) {
+		this.suggestionCallback(folder);
+	}
 }

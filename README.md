@@ -14,6 +14,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
 - Portable plain text data
 - Text-to-timeline with AI
+- Generate combined timeline from all Chronos items in folder
 - Note linking
 - Grouping
 - Colors
@@ -57,6 +58,43 @@ Input can be long text in your notes with time information, or vague like:
 
 ![genai example 2](./docs/ex-points-2.png)
 
+### Generate timeline from folder
+
+Automatically create combined timelines from all Chronos items found in a folder.
+
+![gen from folder example](./docs/ex-combined-timeline-from-folder.gif)
+
+Use the command palette (`Cmd`/`Ctrl` + `P`): `Chronos > Generate Timeline from Folder`
+
+The plugin will:
+
+1. Show you a list of folders that contain Chronos items
+2. Extract all Chronos items from the selected folder
+3. Generate a combined timeline using all these items
+4. Insert the timeline code at your cursor position
+
+This is perfect for:
+
+- Visualizing collections of dated notes (journals, meetings, project milestones)
+- Combining themed items (by topic, person, project, etc)
+- Generating chronological overviews of any folder
+
+Timelines with 26+ items automatically get a `HEIGHT 300` flag for easy viewing. You can remove the flag if you prefer.
+
+**Tip:** Use **inline chronos blocks** in your notes for quickly collecting timeline items that you don't particularly care about rendering in respective notes
+
+```markdown
+The below item will not render in your notes, but will be picked up in the "Generate Timeline from Folder"
+
+`chronos @ [2025~2026] Year of the Snake`
+
+If you omit the Chronos item type (Event `-`, Period `@`, Point `*` etc), it will default to an Event (`-`) in your combined timeline.
+
+`chronos [2025~2026] Year of the Snake`
+
+^ Event
+```
+
 ### Cheatsheet
 
 After installing the Chronos Timeline plugin, paste the contents of [this cheatsheet](./docs/chronos-cheatsheet.md) into a file in your vault to play with examples
@@ -70,6 +108,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
         - [Insert basic template](#insert-basic-template)
         - [Insert advanced template](#insert-advanced-template)
         - [Generate timeline with AI](#generate-timeline-with-ai)
+        - [Generate timeline from folder](#generate-timeline-from-folder)
         - [Cheatsheet](#cheatsheet)
     - [Contents](#contents)
 - [Syntax Overview](#syntax-overview)
