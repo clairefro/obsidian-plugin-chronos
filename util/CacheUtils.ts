@@ -1,6 +1,6 @@
 import { TFile, TFolder } from "obsidian";
 import {
-	DETECTION_PATTERN_TEXT,
+	DETECTION_PATTER_TEXT_FULL,
 	DETECTION_PATTERN_CODEBLOCK,
 } from "../constants";
 
@@ -11,6 +11,7 @@ export class CacheUtils {
 	cachePath: string;
 	fileChronosCache = new Map<string, number>();
 	folderChronosCache = new Map<string, number>();
+	inlineChronosCache = new Set<string>();
 	cacheInitialized = false;
 
 	constructor(plugin: any) {
@@ -23,6 +24,7 @@ export class CacheUtils {
 	}
 
 	async loadCache(): Promise<void> {
+		console.log("Loading cache...")
 		try {
 			const cacheData = await this.plugin.app.vault.adapter.read(
 				this.cachePath,
@@ -30,6 +32,7 @@ export class CacheUtils {
 			const parsed = JSON.parse(cacheData);
 			this.fileChronosCache = new Map(parsed.fileChronosCache || []);
 			this.folderChronosCache = new Map(parsed.folderChronosCache || []);
+			this.inlineChronosCache = new Set<string>(parsed.inlineChronosCache) || new Set<string>;
 			this.cacheInitialized = true;
 		} catch (error) {
 			await this.initializeFolderCache();
@@ -37,6 +40,7 @@ export class CacheUtils {
 	}
 
 	async saveCache(): Promise<void> {
+		console.log("Saving cache...")
 		try {
 			await this.plugin.app.vault.adapter.mkdir(this.pluginDir, {
 				recursive: true,
@@ -49,6 +53,7 @@ export class CacheUtils {
 				folderChronosCache: Array.from(
 					this.folderChronosCache.entries(),
 				).filter(([_path, count]) => count > 0), // Only save folders with items
+				inlineChronosCache: Array.from(this.inlineChronosCache),
 			};
 			await this.plugin.app.vault.adapter.write(
 				this.cachePath,
@@ -90,9 +95,14 @@ export class CacheUtils {
 			const text = await this.plugin.app.vault.cachedRead(file);
 
 			// Count inline chronos blocks
-			const inlineMatches = text.match(DETECTION_PATTERN_TEXT);
+			const inlineMatches = text.match(DETECTION_PATTER_TEXT_FULL);
 			if (inlineMatches) {
 				count += inlineMatches.length;
+
+				// I use the computation to also store the match found
+				inlineMatches.forEach((element: string) => {
+					this.inlineChronosCache.add(element.slice(element.indexOf(" "), element.length - 1).trim());
+				});
 			}
 
 			// Count items in chronos code blocks

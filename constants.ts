@@ -9,6 +9,7 @@ const OPENAI_MODEL = PROVIDER_DEFAULT_MODELS.openai;
 const PEPPER = "drpepper";
 
 const DETECTION_PATTERN_TEXT = /`+chronos\s+(.*?)`+/gi;
+const DETECTION_PATTER_TEXT_FULL = /`+chronos\s+(\*|\-|\@)?\s?\[.*].*?`+/gi;
 const DETECTION_PATTERN_HTML = /^chronos\s+(.*?)$/i;
 const DETECTION_PATTERN_CODEBLOCK = /```chronos\s*\n([\s\S]*?)```/gi;
 
@@ -18,6 +19,7 @@ export {
 	OPENAI_MODEL,
 	PEPPER,
 	DETECTION_PATTERN_TEXT,
+	DETECTION_PATTER_TEXT_FULL,
 	DETECTION_PATTERN_HTML,
 	DETECTION_PATTERN_CODEBLOCK,
 };
