@@ -41,7 +41,10 @@ export class ChronosEditorSuggest extends EditorSuggest<string> {
     }
 
     renderSuggestion(value: string, el: HTMLElement): void {
-        el.createEl("div").innerHTML = value;
+        const type = (value[0] == '*') ? "Point" : (value[0] == '@' ? "Period" : "Event");
+        const body = (value[0] == '[' ? value : value.slice(2));
+
+        el.createEl("div").innerHTML = `<div>${body}</br><small>${type}</small></div>`
     }
 
     selectSuggestion(value: string, evt: MouseEvent | KeyboardEvent): void {
