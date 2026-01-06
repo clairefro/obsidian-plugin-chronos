@@ -11,7 +11,7 @@ export class CacheUtils {
 	cachePath: string;
 	fileChronosCache = new Map<string, number>();
 	folderChronosCache = new Map<string, number>();
-	inlineChronosCache = new Set<string>();
+	inlineChronosCache = new Map<string, Set<string>>();
 	cacheInitialized = false;
 
 	constructor(plugin: any) {
@@ -32,7 +32,7 @@ export class CacheUtils {
 			const parsed = JSON.parse(cacheData);
 			this.fileChronosCache = new Map(parsed.fileChronosCache || []);
 			this.folderChronosCache = new Map(parsed.folderChronosCache || []);
-			this.inlineChronosCache = new Set<string>(parsed.inlineChronosCache) || new Set<string>;
+			this.inlineChronosCache = new Map(parsed.inlineChronosCache || []);
 			this.cacheInitialized = true;
 		} catch (error) {
 			await this.initializeFolderCache();
@@ -53,7 +53,10 @@ export class CacheUtils {
 				folderChronosCache: Array.from(
 					this.folderChronosCache.entries(),
 				).filter(([_path, count]) => count > 0), // Only save folders with items
-				inlineChronosCache: Array.from(this.inlineChronosCache),
+				inlineChronosCache: Array.from(
+					this.inlineChronosCache.entries(),
+				).filter(([_path, entries]) => entries.size > 0)
+				.map(([path, entries]) => [path, Array.from(entries)]),
 			};
 			await this.plugin.app.vault.adapter.write(
 				this.cachePath,
@@ -95,13 +98,14 @@ export class CacheUtils {
 			const text = await this.plugin.app.vault.cachedRead(file);
 
 			// Count inline chronos blocks
+			this.inlineChronosCache.set(file.path, new Set<string>());
 			const inlineMatches = text.match(DETECTION_PATTER_TEXT_FULL);
 			if (inlineMatches) {
 				count += inlineMatches.length;
 
 				// I use the computation to also store the match found
 				inlineMatches.forEach((element: string) => {
-					this.inlineChronosCache.add(element.slice(element.indexOf(" "), element.length - 1).trim());
+					this.inlineChronosCache.get(file.path)?.add(element.slice(element.indexOf(" "), element.length - 1).trim());
 				});
 			}
 

@@ -1,14 +1,21 @@
 import { App, Editor, EditorPosition, EditorSuggest, EditorSuggestContext, EditorSuggestTriggerInfo, TFile } from "obsidian";
 
 export class ChronosEditorSuggest extends EditorSuggest<string> {
-    inlineChronos : Set<string>;
+    inlineChronos : Map<string,Set<string>>;
 
     constructor(
         app: App,
-        inlineChronos: Set<string>
+        inlineChronos: Map<string,Set<string>>
     ) {
         super(app);
         this.inlineChronos = inlineChronos;
+    }
+
+    private _getSuggestionSet(): Set<string> {
+        return new Set(
+        Array.from(this.inlineChronos.values())
+            .flatMap(set => Array.from(set))
+        )
     }
 
     onTrigger(cursor: EditorPosition, editor: Editor, file: TFile | null): EditorSuggestTriggerInfo | null {
@@ -30,7 +37,7 @@ export class ChronosEditorSuggest extends EditorSuggest<string> {
     }
 
     getSuggestions(context: EditorSuggestContext): string[] | Promise<string[]> {
-        return [...this.inlineChronos];
+        return [...this._getSuggestionSet()];
     }
 
     renderSuggestion(value: string, el: HTMLElement): void {
