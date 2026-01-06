@@ -47,7 +47,6 @@ export class GeminiProvider implements AIProviderInterface {
 		};
 
 		const resp: any = await requestUrl(options);
-		console.log(resp);
 		const json = resp?.json || {};
 
 		const extractText = (obj: any): string => {
