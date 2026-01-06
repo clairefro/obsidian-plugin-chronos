@@ -1,6 +1,6 @@
 import { TFile, TFolder } from "obsidian";
 import {
-	DETECTION_PATTER_TEXT_FULL,
+	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_CODEBLOCK,
 } from "../constants";
 
@@ -99,7 +99,7 @@ export class CacheUtils {
 
 			// Count inline chronos blocks
 			this.inlineChronosCache.set(file.path, new Set<string>());
-			const inlineMatches = text.match(DETECTION_PATTER_TEXT_FULL);
+			const inlineMatches = text.match(DETECTION_PATTERN_TEXT);
 			if (inlineMatches) {
 				count += inlineMatches.length;
 
