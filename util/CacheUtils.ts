@@ -104,9 +104,9 @@ export class CacheUtils {
 				count += inlineMatches.length;
 
 				// I use the computation to also store the match found
-				inlineMatches.forEach((element: string) => {
-					this.inlineChronosCache.get(file.path)?.add(element.slice(element.indexOf(" "), element.length - 1).trim());
-				});
+				inlineMatches.forEach((element: string) =>
+					this.inlineChronosCache.get(file.path)?.add(element.slice(element.indexOf(" "), element.length - 1).trim())
+				);
 			}
 
 			// Count items in chronos code blocks
@@ -114,15 +114,16 @@ export class CacheUtils {
 			for (const match of codeBlockMatches) {
 				const blockContent = match[1];
 				const lines = blockContent.split("\n");
-				const itemCount = lines.filter((line: string) => {
+				const items = lines.filter((line: string) => {
 					const trimmed = line.trim();
 					return (
 						trimmed &&
 						!trimmed.startsWith("#") &&
 						!trimmed.startsWith(">")
 					);
-				}).length;
-				count += itemCount;
+				});
+				items.forEach((element: string) => this.inlineChronosCache.get(file.path)?.add(element))
+				count += items.length;
 			}
 		} catch (error) {
 			console.error(
