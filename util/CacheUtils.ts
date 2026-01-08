@@ -98,7 +98,6 @@ export class CacheUtils {
 			const text = await this.plugin.app.vault.cachedRead(file);
 
 			// Count inline chronos blocks
-			this.inlineChronosCache.set(file.path, new Set<string>());
 			const inlineMatches = text.match(DETECTION_PATTERN_TEXT);
 			if (inlineMatches) {
 				count += inlineMatches.length;
@@ -178,6 +177,7 @@ export class CacheUtils {
 		) as TFile[];
 
 		for (const file of files) {
+			this.inlineChronosCache.set(file.path, new Set<string>());
 			const oldCount = this.fileChronosCache.get(file.path) || 0;
 			const newCount = await this.countChronosInFile(file);
 			const delta = newCount - oldCount;
@@ -210,6 +210,7 @@ export class CacheUtils {
 		) as TFile[];
 
 		for (const file of files) {
+			this.inlineChronosCache.set(file.path, new Set<string>());
 			const count = await this.countChronosInFile(file);
 			this.fileChronosCache.set(file.path, count);
 		}
