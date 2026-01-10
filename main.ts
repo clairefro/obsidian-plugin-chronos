@@ -114,7 +114,11 @@ export default class ChronosPlugin extends Plugin {
 		// Invalidate cache when files are modified, created, or deleted (check if caching is enabled)
 		this.registerEvent(
 			this.app.vault.on("modify", (file) => {
-				if (this.settings.enableCaching && file instanceof TFile && file.extension === "md") {
+				if (
+					this.settings.enableCaching &&
+					file instanceof TFile &&
+					file.extension === "md"
+				) {
 					this.cacheUtils.invalidateFolderCache(file.parent);
 				}
 			}),
@@ -122,7 +126,11 @@ export default class ChronosPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.vault.on("create", (file) => {
-				if (this.settings.enableCaching && file instanceof TFile && file.extension === "md") {
+				if (
+					this.settings.enableCaching &&
+					file instanceof TFile &&
+					file.extension === "md"
+				) {
 					this.cacheUtils.invalidateFolderCache(file.parent);
 				}
 			}),
@@ -130,7 +138,11 @@ export default class ChronosPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.vault.on("delete", (file) => {
-				if (this.settings.enableCaching && file instanceof TFile && file.extension === "md") {
+				if (
+					this.settings.enableCaching &&
+					file instanceof TFile &&
+					file.extension === "md"
+				) {
 					this.cacheUtils.invalidateFolderCache(file.parent);
 				}
 			}),
@@ -661,18 +673,18 @@ export default class ChronosPlugin extends Plugin {
 			// If caching is disabled, show all folders
 			const foldersToShow = this.settings.enableCaching
 				? allFolders.filter((folder) => {
-					const cached = this.cacheUtils.folderChronosCache.get(
-						folder.path,
-					);
-					return (cached ?? 0) > 0;
-				})
+						const cached = this.cacheUtils.folderChronosCache.get(
+							folder.path,
+						);
+						return (cached ?? 0) > 0;
+					})
 				: allFolders;
 
 			if (foldersToShow.length === 0) {
 				new Notice(
 					this.settings.enableCaching
 						? "No folders contain chronos items (yet!)"
-						: "No folders found in vault"
+						: "No folders found in vault",
 				);
 				return;
 			}
@@ -792,7 +804,9 @@ export default class ChronosPlugin extends Plugin {
 						);
 					});
 				},
-				this.settings.enableCaching ? this.cacheUtils.folderChronosCache : undefined,
+				this.settings.enableCaching
+					? this.cacheUtils.folderChronosCache
+					: undefined,
 				() => this.settings.enableCaching ?? false,
 			).open();
 		} catch (error) {
@@ -1145,9 +1159,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName("Enable caching")
+			.setName("Enhance features with caching")
 			.setDesc(
-				"Off by default. Only enable if you frequently use the 'Generate timeline from folder' command. When enabled, the plugin indexes chronos blocks across your vault for faster folder selection, showing only folders with chronos items and their counts. When disabled, all folders are shown without counts.",
+				"(Not recommended for massive vaults) Improves 'Generate timeline from folder' feature by showing only folders with chronos items and their counts. Off by default.",
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -1166,9 +1180,11 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 							new Notice("Cache initialized successfully");
 						} else {
 							// Clear cache when disabling
+							console.log("[Chronos] Clearing cache...");
 							this.plugin.cacheUtils.fileChronosCache.clear();
 							this.plugin.cacheUtils.folderChronosCache.clear();
 							this.plugin.cacheUtils.cacheInitialized = false;
+							await this.plugin.cacheUtils.deleteCache();
 							new Notice("Caching disabled");
 						}
 					}),

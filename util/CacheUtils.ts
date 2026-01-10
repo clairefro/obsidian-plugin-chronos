@@ -59,39 +59,41 @@ export class CacheUtils {
 		}
 	}
 
+	async deleteCache(): Promise<void> {
+		try {
+			await this.plugin.app.vault.adapter.remove(this.cachePath);
+			console.log("[Chronos] Cache file deleted");
+		} catch (error) {
+			// Silently fail if file doesn't exist
+		}
+	}
+
 	async initializeFolderCache(): Promise<void> {
 		if (this.cacheInitialized) return;
 
-		console.log("[Chronos] Starting cache initialization...");
+		console.log("[Chronos] Initializing cache...");
 
 		// Cache individual file counts
 		const allFiles = this.plugin.app.vault
 			.getMarkdownFiles()
 			.filter((file: TFile) => this.shouldIndexFile(file));
 
-		console.log(`[Chronos] Scanning ${allFiles.length} files...`);
-
+		let totalItems = 0;
 		for (const file of allFiles) {
 			const count = await this.countChronosInFile(file);
-			if (count > 0) {
-				console.log(`[Chronos] Found ${count} items in ${file.path}`);
-			}
 			this.fileChronosCache.set(file.path, count);
+			totalItems += count;
 		}
 
 		// Cache folder counts (recursive)
 		const allFolders = this.plugin.app.vault.getAllFolders();
-		console.log(`[Chronos] Calculating counts for ${allFolders.length} folders...`);
-
 		for (const folder of allFolders) {
 			const count = await this.folderContainsChronos(folder);
-			if (count > 0) {
-				console.log(`[Chronos] Folder ${folder.path} has ${count} items`);
-			}
 			this.folderChronosCache.set(folder.path, count);
 		}
 
-		console.log(`[Chronos] Cache initialized with ${this.fileChronosCache.size} files and ${this.folderChronosCache.size} folders`);
+		const foldersWithItems = Array.from(this.folderChronosCache.values()).filter(count => count > 0).length;
+		console.log(`[Chronos] Cached ${totalItems} chronos items in ${foldersWithItems} folders`);
 
 		this.cacheInitialized = true;
 		await this.saveCache(); // Save cache after initialization
@@ -107,7 +109,6 @@ export class CacheUtils {
 			// Count inline chronos blocks
 			const inlineMatches = text.match(DETECTION_PATTERN_TEXT);
 			if (inlineMatches) {
-				console.log(`[Chronos] Found ${inlineMatches.length} inline chronos in ${file.path}`);
 				count += inlineMatches.length;
 			}
 
@@ -124,7 +125,6 @@ export class CacheUtils {
 						!trimmed.startsWith(">")
 					);
 				}).length;
-				console.log(`[Chronos] Found code block with ${itemCount} items in ${file.path}`);
 				count += itemCount;
 			}
 		} catch (error) {
