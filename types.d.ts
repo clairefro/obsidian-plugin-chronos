@@ -32,6 +32,7 @@ export interface ChronosPluginSettings {
 	useAI: boolean;
 	lastSeenVersion?: string;
 	showChangelogOnUpdate?: boolean;
+	enableCaching?: boolean;
 }
 
 export type Group = { id: number; content: string };

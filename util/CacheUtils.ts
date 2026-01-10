@@ -59,16 +59,30 @@ export class CacheUtils {
 		}
 	}
 
+	async deleteCache(): Promise<void> {
+		try {
+			await this.plugin.app.vault.adapter.remove(this.cachePath);
+			console.log("[Chronos] Cache file deleted");
+		} catch (error) {
+			// Silently fail if file doesn't exist
+		}
+	}
+
 	async initializeFolderCache(): Promise<void> {
 		if (this.cacheInitialized) return;
+
+		console.log("[Chronos] Initializing cache...");
 
 		// Cache individual file counts
 		const allFiles = this.plugin.app.vault
 			.getMarkdownFiles()
 			.filter((file: TFile) => this.shouldIndexFile(file));
+
+		let totalItems = 0;
 		for (const file of allFiles) {
 			const count = await this.countChronosInFile(file);
 			this.fileChronosCache.set(file.path, count);
+			totalItems += count;
 		}
 
 		// Cache folder counts (recursive)
@@ -77,6 +91,9 @@ export class CacheUtils {
 			const count = await this.folderContainsChronos(folder);
 			this.folderChronosCache.set(folder.path, count);
 		}
+
+		const foldersWithItems = Array.from(this.folderChronosCache.values()).filter(count => count > 0).length;
+		console.log(`[Chronos] Cached ${totalItems} chronos items in ${foldersWithItems} folders`);
 
 		this.cacheInitialized = true;
 		await this.saveCache(); // Save cache after initialization
