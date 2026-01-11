@@ -14,6 +14,7 @@ import { ChronosPluginSettings } from "./types";
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
 import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./components/ChangelogView";
+import { ChronosEditorSuggest } from "./components/ChronosEditorSuggest";
 import { knownLocales } from "./util/knownLocales";
 import { CacheUtils } from "./util/CacheUtils";
 import { FileUtils } from "./util/FileUtils";
@@ -21,8 +22,8 @@ import {
 	DEFAULT_LOCALE,
 	PEPPER,
 	PROVIDER_DEFAULT_MODELS,
-	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_HTML,
+	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_CODEBLOCK,
 } from "./constants";
 
@@ -147,6 +148,8 @@ export default class ChronosPlugin extends Plugin {
 				}
 			}),
 		);
+
+		this.registerEditorSuggest(new ChronosEditorSuggest(this.app, this.cacheUtils.inlineChronosCache))
 
 		this.registerMarkdownCodeBlockProcessor(
 			"chronos",

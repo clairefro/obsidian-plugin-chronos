@@ -1,4 +1,4 @@
-import { App, Notice, SuggestModal, TFolder } from "obsidian";
+import { App, SuggestModal, TFolder } from "obsidian";
 
 export class FolderListModal extends SuggestModal<TFolder> {
 	folders: TFolder[];
