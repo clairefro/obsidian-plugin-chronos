@@ -20,10 +20,12 @@ export interface ChronosDataSetDataItem {
 }
 
 export interface ChronosPluginSettings {
+	key?: string; // LEGACY - DEPRECATED
+	aiKeys?: Record<string, string>; // LEGACY - DEPRECATED
 	selectedLocale: string;
-	key?: string;
 	aiProvider?: string;
-	aiKeys?: Record<string, string>;
+	openaiSecretName?: string;
+	geminiSecretName?: string;
 	aiModels?: Record<string, string>;
 	align: "left" | "center" | "right";
 	clickToUse: boolean;

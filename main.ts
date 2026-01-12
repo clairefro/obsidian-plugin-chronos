@@ -7,6 +7,7 @@ import {
 	Editor,
 	TFile,
 	TFolder,
+	SecretComponent,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
@@ -19,7 +20,6 @@ import { CacheUtils } from "./util/CacheUtils";
 import { FileUtils } from "./util/FileUtils";
 import {
 	DEFAULT_LOCALE,
-	PEPPER,
 	PROVIDER_DEFAULT_MODELS,
 	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_HTML,
@@ -35,8 +35,6 @@ const ChronosTimeline: any =
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
-
-import { decrypt, encrypt } from "./util/vanillaEncrypt";
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	selectedLocale: DEFAULT_LOCALE,
@@ -78,15 +76,15 @@ export default class ChronosPlugin extends Plugin {
 				}),
 		);
 
-		// Migrate legacy single `key` into provider-specific `aiKeys.openai`, if present
+		// Remove old insecure aiKeys property (LEGACY)
+		if ((this.settings as any).aiKeys) {
+			delete (this.settings as any).aiKeys;
+			await this.saveSettings();
+		}
+
+		// Remove legacy key property (LEGACY LEGACY)
 		if ((this.settings as any).key) {
-			(this.settings as any).aiKeys = {
-				...(this.settings as any).aiKeys,
-				openai:
-					(this.settings as any).aiKeys?.openai ||
-					(this.settings as any).key,
-			};
-			// keep legacy `key` for backward compat but persist migration
+			delete (this.settings as any).key;
 			await this.saveSettings();
 		}
 
@@ -283,7 +281,7 @@ export default class ChronosPlugin extends Plugin {
 		return 0;
 	}
 
-	/* Utility method to update width using CSS custom property on editor element */
+	/* Utility method to update width */
 	private _updateChronosWidth(container: HTMLElement, newWidth: number) {
 		const editorEl = container.closest(
 			".markdown-source-view",
@@ -604,7 +602,7 @@ export default class ChronosPlugin extends Plugin {
 		const apiKey = this._getApiKey(provider);
 		if (!apiKey) {
 			new Notice(
-				"No API Key found. Please add an API key in Chronos Timeline Plugin Settings",
+				`No API Key found for ${provider}. Please add an API key in Chronos Timeline Plugin Settings`,
 			);
 			return;
 		}
@@ -637,7 +635,7 @@ export default class ChronosPlugin extends Plugin {
 		const apiKey = this._getApiKey(provider);
 		if (!apiKey) {
 			new Notice(
-				"No API Key found. Please add an API key in Chronos Timeline Plugin Settings",
+				`No API Key found for ${provider}. Please add an API key in Chronos Timeline Plugin Settings`,
 			);
 			return;
 		}
@@ -653,11 +651,10 @@ export default class ChronosPlugin extends Plugin {
 		return res;
 	}
 
-	private _getApiKey(provider: string = "openai") {
-		// prefer provider-specific stored keys
-		const keys = (this.settings as any).aiKeys || {};
-		const enc = keys[provider] || (this.settings as any).key || "";
-		return decrypt(enc, PEPPER);
+	private _getApiKey(provider: string = "openai"): string | null {
+		const secretName = (this.settings as any)[`${provider}SecretName`];
+		if (!secretName) return null;
+		return this.app.secretStorage.getSecret(secretName);
 	}
 
 	private _getCurrentSelectedText(editor: Editor): string {
@@ -1246,6 +1243,27 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		// AI provider settings only shown when AI features are enabled
 		if (this.plugin.settings.useAI) {
+			const updateApiKeyVisibility = () => {
+				const currentProvider =
+					(this.plugin.settings as any).aiProvider || "openai";
+				const openaiSetting = containerEl.querySelector(
+					".ai-setting-openai",
+				) as HTMLElement;
+				const geminiSetting = containerEl.querySelector(
+					".ai-setting-gemini",
+				) as HTMLElement;
+
+				if (openaiSetting) {
+					openaiSetting.style.display =
+						currentProvider === "openai" ? "block" : "none";
+				}
+				if (geminiSetting) {
+					geminiSetting.style.display =
+						currentProvider === "gemini" ? "block" : "none";
+				}
+			};
+
+			// Call updateApiKeyVisibility whenever the provider dropdown changes
 			new Setting(containerEl)
 				.setName("AI Provider")
 				.setDesc(
@@ -1260,6 +1278,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					dropdown.onChange(async (value) => {
 						(this.plugin.settings as any).aiProvider = value;
 						await this.plugin.saveSettings();
+						updateApiKeyVisibility();
 						this.display();
 					});
 				});
@@ -1328,35 +1347,39 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			});
 
 			new Setting(containerEl)
-				.setName(`API Key for ${currentProvider}`)
-				.addText((text) => {
-					const enc =
-						(this.plugin.settings as any).aiKeys?.[
-							currentProvider
-						] || "";
-					const dec = enc ? decrypt(enc, PEPPER) : "";
-					text.setPlaceholder(`Enter your ${currentProvider} API key`)
-						.setValue(dec)
+				.setName("API Key for OpenAI")
+				.setDesc("Select a secret from SecretStorage")
+				.addComponent((el) =>
+					new SecretComponent(this.app, el)
+						.setValue(
+							(this.plugin.settings as any).openaiSecretName ||
+								"",
+						)
 						.onChange(async (value) => {
-							if (!value.trim()) {
-								if ((this.plugin.settings as any).aiKeys) {
-									delete (this.plugin.settings as any).aiKeys[
-										currentProvider
-									];
-								}
-							} else {
-								(this.plugin.settings as any).aiKeys = {
-									...(this.plugin.settings as any).aiKeys,
-									[currentProvider]: encrypt(
-										value.trim(),
-										PEPPER,
-									),
-								};
-							}
+							(this.plugin.settings as any).openaiSecretName =
+								value;
 							await this.plugin.saveSettings();
-						});
-				})
-				.setClass("ai-setting");
+						}),
+				);
+
+			new Setting(containerEl)
+				.setName("API Key for Gemini")
+				.setDesc("Select a secret from SecretStorage")
+				.addComponent((el) =>
+					new SecretComponent(this.app, el)
+						.setValue(
+							(this.plugin.settings as any).geminiSecretName ||
+								"",
+						)
+						.onChange(async (value) => {
+							(this.plugin.settings as any).geminiSecretName =
+								value;
+							await this.plugin.saveSettings();
+						}),
+				);
+
+			// Initial visibility update
+			updateApiKeyVisibility();
 		}
 
 		containerEl.createEl("h2", {
