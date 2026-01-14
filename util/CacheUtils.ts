@@ -11,6 +11,7 @@ export class CacheUtils {
 	cachePath: string;
 	fileChronosCache = new Map<string, number>();
 	folderChronosCache = new Map<string, number>();
+	inlineChronosCache = new Map<string, Set<string>>();
 	cacheInitialized = false;
 
 	constructor(plugin: any) {
@@ -23,6 +24,7 @@ export class CacheUtils {
 	}
 
 	async loadCache(): Promise<void> {
+		console.log("Loading cache...")
 		try {
 			const cacheData = await this.plugin.app.vault.adapter.read(
 				this.cachePath,
@@ -30,6 +32,7 @@ export class CacheUtils {
 			const parsed = JSON.parse(cacheData);
 			this.fileChronosCache = new Map(parsed.fileChronosCache || []);
 			this.folderChronosCache = new Map(parsed.folderChronosCache || []);
+			this.inlineChronosCache = new Map(parsed.inlineChronosCache || []);
 			this.cacheInitialized = true;
 		} catch (error) {
 			await this.initializeFolderCache();
@@ -37,6 +40,7 @@ export class CacheUtils {
 	}
 
 	async saveCache(): Promise<void> {
+		console.log("Saving cache...")
 		try {
 			await this.plugin.app.vault.adapter.mkdir(this.pluginDir, {
 				recursive: true,
@@ -49,6 +53,10 @@ export class CacheUtils {
 				folderChronosCache: Array.from(
 					this.folderChronosCache.entries(),
 				).filter(([_path, count]) => count > 0), // Only save folders with items
+				inlineChronosCache: Array.from(
+					this.inlineChronosCache.entries(),
+				).filter(([_path, entries]) => entries.size > 0)
+				.map(([path, entries]) => [path, Array.from(entries)]),
 			};
 			await this.plugin.app.vault.adapter.write(
 				this.cachePath,
@@ -110,6 +118,11 @@ export class CacheUtils {
 			const inlineMatches = text.match(DETECTION_PATTERN_TEXT);
 			if (inlineMatches) {
 				count += inlineMatches.length;
+
+				// I use the computation to also store the match found
+				inlineMatches.forEach((element: string) =>
+					this.inlineChronosCache.get(file.path)?.add(element.slice(element.indexOf(" "), element.length - 1).trim())
+				);
 			}
 
 			// Count items in chronos code blocks
@@ -117,15 +130,16 @@ export class CacheUtils {
 			for (const match of codeBlockMatches) {
 				const blockContent = match[1];
 				const lines = blockContent.split("\n");
-				const itemCount = lines.filter((line: string) => {
+				const items = lines.filter((line: string) => {
 					const trimmed = line.trim();
 					return (
 						trimmed &&
 						!trimmed.startsWith("#") &&
 						!trimmed.startsWith(">")
 					);
-				}).length;
-				count += itemCount;
+				});
+				items.forEach((element: string) => this.inlineChronosCache.get(file.path)?.add(element))
+				count += items.length;
 			}
 		} catch (error) {
 			console.error(
@@ -180,6 +194,7 @@ export class CacheUtils {
 		) as TFile[];
 
 		for (const file of files) {
+			this.inlineChronosCache.set(file.path, new Set<string>());
 			const oldCount = this.fileChronosCache.get(file.path) || 0;
 			const newCount = await this.countChronosInFile(file);
 			const delta = newCount - oldCount;
@@ -212,6 +227,7 @@ export class CacheUtils {
 		) as TFile[];
 
 		for (const file of files) {
+			this.inlineChronosCache.set(file.path, new Set<string>());
 			const count = await this.countChronosInFile(file);
 			this.fileChronosCache.set(file.path, count);
 		}
