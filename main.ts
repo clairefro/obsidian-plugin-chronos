@@ -82,21 +82,25 @@ export default class ChronosPlugin extends Plugin {
 			name: "Chronos Timeline",
 			icon: "chart-no-axes-gantt",
 			factory: (controller, containerEl) =>
-				new ChronosTimelineBasesView(controller, containerEl),
-			options: () => [
-				{
-					type: "property",
-					key: "start",
-					displayName: "Start Date",
-					default: "note.start",
-				},
-				{
-					type: "property",
-					key: "end",
-					displayName: "End Date",
-					default: "note.end",
-				},
-			],
+				new ChronosTimelineBasesView(
+					controller,
+					containerEl,
+					this.settings,
+				),
+			// options: () => [
+			// 	{
+			// 		type: "property",
+			// 		key: "start",
+			// 		displayName: "Start Date",
+			// 		default: "note.start",
+			// 	},
+			// 	{
+			// 		type: "property",
+			// 		key: "end",
+			// 		displayName: "End Date",
+			// 		default: "note.end",
+			// 	},
+			// ],
 		});
 
 		// Remove old insecure aiKeys property (LEGACY)
