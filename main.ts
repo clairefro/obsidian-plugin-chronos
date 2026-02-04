@@ -26,6 +26,8 @@ import {
 	DETECTION_PATTERN_CODEBLOCK,
 } from "./constants";
 
+import { ChronosTimelineBasesView } from "./views/ChronosTimelineBasesView";
+
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
 const ChronosTimeline: any =
@@ -75,6 +77,27 @@ export default class ChronosPlugin extends Plugin {
 					},
 				}),
 		);
+		// register bases view
+		this.registerBasesView("chronos-timeline-view", {
+			name: "Chronos Timeline",
+			icon: "chart-no-axes-gantt",
+			factory: (controller, containerEl) =>
+				new ChronosTimelineBasesView(controller, containerEl),
+			options: () => [
+				{
+					type: "property",
+					key: "start",
+					displayName: "Start Date",
+					default: "note.start",
+				},
+				{
+					type: "property",
+					key: "end",
+					displayName: "End Date",
+					default: "note.end",
+				},
+			],
+		});
 
 		// Remove old insecure aiKeys property (LEGACY)
 		if ((this.settings as any).aiKeys) {
