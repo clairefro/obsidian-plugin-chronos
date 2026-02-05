@@ -34,6 +34,7 @@ const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
@@ -87,20 +88,6 @@ export default class ChronosPlugin extends Plugin {
 					containerEl,
 					this.settings,
 				),
-			// options: () => [
-			// 	{
-			// 		type: "property",
-			// 		key: "start",
-			// 		displayName: "Start Date",
-			// 		default: "note.start",
-			// 	},
-			// 	{
-			// 		type: "property",
-			// 		key: "end",
-			// 		displayName: "End Date",
-			// 		default: "note.end",
-			// 	},
-			// ],
 		});
 
 		// Remove old insecure aiKeys property (LEGACY)
@@ -463,10 +450,6 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private _renderChronosBlock(source: string, el: HTMLElement) {
-		// HACK for preventing triple propogation of mouseDown handler
-		let lastEventTime = 0;
-		const THROTTLE_MS = 500;
-
 		const container = el.createEl("div", {
 			cls: "chronos-timeline-container",
 		});
@@ -521,89 +504,14 @@ export default class ChronosPlugin extends Plugin {
 
 		try {
 			timeline.render(source);
-			// handle note linking
-			timeline.on("mouseDown", (event: any) => {
-				const now = performance.now();
-				if (now - lastEventTime < THROTTLE_MS) {
-					event.event.stopImmediatePropagation();
-					event.event.preventDefault();
-					return;
-				}
-				lastEventTime = now;
-
-				// Stop event immediately
-				if (event.event instanceof MouseEvent) {
-					event.event.stopImmediatePropagation();
-					event.event.preventDefault();
-
-					const itemId = event.item;
-					if (!itemId) return;
-
-					const item = timeline.items?.find(
-						(i: any) => i.id === itemId,
-					);
-					if (!item?.cLink) return;
-
-					// Check for middle click or CMD+click (Mac)
-					const isMiddleClick = event.event.button === 1;
-					const isCmdClick =
-						event.event.metaKey && event.event.button === 0;
-					const isShiftClick = event.event.shiftKey;
-
-					const shouldOpenInNewLeaf =
-						isMiddleClick || isCmdClick || isShiftClick;
-					this.fileUtils.openFileFromWikiLink(
-						item.cLink,
-						shouldOpenInNewLeaf,
-					);
-				}
-			});
-
-			// Add hover preview for linked notes
-			timeline.on("itemover", async (event: any) => {
-				const itemId = event.item;
-				if (itemId) {
-					const item = timeline.items?.find(
-						(i: any) => i.id === itemId,
-					);
-					if (item?.cLink) {
-						// Get the target element to show hover on
-						const targetEl = event.event.target as HTMLElement;
-
-						// Use Obsidian's built-in hover preview
-						this.app.workspace.trigger("hover-link", {
-							event: event.event,
-							source: "chronos-timeline",
-							hoverParent: container,
-							targetEl: targetEl,
-							linktext: item.cLink,
-						});
-					}
-				}
-			});
-			// Close item preview on item out
-			timeline.on("itemout", () => {
-				// Force close any open hovers
-				this.app.workspace.trigger("hover-link:close");
-			});
-
-			// Add click to use functionality and UI hints if,enabled
-			if (this.settings.clickToUse && container) {
-				timeline.timeline?.setOptions({
-					clickToUse: this.settings.clickToUse,
-				});
-
-				timeline.on("mouseOver", (e: any) => {
-					if (
-						this.settings.clickToUse &&
-						!container.querySelectorAll(".vis-active").length
-					) {
-						// Tooltip removed due to deprecation
-					} else {
-						// Tooltip removed due to deprecation
-					}
-				});
-			}
+			// DRY: wire up note linking and hover preview
+			wireSharedTimelineInteractions(
+				timeline,
+				this.fileUtils,
+				this.app,
+				container,
+				this.settings,
+			);
 		} catch (error) {
 			console.debug(error);
 		}

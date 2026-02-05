@@ -100,7 +100,7 @@
 	border-color: var(--color-accent);
 }
 
-.chronos-timeline-container .vis-item.with-caps {
+.chronos-timeline-container .vis-item.with-caps:not(.vis-background) {
 	border-radius: 50px !important;
 }
 

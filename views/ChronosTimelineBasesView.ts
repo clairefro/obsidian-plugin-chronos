@@ -14,6 +14,8 @@ const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+import { FileUtils } from "../util/FileUtils";
+import { wireSharedTimelineInteractions } from "../util/wireSharedTimelineInteractions";
 
 export class ChronosTimelineBasesView extends BasesView {
 	// This unique ID is what appears in the "Add View" menu
@@ -22,6 +24,7 @@ export class ChronosTimelineBasesView extends BasesView {
 	private containerEl: HTMLElement;
 	private pluginSettings: ChronosPluginSettings;
 	private chronosMarkdown: string = "";
+	private fileUtils: FileUtils;
 
 	constructor(
 		controller: QueryController,
@@ -30,8 +33,9 @@ export class ChronosTimelineBasesView extends BasesView {
 	) {
 		super(controller);
 		this.containerEl = parentEl.createDiv("chronos-bases-view-container");
-
 		this.pluginSettings = pluginSettings;
+		// FileUtils instance for note linking
+		this.fileUtils = new FileUtils({ app: this.app });
 	}
 
 	public onDataUpdated(): void {
@@ -114,6 +118,14 @@ export class ChronosTimelineBasesView extends BasesView {
 			settings: this.pluginSettings || {},
 		});
 		timeline.render(this.chronosMarkdown);
+		// DRY: wire up note linking and hover preview
+		wireSharedTimelineInteractions(
+			timeline,
+			this.fileUtils,
+			this.app,
+			timelineContainerEl,
+			this.pluginSettings,
+		);
 
 		// render buttons
 		this.renderCopyButton();
