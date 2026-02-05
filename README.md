@@ -623,9 +623,9 @@ description?
 2. Select "Chronos Timeline" view and give a custom name
 <img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
 
-3. Select filters for notes
+3. Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
 
-NOTE: Only notes with `start` property will show up in the timeline.
+> Note: Only notes with `start` property will show up in the timeline - other notes will be ignored.
 
 Dragging your Bases view into the right or left side panels allows you to watch your timeline update in realtime as you add notes and update properties.
 
