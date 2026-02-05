@@ -154,9 +154,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		const content = this.chronosMarkdown;
 		const locale = this.pluginSettings.selectedLocale;
 
-		const globalObject: any =
-			typeof globalThis !== "undefined" ? globalThis : window;
-
 		// Start from the current origin+pathname and build query params fresh
 		const url = new URL(CHRONOS_PLAYGROUND_BASE_URL);
 		url.search = "";
