@@ -471,3 +471,27 @@
 	text-decoration: none;
 	color: #000000;
 }
+
+.chronos-bases-view-container {
+	padding: 2rem;
+}
+
+.chronos-bases-view-container.chronos-sidebar {
+	padding: 0.5rem !important;
+}
+
+/* Chronos Bases View Buttons */
+.chronos-bases-view-copy-btn,
+.chronos-bases-view-share-btn {
+	margin-top: 1rem;
+	background: none;
+	border: none;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.chronos-bases-view-share-btn {
+	margin-left: 0.5rem;
+}
