@@ -133,7 +133,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
         - [Colors `#color`](#colors-color)
         - [Groups `{}`](#groups-)
     - [Advanced example](#advanced-example)
-- [Obsidian Bases view](#obsidian-bases)
+- [Obsidian Bases view](#obsidian-bases-view)
 - [Note linking (beta)](#note-linking-beta)
 - [Dynamic Timelines](#dynamic-timelines)
     - [Prerequisites](#prerequisites)
@@ -601,7 +601,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 
 ![advanced example](./docs/ex-advanced.png)
 
-# Obsdian Bases
+# Obsidian Bases view
 
 By adding frontmatter properties to your notes, you can easily make dynamic and highly portable timelines! Any note with at least a `start` property will show. Properties marked with `?` below are optional
 
