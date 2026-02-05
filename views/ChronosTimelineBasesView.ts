@@ -5,10 +5,15 @@ import {
 	QueryController,
 	Notice,
 } from "obsidian";
-import { ChronosTimeline } from "chronos-timeline-md";
+
 import { ChronosPluginSettings } from "../types";
 import { CHRONOS_PLAYGROUND_BASE_URL } from "../constants";
 import LZString from "lz-string";
+import * as ChronosLib from "chronos-timeline-md";
+const ChronosTimeline: any =
+	(ChronosLib as any).ChronosTimeline ??
+	(ChronosLib as any).default ??
+	(ChronosLib as any);
 
 export class ChronosTimelineBasesView extends BasesView {
 	// This unique ID is what appears in the "Add View" menu

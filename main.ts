@@ -56,7 +56,7 @@ export default class ChronosPlugin extends Plugin {
 	private fileUtils: FileUtils;
 
 	async onload() {
-		console.log("Loading Chronos Timeline Plugin....");
+		console.debug("Loading Chronos Timeline Plugin....");
 
 		this.settings = {
 			...DEFAULT_SETTINGS,
@@ -269,7 +269,7 @@ export default class ChronosPlugin extends Plugin {
 			}
 		});
 		this.observedEditors.clear();
-		console.log("Chronos plugin unloaded, all observers cleaned up");
+		console.debug("Chronos plugin unloaded, all observers cleaned up");
 	}
 
 	async loadSettings() {
@@ -336,7 +336,7 @@ export default class ChronosPlugin extends Plugin {
 			}
 
 			if (!editorEl) {
-				console.log(
+				console.debug(
 					"Could not find .markdown-source-view element after 5 attempts",
 				);
 				// Debug: log the container's ancestors
@@ -605,7 +605,7 @@ export default class ChronosPlugin extends Plugin {
 				});
 			}
 		} catch (error) {
-			console.log(error);
+			console.debug(error);
 		}
 	}
 
@@ -1204,7 +1204,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 							new Notice("Cache initialized successfully");
 						} else {
 							// Clear cache when disabling
-							console.log("[Chronos] Clearing cache...");
+							console.debug("[Chronos] Clearing cache...");
 							this.plugin.cacheUtils.fileChronosCache.clear();
 							this.plugin.cacheUtils.folderChronosCache.clear();
 							this.plugin.cacheUtils.cacheInitialized = false;

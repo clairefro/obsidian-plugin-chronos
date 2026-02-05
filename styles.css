@@ -100,6 +100,10 @@
 	border-color: var(--color-accent);
 }
 
+.chronos-timeline-container .vis-item.with-caps {
+	border-radius: 50px !important;
+}
+
 .chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
 	border-color: var(--chronos-semi-gray) !important;
 }
