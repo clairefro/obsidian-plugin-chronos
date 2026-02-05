@@ -55,30 +55,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		// show helpful message if results are empty
 		if (!this.data || !this.data.data || this.data.data.length === 0) {
-			this.containerEl.empty();
-			this.containerEl.createDiv({
-				cls: "chronos-empty-message",
-				text: "No results found!",
-			});
-			const instructionsHtml = `
-				<div class="chronos-instructions">
-					<p>To enable timeline views, add frontmatter to your notes by typing <code>---</code> at the top, then add a <b>start</b> property with a date (like <code>2025</code>, <code>2025-03</code>, or <code>2025-03-14</code>).</p>
-					<p>Available properties:</p>
-					<ul>
-                    	<li><b>start</b> <span style="color: var(--text-muted)">(required; YYYY-MM-DD...)</span></li>
-						<li><b>end</b> <span style="color:  var(--text-muted)">(optional)</span></li>
-						<li><b>color</b> <span style="color:  var(--text-muted)">(optional; named colors like red, blue, green, cyan or valid hexcode color)</span></li>
-						<li><b>content</b> <span style="color:  var(--text-muted)">(optional; defaults to note title)</span></li>
-						<li><b>type</b> <span style="color:  var(--text-muted)">(event, period, marker, point; defaults to event)</span></li>
-						<li><b>description</b> <span style="color:  var(--text-muted)">(optional)</span></li>
-					</ul>
-				</div>
-			`;
-			const instructionsDiv = this.containerEl.createDiv({
-				cls: "chronos-instructions",
-			});
-			instructionsDiv.innerHTML = instructionsHtml;
-			return;
+			this.renderInstructionsOnEmptyResults();
 		}
 
 		const entries = this.data.data; // BasesEntry[]
@@ -109,6 +86,10 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		// TODO: helper for converting data to chronos string
 		this.chronosMarkdown = chronosItemsToMarkdown(items);
+		if (!this.chronosMarkdown.length) {
+			this.renderInstructionsOnEmptyResults();
+			return;
+		}
 
 		const timelineContainerEl = this.containerEl.createDiv(
 			"chronos-bases-view-timeline-container",
@@ -117,6 +98,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			container: timelineContainerEl,
 			settings: this.pluginSettings || {},
 		});
+
 		timeline.render(this.chronosMarkdown);
 		// DRY: wire up note linking and hover preview
 		wireSharedTimelineInteractions(
@@ -166,6 +148,32 @@ export class ChronosTimelineBasesView extends BasesView {
 				new Notice("Failed to create shareable link");
 			}
 		};
+	}
+	private renderInstructionsOnEmptyResults() {
+		this.containerEl.empty();
+		this.containerEl.createDiv({
+			cls: "chronos-empty-message",
+			text: "No results found!",
+		});
+		const instructionsHtml = `
+				<div class="chronos-instructions">
+					<p>To enable timeline views, add frontmatter to your notes by typing <code>---</code> at the top, then add a <b>start</b> property with a date (like <code>2025</code>, <code>2025-03</code>, or <code>2025-03-14</code>).</p>
+					<p>Available properties:</p>
+					<ul>
+                    	<li><b>start</b> <span style="color: var(--text-muted)">(required; YYYY-MM-DD...)</span></li>
+						<li><b>end</b> <span style="color:  var(--text-muted)">(optional)</span></li>
+						<li><b>color</b> <span style="color:  var(--text-muted)">(optional; named colors like red, blue, green, cyan or valid hexcode color)</span></li>
+						<li><b>content</b> <span style="color:  var(--text-muted)">(optional; defaults to note title)</span></li>
+						<li><b>type</b> <span style="color:  var(--text-muted)">(event, period, marker, point; defaults to event)</span></li>
+						<li><b>description</b> <span style="color:  var(--text-muted)">(optional)</span></li>
+					</ul>
+				</div>
+			`;
+		const instructionsDiv = this.containerEl.createDiv({
+			cls: "chronos-instructions",
+		});
+		instructionsDiv.innerHTML = instructionsHtml;
+		return;
 	}
 
 	private buildShareableUrl() {
