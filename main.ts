@@ -14,7 +14,7 @@ import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
-import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./components/ChangelogView";
+import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./views/ChangelogView";
 import { knownLocales } from "./util/knownLocales";
 import { CacheUtils } from "./util/CacheUtils";
 import { FileUtils } from "./util/FileUtils";
@@ -26,12 +26,15 @@ import {
 	DETECTION_PATTERN_CODEBLOCK,
 } from "./constants";
 
+import { ChronosTimelineBasesView } from "./views/ChronosTimelineBasesView";
+
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
@@ -54,7 +57,7 @@ export default class ChronosPlugin extends Plugin {
 	private fileUtils: FileUtils;
 
 	async onload() {
-		console.log("Loading Chronos Timeline Plugin....");
+		console.debug("Loading Chronos Timeline Plugin....");
 
 		this.settings = {
 			...DEFAULT_SETTINGS,
@@ -75,6 +78,17 @@ export default class ChronosPlugin extends Plugin {
 					},
 				}),
 		);
+		// register bases view
+		this.registerBasesView("chronos-timeline-view", {
+			name: "Chronos Timeline",
+			icon: "chart-no-axes-gantt",
+			factory: (controller, containerEl) =>
+				new ChronosTimelineBasesView(
+					controller,
+					containerEl,
+					this.settings,
+				),
+		});
 
 		// Remove old insecure aiKeys property (LEGACY)
 		if ((this.settings as any).aiKeys) {
@@ -242,7 +256,7 @@ export default class ChronosPlugin extends Plugin {
 			}
 		});
 		this.observedEditors.clear();
-		console.log("Chronos plugin unloaded, all observers cleaned up");
+		console.debug("Chronos plugin unloaded, all observers cleaned up");
 	}
 
 	async loadSettings() {
@@ -309,7 +323,7 @@ export default class ChronosPlugin extends Plugin {
 			}
 
 			if (!editorEl) {
-				console.log(
+				console.debug(
 					"Could not find .markdown-source-view element after 5 attempts",
 				);
 				// Debug: log the container's ancestors
@@ -436,10 +450,6 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private _renderChronosBlock(source: string, el: HTMLElement) {
-		// HACK for preventing triple propogation of mouseDown handler
-		let lastEventTime = 0;
-		const THROTTLE_MS = 500;
-
 		const container = el.createEl("div", {
 			cls: "chronos-timeline-container",
 		});
@@ -494,91 +504,16 @@ export default class ChronosPlugin extends Plugin {
 
 		try {
 			timeline.render(source);
-			// handle note linking
-			timeline.on("mouseDown", (event: any) => {
-				const now = performance.now();
-				if (now - lastEventTime < THROTTLE_MS) {
-					event.event.stopImmediatePropagation();
-					event.event.preventDefault();
-					return;
-				}
-				lastEventTime = now;
-
-				// Stop event immediately
-				if (event.event instanceof MouseEvent) {
-					event.event.stopImmediatePropagation();
-					event.event.preventDefault();
-
-					const itemId = event.item;
-					if (!itemId) return;
-
-					const item = timeline.items?.find(
-						(i: any) => i.id === itemId,
-					);
-					if (!item?.cLink) return;
-
-					// Check for middle click or CMD+click (Mac)
-					const isMiddleClick = event.event.button === 1;
-					const isCmdClick =
-						event.event.metaKey && event.event.button === 0;
-					const isShiftClick = event.event.shiftKey;
-
-					const shouldOpenInNewLeaf =
-						isMiddleClick || isCmdClick || isShiftClick;
-					this.fileUtils.openFileFromWikiLink(
-						item.cLink,
-						shouldOpenInNewLeaf,
-					);
-				}
-			});
-
-			// Add hover preview for linked notes
-			timeline.on("itemover", async (event: any) => {
-				const itemId = event.item;
-				if (itemId) {
-					const item = timeline.items?.find(
-						(i: any) => i.id === itemId,
-					);
-					if (item?.cLink) {
-						// Get the target element to show hover on
-						const targetEl = event.event.target as HTMLElement;
-
-						// Use Obsidian's built-in hover preview
-						this.app.workspace.trigger("hover-link", {
-							event: event.event,
-							source: "chronos-timeline",
-							hoverParent: container,
-							targetEl: targetEl,
-							linktext: item.cLink,
-						});
-					}
-				}
-			});
-			// Close item preview on item out
-			timeline.on("itemout", () => {
-				// Force close any open hovers
-				this.app.workspace.trigger("hover-link:close");
-			});
-
-			// Add click to use functionality and UI hints if,enabled
-			if (this.settings.clickToUse && container) {
-				timeline.timeline?.setOptions({
-					clickToUse: this.settings.clickToUse,
-				});
-
-				timeline.on("mouseOver", (e: any) => {
-					if (
-						this.settings.clickToUse &&
-						!container.querySelectorAll(".vis-active").length
-					) {
-						// Tooltip removed due to deprecation
-					} else {
-						// Tooltip removed due to deprecation
-					}
-				});
-			}
+			// DRY: wire up note linking and hover preview
+			wireSharedTimelineInteractions(
+				timeline,
+				this.fileUtils,
+				this.app,
+				container,
+				this.settings,
+			);
 		} catch (error) {
-			console.log(error);
+			console.debug(error);
 		}
 	}
 
@@ -1177,7 +1112,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 							new Notice("Cache initialized successfully");
 						} else {
 							// Clear cache when disabling
-							console.log("[Chronos] Clearing cache...");
+							console.debug("[Chronos] Clearing cache...");
 							this.plugin.cacheUtils.fileChronosCache.clear();
 							this.plugin.cacheUtils.folderChronosCache.clear();
 							this.plugin.cacheUtils.cacheInitialized = false;
