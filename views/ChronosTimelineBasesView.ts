@@ -61,8 +61,14 @@ export class ChronosTimelineBasesView extends BasesView {
 		const entries = this.data.data; // BasesEntry[]
 
 		const items = entries.map((entry) => {
-			const start = (entry.getValue("note.start") as any)?.data;
-			const end = (entry.getValue("note.end") as any)?.data || undefined;
+			const start =
+				entry.getValue("note.start")?.toString() !== "null"
+					? entry.getValue("note.start")?.toString()
+					: undefined;
+			const end =
+				entry.getValue("note.end")?.toString() !== "null"
+					? entry.getValue("note.end")?.toString()
+					: undefined;
 			// content defaults to filename unless overriden by note.content
 			const content =
 				(entry.getValue("note.content") as any)?.data ||
@@ -84,7 +90,6 @@ export class ChronosTimelineBasesView extends BasesView {
 			});
 		});
 
-		// TODO: helper for converting data to chronos string
 		this.chronosMarkdown = chronosItemsToMarkdown(items);
 		if (!this.chronosMarkdown.length) {
 			this.renderInstructionsOnEmptyResults();
