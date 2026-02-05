@@ -14,7 +14,7 @@ import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
-import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./components/ChangelogView";
+import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./views/ChangelogView";
 import { knownLocales } from "./util/knownLocales";
 import { CacheUtils } from "./util/CacheUtils";
 import { FileUtils } from "./util/FileUtils";
