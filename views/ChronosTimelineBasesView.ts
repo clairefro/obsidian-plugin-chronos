@@ -176,6 +176,7 @@ export class ChronosTimelineBasesView extends BasesView {
 						<li><b>type</b> <span style="color:  var(--text-muted)">(event, period, marker, point; defaults to event)</span></li>
 						<li><b>description</b> <span style="color:  var(--text-muted)">(optional)</span></li>
 					</ul>
+					<a href="https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:0.5em;">Learn more about Chronos Timeline Bases view</a>
 				</div>
 			`;
 		const instructionsDiv = this.containerEl.createDiv({

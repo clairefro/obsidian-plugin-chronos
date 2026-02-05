@@ -499,3 +499,7 @@
 .chronos-bases-view-share-btn {
 	margin-left: 0.5rem;
 }
+
+.chronos-bases-view-timeline-container .chronos-error-message-container {
+	color: var(--text-normal) !important;
+}
