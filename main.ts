@@ -57,7 +57,7 @@ export default class ChronosPlugin extends Plugin {
 	private fileUtils: FileUtils;
 
 	async onload() {
-		console.debug("Loading Chronos Timeline Plugin....");
+		console.debug("[Chronos] Loading Plugin....");
 
 		this.settings = {
 			...DEFAULT_SETTINGS,
@@ -256,7 +256,7 @@ export default class ChronosPlugin extends Plugin {
 			}
 		});
 		this.observedEditors.clear();
-		console.debug("Chronos plugin unloaded, all observers cleaned up");
+		console.debug("[Chronos] Plugin unloaded, all observers cleaned up");
 	}
 
 	async loadSettings() {
@@ -324,7 +324,7 @@ export default class ChronosPlugin extends Plugin {
 
 			if (!editorEl) {
 				console.debug(
-					"Could not find .markdown-source-view element after 5 attempts",
+					"[Chronos] Could not find .markdown-source-view element after 5 attempts",
 				);
 				// Debug: log the container's ancestors
 				let parent = container.parentElement;
@@ -370,7 +370,10 @@ export default class ChronosPlugin extends Plugin {
 			try {
 				resizeObserver.observe(editorEl);
 			} catch (error) {
-				console.error("Failed to observe editor element:", error);
+				console.error(
+					"[Chronos] Failed to observe editor element:",
+					error,
+				);
 			}
 
 			this.observedEditors.add(editorEl);
@@ -743,7 +746,10 @@ export default class ChronosPlugin extends Plugin {
 			).open();
 		} catch (error) {
 			new Notice("Error scanning for chronos items");
-			console.error("Error in _generateTimelineFromFolder:", error);
+			console.error(
+				"[Chronos] Error in _generateTimelineFromFolder:",
+				error,
+			);
 		}
 	}
 
@@ -1342,7 +1348,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					"Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax",
 				);
 			} catch (err) {
-				console.error("Failed to copy cheatsheet:", err);
+				console.error("[Chronos] Failed to copy cheatsheet:", err);
 				new Notice("Failed to copy cheatsheet");
 			}
 		});
