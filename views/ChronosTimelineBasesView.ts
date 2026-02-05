@@ -130,7 +130,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		});
 		setTooltip(copyBtn, "Copy timeline markdown");
 		setIcon(copyBtn, "copy");
-		// Styles moved to styles.css
 		copyBtn.onclick = async () => {
 			try {
 				await navigator.clipboard.writeText(this.chronosMarkdown);
@@ -147,7 +146,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		});
 		setTooltip(shareBtn, "Copy shareable public link");
 		setIcon(shareBtn, "share-2");
-		// Styles moved to styles.css
 		shareBtn.onclick = async () => {
 			try {
 				const url = this.buildShareableUrl();
