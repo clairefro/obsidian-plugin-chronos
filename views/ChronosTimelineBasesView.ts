@@ -78,8 +78,12 @@ export class ChronosTimelineBasesView extends BasesView {
 				(entry.getValue("note.color") as any)?.data || undefined;
 			const type =
 				(entry.getValue("note.type") as any)?.data || undefined;
-			const description =
+			const fileName =
+				(entry.getValue("file.name") as any)?.data || "Untitled";
+			const descriptionRaw =
 				(entry.getValue("note.description") as any)?.data || undefined;
+			/** automatically postpend a wikilink to this note so users can click to open */
+			const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
 			return normalizeItemFields({
 				start,
 				end,
@@ -182,7 +186,14 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 
 	private buildShareableUrl() {
-		const content = this.chronosMarkdown;
+		let content = this.chronosMarkdown;
+		// Remove all wikilinks ([[...]]) from the markdown for the shareable link
+		content = content.replace(/\[\[.*?\]\]/g, "").trim();
+		// For each line, if it ends with | and only whitespace, remove the pipe and whitespace
+		content = content
+			.split("\n")
+			.map((line) => line.replace(/\|\s*$/, ""))
+			.join("\n");
 		const locale = this.pluginSettings.selectedLocale;
 
 		// Start from the current origin+pathname and build query params fresh
@@ -254,7 +265,7 @@ function chronosItemsToMarkdown(
 		line += "]";
 		if (color) line += ` #${color} `;
 		if (content) line += ` ${content}`;
-		if (description) line += ` |${description}`;
+		if (description) line += ` | ${description}`;
 		lines.push(line);
 	}
 	if (lines.length > 15) {
