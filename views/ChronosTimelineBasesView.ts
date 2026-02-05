@@ -259,11 +259,57 @@ function normalizeItemFields(event: {
 				? String(event.content).trim()
 				: undefined,
 		color:
-			event.color !== undefined ? String(event.color).trim() : undefined,
-		type: event.type !== undefined ? String(event.type).trim() : undefined,
+			event.color !== undefined
+				? normalizeColor(String(event.color).trim())
+				: undefined,
+		type:
+			event.type !== undefined
+				? normalizeType(String(event.type).trim())
+				: undefined,
 		description:
 			event.description !== undefined
 				? String(event.description).trim()
 				: undefined,
 	};
+}
+
+function normalizeColor(color: string): string | undefined {
+	if (!color) return undefined;
+	const VALID_PRESET_COLORS = [
+		"red",
+		"orange",
+		"yellow",
+		"green",
+		"cyan",
+		"blue",
+		"purple",
+		"pink",
+	];
+	const lower = color.trim().toLowerCase();
+	if (VALID_PRESET_COLORS.includes(lower)) {
+		return lower;
+	}
+	// Check for valid hex code (3, 4, 6, or 8 digits, with or without #)
+	const hex = color.trim().replace(/^#/, "");
+	if (
+		/^[0-9a-fA-F]{3}$/.test(hex) ||
+		/^[0-9a-fA-F]{4}$/.test(hex) ||
+		/^[0-9a-fA-F]{6}$/.test(hex) ||
+		/^[0-9a-fA-F]{8}$/.test(hex)
+	) {
+		return hex;
+	}
+	return undefined;
+}
+
+function normalizeType(type: string) {
+	if (!type) return undefined;
+	const VALID_TYPES = ["event", "period", "point", "marker"];
+
+	const lower = type.trim().toLowerCase();
+	if (VALID_TYPES.includes(lower)) {
+		return lower;
+	} else {
+		return undefined;
+	}
 }
