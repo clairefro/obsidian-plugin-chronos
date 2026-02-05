@@ -78,8 +78,17 @@ export function wireSharedTimelineInteractions(
 	// Click-to-use support (if enabled)
 	if (settings.clickToUse && container) {
 		timeline.timeline?.setOptions({ clickToUse: settings.clickToUse });
-		timeline.on("mouseOver", () => {
-			// Tooltip logic removed (deprecated)
-		});
 	}
+
+	// mark scroll-blocking event listeners as passive
+	// Example: container.addEventListener('touchstart', handler, { passive: true });
+	["touchstart", "touchmove", "touchend"].forEach((evt) => {
+		container.addEventListener(
+			evt,
+			(e) => {
+				e.stopPropagation();
+			},
+			{ passive: true },
+		);
+	});
 }

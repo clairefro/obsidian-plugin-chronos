@@ -489,16 +489,6 @@ export default class ChronosPlugin extends Plugin {
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
 
-		// disable touch event propogation on containainer so sidebars don't interfer on mobile when swiping timeline
-		["touchstart", "touchmove", "touchend"].forEach((evt) => {
-			container.addEventListener(
-				evt,
-				(e) => {
-					e.stopPropagation();
-				},
-				{ passive: false },
-			);
-		});
 
 		const timeline = new ChronosTimeline({
 			container,
