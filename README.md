@@ -612,13 +612,41 @@ content?        (Optional alternate title - defaults to note name)
 type?           (event|point|period|marker - defaults to event)
 color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?
-
 ```
 
 ![example: Chronos Timeline View in Obsidian Bases](./docs/ex-chronos-bases-demo.gif)
 
+## Adding a Chronos Timelines Bases view
+1. From a base, click "Add View" from the Views dropdown 
+<img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
+
+2. Select "Chronos Timeline" view and give a custom name
+<img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
+
+3. Select filters for notes
+
+NOTE: Only notes with `start` property will show up in the timeline.
+
 Dragging your Bases view into the right or left side panels allows you to watch your timeline update in realtime as you add notes and update properties.
 
+## Adding properties to notes
+At the very top of a note you'd like to see in the Chronos Timeline Bases view, add properties by typing `---` on the first line (Figure A). Or by using the properties wizard if it is already showing (Figure B). 
+
+Figure A
+<img width="969" height="360" alt="image" src="https://github.com/user-attachments/assets/9d66d299-b4c7-4c8d-8749-985e7de732dd" />
+
+Figure B
+<img width="954" height="449" alt="image" src="https://github.com/user-attachments/assets/19e6b689-96aa-4c2d-895e-32c8b6ea1499" />
+
+```
+start           (Chronos date)
+end?            (Chronos date)
+content?        (Optional alternate title - defaults to note name)
+type?           (event|point|period|marker - defaults to event)
+color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
+description?
+```
+## Interacting with the Chronos Timeline Bases view
 The Chronos Timeline Bases view automatically links to the related note.
 
 You can hover on an item and hold `Cmd/Ctrl` to see a note preview before jumping.
