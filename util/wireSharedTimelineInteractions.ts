@@ -11,6 +11,7 @@ export function wireSharedTimelineInteractions(
 	app: App,
 	container: HTMLElement,
 	settings: ChronosPluginSettings,
+	hoverSource: "preview" | "chronos-timeline" = "chronos-timeline",
 ) {
 	let lastEventTime = 0;
 	const THROTTLE_MS = 500;
@@ -60,7 +61,7 @@ export function wireSharedTimelineInteractions(
 				}
 				app.workspace.trigger("hover-link", {
 					event: event.event,
-					source: "chronos-timeline",
+					source: hoverSource,
 					hoverParent: container,
 					targetEl,
 					linktext: item.cLink,

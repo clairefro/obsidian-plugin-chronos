@@ -125,6 +125,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			this.app,
 			timelineContainerEl,
 			this.pluginSettings,
+			"chronos-timeline", // Use custom source for BasesView
 		);
 
 		// render buttons
@@ -250,7 +251,7 @@ function chronosItemsToMarkdown(
 }
 
 // enforce strings for non-undefined vals; trim whitespace
-function normalizeItemFields(event: {
+function normalizeItemFields(item: {
 	start: any;
 	end?: any;
 	content?: any;
@@ -266,23 +267,23 @@ function normalizeItemFields(event: {
 	description?: string;
 } {
 	return {
-		start: event.start !== undefined ? String(event.start).trim() : "",
-		end: event.end !== undefined ? String(event.end).trim() : undefined,
+		start: item.start !== undefined ? String(item.start).trim() : "",
+		end: item.end !== undefined ? String(item.end).trim() : undefined,
 		content:
-			event.content !== undefined
-				? String(event.content).trim()
+			item.content !== undefined
+				? String(item.content).trim()
 				: undefined,
 		color:
-			event.color !== undefined
-				? normalizeColor(String(event.color).trim())
+			item.color !== undefined
+				? normalizeColor(String(item.color).trim())
 				: undefined,
 		type:
-			event.type !== undefined
-				? normalizeType(String(event.type).trim())
+			item.type !== undefined
+				? normalizeType(String(item.type).trim())
 				: undefined,
 		description:
-			event.description !== undefined
-				? String(event.description).trim()
+			item.description !== undefined
+				? String(item.description).trim()
 				: undefined,
 	};
 }
