@@ -13,6 +13,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 ## Features
 
 - Portable plain text data
+- Obsidian Bases view
 - Text-to-timeline with AI
 - Generate combined timeline from all Chronos items in folder
 - Note linking
@@ -132,6 +133,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
         - [Colors `#color`](#colors-color)
         - [Groups `{}`](#groups-)
     - [Advanced example](#advanced-example)
+- [Obsidian Bases view](#obsidian-bases)
 - [Note linking (beta)](#note-linking-beta)
 - [Dynamic Timelines](#dynamic-timelines)
     - [Prerequisites](#prerequisites)
@@ -598,6 +600,30 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ````
 
 ![advanced example](./docs/ex-advanced.png)
+
+# Obsdian Bases
+
+By adding frontmatter properties to your notes, you can easily make dynamic and highly portable timelines! Any note with at least a `start` property will show. Properties marked with `?` below are optional
+
+```
+start           (Chronos date)
+end?            (Chronos date)
+content?        (Optional alternate title - defaults to note name)
+type?           (event|point|period|marker - defaults to event)
+color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
+description?
+
+```
+
+![example: Chronos Timeline View in Obsidian Bases](./docs/ex-chronos-bases-demo.gif)
+
+Dragging your Bases view into the right or left side panels allows you to watch your timeline update in realtime as you add notes and update properties.
+
+The Chronos Timeline Bases view automatically links to the related note.
+
+You can hover on an item and hold `Cmd/Ctrl` to see a note preview before jumping.
+
+You can also **Copy** the generated markdown (to paste in `chronos` blocks in your notes), or **Copy a shareable link** (stripped of wikilinks) that you can send your friends online
 
 # Note linking (beta)
 
