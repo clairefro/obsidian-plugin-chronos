@@ -92,10 +92,14 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		const items = entries.map((entry) => {
 			// start --------
-			let start =
-				entry.getValue(`note.${propNames.start}`)?.toString() !== "null"
-					? entry.getValue(`note.${propNames.start}`)?.toString()
-					: undefined;
+			let start = undefined;
+			if (this.data.properties.includes(`note.${propNames.start}`)) {
+				start =
+					entry.getValue(`note.${propNames.start}`)?.toString() !==
+					"null"
+						? entry.getValue(`note.${propNames.start}`)?.toString()
+						: undefined;
+			}
 			if (this.data.properties.includes(`formula.${propNames.start}`)) {
 				start =
 					entry.getValue(`formula.${propNames.start}`)?.toString() !==
@@ -106,13 +110,15 @@ export class ChronosTimelineBasesView extends BasesView {
 						: undefined;
 			}
 
-			console.log({ start });
-
 			// end --------
-			let end =
-				entry.getValue(`note.${propNames.end}`)?.toString() !== "null"
-					? entry.getValue(`note.${propNames.end}`)?.toString()
-					: undefined;
+			let end = undefined;
+			if (this.data.properties.includes(`note.${propNames.end}`)) {
+				end =
+					entry.getValue(`note.${propNames.end}`)?.toString() !==
+					"null"
+						? entry.getValue(`note.${propNames.end}`)?.toString()
+						: undefined;
+			}
 			if (this.data.properties.includes(`formula.${propNames.end}`)) {
 				end =
 					entry.getValue(`formula.${propNames.end}`)?.toString() !==
@@ -122,11 +128,14 @@ export class ChronosTimelineBasesView extends BasesView {
 			}
 
 			// group --------
-			let group =
-				(entry.getValue(`note.${propNames.group}`) as any)?.data ||
-				(entry.getValue(`note.${propNames.group}`) as any)?.data ||
-				undefined;
-
+			let group = undefined;
+			if (this.data.properties.includes(`note.${propNames.group}`)) {
+				group =
+					entry.getValue(`note.${propNames.group}`)?.toString() !==
+					"null"
+						? entry.getValue(`note.${propNames.group}`)?.toString()
+						: undefined;
+			}
 			if (this.data.properties.includes(`formula.${propNames.group}`)) {
 				group =
 					entry.getValue(`formula.${propNames.group}`)?.toString() !==
@@ -138,62 +147,98 @@ export class ChronosTimelineBasesView extends BasesView {
 			}
 
 			// content --------
-			let content =
-				(entry.getValue(`note.${propNames.content}`) as any)?.data ||
-				(entry.getValue(`formula.${propNames.content}`) as any)?.data ||
-				(entry.getValue("file.name") as any)?.data ||
-				"Untitled";
+			let content = undefined;
+			if (this.data.properties.includes(`note.${propNames.content}`)) {
+				content =
+					entry.getValue(`note.${propNames.content}`)?.toString() !==
+					"null"
+						? entry
+								.getValue(`note.${propNames.content}`)
+								?.toString()
+						: undefined;
+			}
 			if (this.data.properties.includes(`formula.${propNames.content}`)) {
-				content = (
-					entry.getValue(`formula.${propNames.content}`) as any
-				)?.data
-					? entry.getValue(`formula.${propNames.content}`)?.toString()
-					: content;
+				content =
+					entry
+						.getValue(`formula.${propNames.content}`)
+						?.toString() !== "null"
+						? entry
+								.getValue(`formula.${propNames.content}`)
+								?.toString()
+						: undefined;
+			}
+			if (!content) {
+				content =
+					(entry.getValue("file.name") as any)?.data || "Untitled";
 			}
 
 			// color --------
-			let color =
-				(entry.getValue(`note.${propNames.color}`) as any)?.data ||
-				(entry.getValue(`formula.${propNames.color}`) as any)?.data ||
-				undefined;
+			let color = undefined;
+			if (this.data.properties.includes(`note.${propNames.color}`)) {
+				color =
+					entry.getValue(`note.${propNames.color}`)?.toString() !==
+					"null"
+						? entry.getValue(`note.${propNames.color}`)?.toString()
+						: undefined;
+			}
 			if (this.data.properties.includes(`formula.${propNames.color}`)) {
-				color = (entry.getValue(`formula.${propNames.color}`) as any)
-					?.data
-					? entry.getValue(`formula.${propNames.color}`)?.toString()
-					: undefined;
+				color =
+					entry.getValue(`formula.${propNames.color}`)?.toString() !==
+					"null"
+						? entry
+								.getValue(`formula.${propNames.color}`)
+								?.toString()
+						: undefined;
 			}
 
 			// type --------
-			let type =
-				(entry.getValue(`note.${propNames.type}`) as any)?.data ||
-				(entry.getValue(`formula.${propNames.type}`) as any)?.data ||
-				undefined;
+			let type = undefined;
+			if (this.data.properties.includes(`note.${propNames.type}`)) {
+				type =
+					entry.getValue(`note.${propNames.type}`)?.toString() !==
+					"null"
+						? entry.getValue(`note.${propNames.type}`)?.toString()
+						: undefined;
+			}
 			if (this.data.properties.includes(`formula.${propNames.type}`)) {
-				type = (entry.getValue(`formula.${propNames.type}`) as any)
-					?.data
-					? entry.getValue(`formula.${propNames.type}`)?.toString()
-					: undefined;
+				type =
+					entry.getValue(`formula.${propNames.type}`)?.toString() !==
+					"null"
+						? entry
+								.getValue(`formula.${propNames.type}`)
+								?.toString()
+						: undefined;
 			}
 
+			console.log({ type });
+
 			// description --------
-			let descriptionRaw =
-				(entry.getValue(`note.${propNames.description}`) as any)
-					?.data ||
-				(entry.getValue(`formula.${propNames.description}`) as any)
-					?.data ||
-				undefined;
+			let descriptionRaw = undefined;
+			if (
+				this.data.properties.includes(`note.${propNames.description}`)
+			) {
+				descriptionRaw =
+					entry
+						.getValue(`note.${propNames.description}`)
+						?.toString() !== "null"
+						? entry
+								.getValue(`note.${propNames.description}`)
+								?.toString()
+						: undefined;
+			}
 			if (
 				this.data.properties.includes(
 					`formula.${propNames.description}`,
 				)
 			) {
-				descriptionRaw = (
-					entry.getValue(`formula.${propNames.description}`) as any
-				)?.data
-					? entry
-							.getValue(`formula.${propNames.description}`)
-							?.toString()
-					: undefined;
+				descriptionRaw =
+					entry
+						.getValue(`formula.${propNames.description}`)
+						?.toString() !== "null"
+						? entry
+								.getValue(`formula.${propNames.description}`)
+								?.toString()
+						: undefined;
 			}
 
 			const fileName =
