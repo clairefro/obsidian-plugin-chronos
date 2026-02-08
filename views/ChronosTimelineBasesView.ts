@@ -63,7 +63,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		}
 
 		const entries = this.data.data; // BasesEntry[]
-		console.log(entries);
 
 		// Get property names from plugin settings, fallback to defaults
 		const propNames = {
@@ -209,8 +208,6 @@ export class ChronosTimelineBasesView extends BasesView {
 								?.toString()
 						: undefined;
 			}
-
-			console.log({ type });
 
 			// description --------
 			let descriptionRaw = undefined;
