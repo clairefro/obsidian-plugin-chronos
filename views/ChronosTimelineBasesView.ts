@@ -4,6 +4,7 @@ import {
 	setTooltip,
 	QueryController,
 	Notice,
+	BasesEntry,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "../types";
@@ -18,7 +19,7 @@ import { FileUtils } from "../util/FileUtils";
 import { wireSharedTimelineInteractions } from "../util/wireSharedTimelineInteractions";
 
 export class ChronosTimelineBasesView extends BasesView {
-	// This unique ID is what appears in the "Add View" menu
+	//  unique ID that appears in the "Add View" menu
 	static VIEW_TYPE = "chronos-timeline-bases-view";
 	type: string = ChronosTimelineBasesView.VIEW_TYPE;
 	private containerEl: HTMLElement;
@@ -61,32 +62,72 @@ export class ChronosTimelineBasesView extends BasesView {
 		const entries = this.data.data; // BasesEntry[]
 
 		const items = entries.map((entry) => {
-			const start =
+			// DEFAULT TO FORMULAS
+			// start --------
+			let start = (entry.getValue("formula.start") as any)?.data
+				? entry.getValue("formula.start")?.toString()
+				: undefined;
+
+			start =
 				entry.getValue("note.start")?.toString() !== "null"
 					? entry.getValue("note.start")?.toString()
-					: undefined;
-			const end =
+					: start;
+
+			// end --------
+
+			let end =
+				(entry.getValue("formula.end") as any)?.data ||
+				entry.getValue("formula.end")?.toString() ||
+				undefined;
+			end =
 				entry.getValue("note.end")?.toString() !== "null"
 					? entry.getValue("note.end")?.toString()
-					: undefined;
+					: end;
+
+			// group --------
+
+			let group = (entry.getValue("formula.group") as any)?.data
+				? entry.getValue("formula.group")?.toString()
+				: undefined;
+
+			group =
+				(entry.getValue("note.group") as any)?.data ||
+				(entry.getValue("note.group") as any)?.data ||
+				group;
+
+			// content --------
 			// content defaults to filename unless overriden by note.content
 			const content =
+				(entry.getValue("formula.content") as any)?.data ||
 				(entry.getValue("note.content") as any)?.data ||
 				(entry.getValue("file.name") as any)?.data ||
 				"Untitled";
-			const color =
-				(entry.getValue("note.color") as any)?.data || undefined;
+
+			// color --------
+			let color =
+				(entry.getValue("formula.color") as any)?.data ||
+				(entry.getValue("note.color") as any)?.data ||
+				undefined;
+			// type --------
 			const type =
-				(entry.getValue("note.type") as any)?.data || undefined;
+				(entry.getValue("formula.type") as any)?.data ||
+				(entry.getValue("note.type") as any)?.data ||
+				undefined;
+
+			// description --------
+			const descriptionRaw =
+				(entry.getValue("formula.description") as any)?.data(
+					entry.getValue("note.description") as any,
+				)?.data || undefined;
+
 			const fileName =
 				(entry.getValue("file.name") as any)?.data || "Untitled";
-			const descriptionRaw =
-				(entry.getValue("note.description") as any)?.data || undefined;
 			/** automatically postpend a wikilink to this note so users can click to open */
 			const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
 			return normalizeItemFields({
 				start,
 				end,
+				group,
 				content,
 				color,
 				type,
@@ -235,6 +276,7 @@ function chronosItemsToMarkdown(
 	items: {
 		start: string;
 		end?: string;
+		group?: string;
 		content?: string;
 		color?: string;
 		type?: string;
@@ -244,7 +286,7 @@ function chronosItemsToMarkdown(
 	// TODO: HANDLE EDGE CASES + TRIMMING
 	let lines = [];
 	for (const item of items) {
-		const { start, end, content, color, type, description } = item;
+		const { start, end, group, content, color, type, description } = item;
 
 		// skip items without start
 		if (!start) continue;
@@ -263,6 +305,7 @@ function chronosItemsToMarkdown(
 		if (end) line += `~${end}`;
 		line += "]";
 		if (color) line += ` #${color} `;
+		if (group) line += ` {${group}} `;
 		if (content) line += ` ${content}`;
 		if (description) line += ` | ${description}`;
 		lines.push(line);
@@ -277,6 +320,7 @@ function chronosItemsToMarkdown(
 function normalizeItemFields(item: {
 	start: any;
 	end?: any;
+	group?: any;
 	content?: any;
 	color?: any;
 	type?: any;
@@ -284,6 +328,7 @@ function normalizeItemFields(item: {
 }): {
 	start: string;
 	end?: string;
+	group?: string;
 	content?: string;
 	color?: string;
 	type?: string;
@@ -292,6 +337,8 @@ function normalizeItemFields(item: {
 	return {
 		start: item.start !== undefined ? String(item.start).trim() : "",
 		end: item.end !== undefined ? String(item.end).trim() : undefined,
+		group:
+			item.content !== undefined ? String(item.group).trim() : undefined,
 		content:
 			item.content !== undefined
 				? String(item.content).trim()

@@ -489,7 +489,6 @@ export default class ChronosPlugin extends Plugin {
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
 
-
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
