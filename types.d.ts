@@ -66,6 +66,16 @@ export interface ParseResult {
 	flags: Flags;
 }
 
+export interface BasePropNames {
+	start: string;
+	end: string;
+	group: string;
+	color: string;
+	type: string;
+	content: string;
+	description: string;
+}
+
 interface ChronosTimelineConstructor {
 	container: HTMLElement;
 	settings: ChronosPluginSettings;

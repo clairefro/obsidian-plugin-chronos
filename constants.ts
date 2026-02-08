@@ -1,3 +1,5 @@
+import { BasePropNames } from "./types";
+
 const DEFAULT_LOCALE = "en";
 
 const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
@@ -12,7 +14,7 @@ const DETECTION_PATTERN_TEXT = /`+chronos\s+(.*?)`+/gi;
 const DETECTION_PATTERN_HTML = /^chronos\s+(.*?)$/i;
 const DETECTION_PATTERN_CODEBLOCK = /```chronos\s*\n([\s\S]*?)```/gi;
 
-const BASES_PROP_NAMES_DEFAULTS = {
+const BASES_PROP_NAMES_DEFAULTS: BasePropNames = {
 	start: "start",
 	end: "end",
 	group: "group",

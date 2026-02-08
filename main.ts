@@ -10,7 +10,7 @@ import {
 	SecretComponent,
 } from "obsidian";
 
-import { Align, ChronosPluginSettings } from "./types";
+import { Align, BasePropNames, ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
@@ -1081,6 +1081,44 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		containerEl.createEl("h2", {
+			text: "Bases view",
+			cls: "chronos-setting-header",
+		});
+
+		containerEl.createEl("p", {
+			text: "Customize the property names used for Chronos Timeline Bases views. If empty, the default value will be used.",
+			cls: "chronos-setting-p",
+		});
+
+		const propNames = Object.keys(BASES_PROP_NAMES_DEFAULTS);
+		const basesPropNames = this.plugin.settings.basesPropNames as Record<
+			string,
+			string
+		>;
+		const defaultPropNames = BASES_PROP_NAMES_DEFAULTS as any;
+
+		propNames.forEach((prop: string) => {
+			new Setting(containerEl)
+				.setName(`${prop}`)
+				// .setDesc(`Customize the name for '${prop}' property`)
+				.addText((text) => {
+					const value =
+						basesPropNames[prop] ?? defaultPropNames[prop];
+					text.setValue(value)
+						.setPlaceholder(defaultPropNames[prop])
+						.onChange(async (inputValue) => {
+							const trimmed = inputValue.trim();
+							if (trimmed === "") {
+								basesPropNames[prop] = defaultPropNames[prop];
+							} else {
+								basesPropNames[prop] = trimmed;
+							}
+							await this.plugin.saveSettings();
+						});
+				});
+		});
 
 		containerEl.createEl("h2", {
 			text: "Performance",
