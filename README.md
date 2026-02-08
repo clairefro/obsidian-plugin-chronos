@@ -617,11 +617,12 @@ description?
 ![example: Chronos Timeline View in Obsidian Bases](./docs/ex-chronos-bases-demo.gif)
 
 ## Adding a Chronos Timelines Bases view
-1. From a base, click "Add View" from the Views dropdown 
-<img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
+
+1. From a base, click "Add View" from the Views dropdown
+   <img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
 
 2. Select "Chronos Timeline" view and give a custom name
-<img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
+   <img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
 
 3. Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
 
@@ -630,7 +631,8 @@ description?
 Dragging your Bases view into the right or left side panels allows you to watch your timeline update in realtime as you add notes and update properties.
 
 ## Adding properties to notes
-At the very top of a note you'd like to see in the Chronos Timeline Bases view, add properties by typing `---` on the first line (Figure A). Or by using the properties wizard if it is already showing (Figure B). 
+
+At the very top of a note you'd like to see in the Chronos Timeline Bases view, add properties by typing `---` on the first line (Figure A). Or by using the properties wizard if it is already showing (Figure B).
 
 Figure A
 <img width="969" height="360" alt="image" src="https://github.com/user-attachments/assets/9d66d299-b4c7-4c8d-8749-985e7de732dd" />
@@ -646,7 +648,25 @@ type?           (event|point|period|marker - defaults to event)
 color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?
 ```
+
+## Using custom property names
+
+You can change the default property names (`start`,`end` etc) from the Chronos Timeline plugin settings.
+
+## Using formulas to calculate custom values
+
+You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
+
+For example, this can be useful for creating groups by folder name, some other property like "author", or any custom logic you come up with.
+
+## How Chronos Timeline Bases view resolves properties
+
+The Chronos Timeline Bases view will only display properties that **are selected**.
+
+If two properties of the same name (ex: `group` in a note frontmatter, and `group` as a custom formula) **Formula value will override the note frontmatter**.
+
 ## Interacting with the Chronos Timeline Bases view
+
 The Chronos Timeline Bases view automatically links to the related note.
 
 You can hover on an item and hold `Cmd/Ctrl` to see a note preview before jumping.
