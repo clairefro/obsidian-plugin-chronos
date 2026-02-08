@@ -63,7 +63,8 @@ export class ChronosTimelineBasesView extends BasesView {
 		}
 
 		const entries = this.data.data; // BasesEntry[]
-		console.log(this.data.properties);
+		console.log(entries);
+
 		// Get property names from plugin settings, fallback to defaults
 		const propNames = {
 			start:
@@ -95,58 +96,109 @@ export class ChronosTimelineBasesView extends BasesView {
 				entry.getValue(`note.${propNames.start}`)?.toString() !== "null"
 					? entry.getValue(`note.${propNames.start}`)?.toString()
 					: undefined;
-			start = (entry.getValue(`formula.${propNames.start}`) as any)?.data
-				? entry.getValue(`formula.${propNames.start}`)?.toString()
-				: start;
+			if (this.data.properties.includes(`formula.${propNames.start}`)) {
+				start =
+					entry.getValue(`formula.${propNames.start}`)?.toString() !==
+					"null"
+						? entry
+								.getValue(`formula.${propNames.start}`)
+								?.toString()
+						: undefined;
+			}
+
+			console.log({ start });
 
 			// end --------
 			let end =
 				entry.getValue(`note.${propNames.end}`)?.toString() !== "null"
 					? entry.getValue(`note.${propNames.end}`)?.toString()
 					: undefined;
-			end =
-				(entry.getValue(`formula.${propNames.end}`) as any)?.data ||
-				entry.getValue(`formula.${propNames.end}`)?.toString() ||
-				end;
+			if (this.data.properties.includes(`formula.${propNames.end}`)) {
+				end =
+					entry.getValue(`formula.${propNames.end}`)?.toString() !==
+					"null"
+						? entry.getValue(`formula.${propNames.end}`)?.toString()
+						: undefined;
+			}
 
 			// group --------
 			let group =
 				(entry.getValue(`note.${propNames.group}`) as any)?.data ||
 				(entry.getValue(`note.${propNames.group}`) as any)?.data ||
 				undefined;
-			group = (entry.getValue(`formula.${propNames.group}`) as any)?.data
-				? entry.getValue(`formula.${propNames.group}`)?.toString()
-				: group;
+
+			if (this.data.properties.includes(`formula.${propNames.group}`)) {
+				group =
+					entry.getValue(`formula.${propNames.group}`)?.toString() !==
+					"null"
+						? entry
+								.getValue(`formula.${propNames.group}`)
+								?.toString()
+						: undefined;
+			}
 
 			// content --------
-			const content =
+			let content =
 				(entry.getValue(`note.${propNames.content}`) as any)?.data ||
 				(entry.getValue(`formula.${propNames.content}`) as any)?.data ||
 				(entry.getValue("file.name") as any)?.data ||
 				"Untitled";
+			if (this.data.properties.includes(`formula.${propNames.content}`)) {
+				content = (
+					entry.getValue(`formula.${propNames.content}`) as any
+				)?.data
+					? entry.getValue(`formula.${propNames.content}`)?.toString()
+					: content;
+			}
 
 			// color --------
 			let color =
 				(entry.getValue(`note.${propNames.color}`) as any)?.data ||
 				(entry.getValue(`formula.${propNames.color}`) as any)?.data ||
 				undefined;
+			if (this.data.properties.includes(`formula.${propNames.color}`)) {
+				color = (entry.getValue(`formula.${propNames.color}`) as any)
+					?.data
+					? entry.getValue(`formula.${propNames.color}`)?.toString()
+					: undefined;
+			}
 
 			// type --------
-			const type =
+			let type =
 				(entry.getValue(`note.${propNames.type}`) as any)?.data ||
 				(entry.getValue(`formula.${propNames.type}`) as any)?.data ||
 				undefined;
+			if (this.data.properties.includes(`formula.${propNames.type}`)) {
+				type = (entry.getValue(`formula.${propNames.type}`) as any)
+					?.data
+					? entry.getValue(`formula.${propNames.type}`)?.toString()
+					: undefined;
+			}
 
 			// description --------
-			const descriptionRaw =
+			let descriptionRaw =
 				(entry.getValue(`note.${propNames.description}`) as any)
 					?.data ||
 				(entry.getValue(`formula.${propNames.description}`) as any)
 					?.data ||
 				undefined;
+			if (
+				this.data.properties.includes(
+					`formula.${propNames.description}`,
+				)
+			) {
+				descriptionRaw = (
+					entry.getValue(`formula.${propNames.description}`) as any
+				)?.data
+					? entry
+							.getValue(`formula.${propNames.description}`)
+							?.toString()
+					: undefined;
+			}
 
 			const fileName =
 				(entry.getValue("file.name") as any)?.data || "Untitled";
+
 			/** automatically postpend a wikilink to this note so users can click to open */
 			const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
 			return normalizeItemFields({
@@ -228,21 +280,72 @@ export class ChronosTimelineBasesView extends BasesView {
 			cls: "chronos-empty-message",
 			text: "No results found!",
 		});
+		// Build a table of properties: canonical, user-selected, notes
+		const propRows = [
+			{
+				canonical: "start",
+				notes: "(required; YYYY-MM-DD...)",
+			},
+			{
+				canonical: "end",
+				notes: "(optional; YYYY-MM-DD...)",
+			},
+			{
+				canonical: "color",
+				notes: "(optional; named colors red|orange|yellow|green|blue|purple|pink|cyan, or valid hexcode color)",
+			},
+			{
+				canonical: "content",
+				notes: "(optional; defaults to note title)",
+			},
+			{
+				canonical: "type",
+				notes: "(event, period, marker, point; defaults to event)",
+			},
+			{
+				canonical: "description",
+				notes: "(optional)",
+			},
+		];
+		// Get user-selected prop names from plugin settings, fallback to defaults
+		const propNames: Record<string, string> =
+			(this.pluginSettings && this.pluginSettings.basesPropNames) || {};
+		const defaultPropNames: Record<string, string> =
+			BASES_PROP_NAMES_DEFAULTS as any;
+		const getUserPropName = (canonical: string) =>
+			propNames[canonical] || defaultPropNames[canonical] || canonical;
+
+		let tableRows = propRows
+			.map(
+				(row) =>
+					`<tr>
+						<td style="padding:0.25em;"><b>${row.canonical}</b></td>
+						<td style="padding:0.25em;"><code>${getUserPropName(row.canonical)}</code></td>
+						<td style="padding:0.25em;"><span style="color: var(--text-muted)">${row.notes}</span></td>
+					</tr>`,
+			)
+			.join("");
+
 		const instructionsHtml = `
-				<div class="chronos-instructions">
-					<p>To enable timeline views, add frontmatter to your notes by typing <code>---</code> at the top, then add a <b>start</b> property with a date (like <code>2025</code>, <code>2025-03</code>, or <code>2025-03-14</code>).</p>
-					<p>Available properties:</p>
-					<ul>
-                    	<li><b>start</b> <span style="color: var(--text-muted)">(required; YYYY-MM-DD...)</span></li>
-						<li><b>end</b> <span style="color:  var(--text-muted)">(optional)</span></li>
-						<li><b>color</b> <span style="color:  var(--text-muted)">(optional; named colors like red, blue, green, cyan or valid hexcode color)</span></li>
-						<li><b>content</b> <span style="color:  var(--text-muted)">(optional; defaults to note title)</span></li>
-						<li><b>type</b> <span style="color:  var(--text-muted)">(event, period, marker, point; defaults to event)</span></li>
-						<li><b>description</b> <span style="color:  var(--text-muted)">(optional)</span></li>
-					</ul>
-					<a href="https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:0.5em;">Learn more about Chronos Timeline Bases view</a>
-				</div>
-			`;
+			<div class="chronos-instructions">
+				<p>To enable timeline views, add frontmatter to your notes by typing <code>---</code> at the top of a note, or use formulas to resolve the below prop names.</p>
+				<p>Make sure the prop name is selected in the Properties setting of a Chronos Timeline Bases view.</p>
+				<p>Available properties:</p>
+				<table style="width:100%;border-collapse:collapse;">
+					<thead>
+						<tr>
+							<th style="text-align:left;padding:0.25em;">Prop</th>
+							<th style="text-align:left;padding:0.25em;">Prop name</th>
+							<th style="text-align:left;padding:0.25em;">Notes</th>
+						</tr>
+					</thead>
+					<tbody>
+						${tableRows.replace(/<td>/g, '<td style="padding:0.25em;">')}
+					</tbody>
+				</table>
+				<a href="https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:0.5em;">Learn more about Chronos Timeline Bases view</a>
+			</div>
+		`;
 		const instructionsDiv = this.containerEl.createDiv({
 			cls: "chronos-instructions",
 		});
@@ -308,7 +411,6 @@ function chronosItemsToMarkdown(
 		description?: string;
 	}[],
 ): string {
-	// TODO: HANDLE EDGE CASES + TRIMMING
 	let lines = [];
 	for (const item of items) {
 		const { start, end, group, content, color, type, description } = item;
