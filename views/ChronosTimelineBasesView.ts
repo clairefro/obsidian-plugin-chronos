@@ -8,7 +8,10 @@ import {
 } from "obsidian";
 
 import { ChronosPluginSettings } from "../types";
-import { CHRONOS_PLAYGROUND_BASE_URL } from "../constants";
+import {
+	CHRONOS_PLAYGROUND_BASE_URL,
+	BASES_PROP_NAMES_DEFAULTS,
+} from "../constants";
 import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
 const ChronosTimeline: any =
@@ -60,67 +63,86 @@ export class ChronosTimelineBasesView extends BasesView {
 		}
 
 		const entries = this.data.data; // BasesEntry[]
+		console.log(this.data.properties);
+		// Get property names from plugin settings, fallback to defaults
+		const propNames = {
+			start:
+				this.pluginSettings?.basesPropNames?.start ||
+				BASES_PROP_NAMES_DEFAULTS.start,
+			end:
+				this.pluginSettings?.basesPropNames?.end ||
+				BASES_PROP_NAMES_DEFAULTS.end,
+			group:
+				this.pluginSettings?.basesPropNames?.group ||
+				BASES_PROP_NAMES_DEFAULTS.group,
+			content:
+				this.pluginSettings?.basesPropNames?.content ||
+				BASES_PROP_NAMES_DEFAULTS.content,
+			color:
+				this.pluginSettings?.basesPropNames?.color ||
+				BASES_PROP_NAMES_DEFAULTS.color,
+			type:
+				this.pluginSettings?.basesPropNames?.type ||
+				BASES_PROP_NAMES_DEFAULTS.type,
+			description:
+				this.pluginSettings?.basesPropNames?.description ||
+				"description",
+		};
 
 		const items = entries.map((entry) => {
-			// DEFAULT TO FORMULAS
 			// start --------
 			let start =
-				entry.getValue("note.start")?.toString() !== "null"
-					? entry.getValue("note.start")?.toString()
+				entry.getValue(`note.${propNames.start}`)?.toString() !== "null"
+					? entry.getValue(`note.${propNames.start}`)?.toString()
 					: undefined;
-
-			start = (entry.getValue("formula.start") as any)?.data
-				? entry.getValue("formula.start")?.toString()
+			start = (entry.getValue(`formula.${propNames.start}`) as any)?.data
+				? entry.getValue(`formula.${propNames.start}`)?.toString()
 				: start;
 
 			// end --------
-
 			let end =
-				entry.getValue("note.end")?.toString() !== "null"
-					? entry.getValue("note.end")?.toString()
+				entry.getValue(`note.${propNames.end}`)?.toString() !== "null"
+					? entry.getValue(`note.${propNames.end}`)?.toString()
 					: undefined;
-
 			end =
-				(entry.getValue("formula.end") as any)?.data ||
-				entry.getValue("formula.end")?.toString() ||
+				(entry.getValue(`formula.${propNames.end}`) as any)?.data ||
+				entry.getValue(`formula.${propNames.end}`)?.toString() ||
 				end;
 
 			// group --------
-
 			let group =
-				(entry.getValue("note.group") as any)?.data ||
-				(entry.getValue("note.group") as any)?.data ||
+				(entry.getValue(`note.${propNames.group}`) as any)?.data ||
+				(entry.getValue(`note.${propNames.group}`) as any)?.data ||
 				undefined;
-
-			group = (entry.getValue("formula.group") as any)?.data
-				? entry.getValue("formula.group")?.toString()
+			group = (entry.getValue(`formula.${propNames.group}`) as any)?.data
+				? entry.getValue(`formula.${propNames.group}`)?.toString()
 				: group;
 
 			// content --------
-			// content defaults to filename unless overriden by note.content for formula.content
 			const content =
-				(entry.getValue("note.content") as any)?.data ||
-				(entry.getValue("formula.content") as any)?.data ||
+				(entry.getValue(`note.${propNames.content}`) as any)?.data ||
+				(entry.getValue(`formula.${propNames.content}`) as any)?.data ||
 				(entry.getValue("file.name") as any)?.data ||
 				"Untitled";
 
 			// color --------
 			let color =
-				(entry.getValue("note.color") as any)?.data ||
-				(entry.getValue("formula.color") as any)?.data ||
+				(entry.getValue(`note.${propNames.color}`) as any)?.data ||
+				(entry.getValue(`formula.${propNames.color}`) as any)?.data ||
 				undefined;
 
 			// type --------
 			const type =
-				(entry.getValue("note.type") as any)?.data ||
-				(entry.getValue("formula.type") as any)?.data ||
+				(entry.getValue(`note.${propNames.type}`) as any)?.data ||
+				(entry.getValue(`formula.${propNames.type}`) as any)?.data ||
 				undefined;
 
 			// description --------
-
 			const descriptionRaw =
-				(entry.getValue("note.description") as any)?.data ||
-				(entry.getValue("formula.description") as any)?.data ||
+				(entry.getValue(`note.${propNames.description}`) as any)
+					?.data ||
+				(entry.getValue(`formula.${propNames.description}`) as any)
+					?.data ||
 				undefined;
 
 			const fileName =

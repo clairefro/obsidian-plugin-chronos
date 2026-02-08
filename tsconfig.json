@@ -3,7 +3,7 @@
 		"inlineSourceMap": true,
 		"inlineSources": true,
 		"module": "Node16",
-		"target": "ES6",
+		"target": "es2020",
 		"allowJs": true,
 		"noImplicitAny": true,
 		"moduleResolution": "node16",
@@ -11,7 +11,7 @@
 		"isolatedModules": true,
 		"strictNullChecks": true,
 		"allowSyntheticDefaultImports": true,
-		"lib": ["DOM", "ES5", "ES6", "ES7"]
+		"lib": ["DOM", "ES2020"]
 	},
 	"include": ["**/*.ts"]
 }
