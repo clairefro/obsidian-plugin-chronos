@@ -64,61 +64,64 @@ export class ChronosTimelineBasesView extends BasesView {
 		const items = entries.map((entry) => {
 			// DEFAULT TO FORMULAS
 			// start --------
-			let start = (entry.getValue("formula.start") as any)?.data
-				? entry.getValue("formula.start")?.toString()
-				: undefined;
-
-			start =
+			let start =
 				entry.getValue("note.start")?.toString() !== "null"
 					? entry.getValue("note.start")?.toString()
-					: start;
+					: undefined;
+
+			start = (entry.getValue("formula.start") as any)?.data
+				? entry.getValue("formula.start")?.toString()
+				: start;
 
 			// end --------
 
 			let end =
-				(entry.getValue("formula.end") as any)?.data ||
-				entry.getValue("formula.end")?.toString() ||
-				undefined;
-			end =
 				entry.getValue("note.end")?.toString() !== "null"
 					? entry.getValue("note.end")?.toString()
-					: end;
+					: undefined;
+
+			end =
+				(entry.getValue("formula.end") as any)?.data ||
+				entry.getValue("formula.end")?.toString() ||
+				end;
 
 			// group --------
 
-			let group = (entry.getValue("formula.group") as any)?.data
-				? entry.getValue("formula.group")?.toString()
-				: undefined;
+			let group =
+				(entry.getValue("note.group") as any)?.data ||
+				(entry.getValue("note.group") as any)?.data ||
+				undefined;
 
-			group =
-				(entry.getValue("note.group") as any)?.data ||
-				(entry.getValue("note.group") as any)?.data ||
-				group;
+			group = (entry.getValue("formula.group") as any)?.data
+				? entry.getValue("formula.group")?.toString()
+				: group;
 
 			// content --------
-			// content defaults to filename unless overriden by note.content
+			// content defaults to filename unless overriden by note.content for formula.content
 			const content =
-				(entry.getValue("formula.content") as any)?.data ||
 				(entry.getValue("note.content") as any)?.data ||
+				(entry.getValue("formula.content") as any)?.data ||
 				(entry.getValue("file.name") as any)?.data ||
 				"Untitled";
 
 			// color --------
 			let color =
-				(entry.getValue("formula.color") as any)?.data ||
 				(entry.getValue("note.color") as any)?.data ||
+				(entry.getValue("formula.color") as any)?.data ||
 				undefined;
+
 			// type --------
 			const type =
-				(entry.getValue("formula.type") as any)?.data ||
 				(entry.getValue("note.type") as any)?.data ||
+				(entry.getValue("formula.type") as any)?.data ||
 				undefined;
 
 			// description --------
+
 			const descriptionRaw =
-				(entry.getValue("formula.description") as any)?.data(
-					entry.getValue("note.description") as any,
-				)?.data || undefined;
+				(entry.getValue("note.description") as any)?.data ||
+				(entry.getValue("formula.description") as any)?.data ||
+				undefined;
 
 			const fileName =
 				(entry.getValue("file.name") as any)?.data || "Untitled";
