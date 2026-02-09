@@ -691,7 +691,15 @@ Voila!
 
 <img width="1241" height="403" alt="image" src="https://github.com/user-attachments/assets/24b03a17-7775-4eb7-9fe8-0a4d6e296b0a" />
 
-Formulas also allow for more complex logic to determine groups. See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
+Formulas also allow for more complex logic to determine groups. For example, if you want to assign group labels based on the folder a given note is in:
+
+```
+if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "China", ""))
+```
+
+<img width="318" height="281" alt="image" src="https://github.com/user-attachments/assets/2491e75a-853d-4bc1-bf83-0a19ecd0dc09" />
+
+See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
 ## How Chronos Timeline Bases view resolves properties
 
