@@ -10,7 +10,7 @@ import {
 	SecretComponent,
 } from "obsidian";
 
-import { ChronosPluginSettings } from "./types";
+import { Align, BasePropNames, ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
@@ -24,6 +24,7 @@ import {
 	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_HTML,
 	DETECTION_PATTERN_CODEBLOCK,
+	BASES_PROP_NAMES_DEFAULTS,
 } from "./constants";
 
 import { ChronosTimelineBasesView } from "./views/ChronosTimelineBasesView";
@@ -48,13 +49,14 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	useAI: true,
 	showChangelogOnUpdate: true,
 	enableCaching: false,
+	basesPropNames: BASES_PROP_NAMES_DEFAULTS,
 };
 
 export default class ChronosPlugin extends Plugin {
-	settings: ChronosPluginSettings;
+	settings!: ChronosPluginSettings;
 	private observedEditors = new Set<HTMLElement>();
-	cacheUtils: CacheUtils;
-	private fileUtils: FileUtils;
+	cacheUtils!: CacheUtils;
+	private fileUtils!: FileUtils;
 
 	async onload() {
 		console.debug("[Chronos] Loading Plugin....");
@@ -489,7 +491,6 @@ export default class ChronosPlugin extends Plugin {
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
 
-
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
@@ -547,7 +548,7 @@ export default class ChronosPlugin extends Plugin {
 		try {
 			const chronos = await this._textToChronos(selection);
 			chronos && this._insertTextAfterSelection(editor, chronos);
-		} catch (e) {
+		} catch (e: any) {
 			console.error(e);
 
 			loadingModal.setText(e.message);
@@ -1075,11 +1076,49 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					.addOption("center", "Center")
 					.addOption("right", "Right")
 					.setValue(this.plugin.settings.align)
-					.onChange(async (value: "left" | "center" | "right") => {
+					.onChange(async (value: any) => {
 						this.plugin.settings.align = value;
 						await this.plugin.saveSettings();
 					}),
 			);
+
+		containerEl.createEl("h2", {
+			text: "Bases view",
+			cls: "chronos-setting-header",
+		});
+
+		containerEl.createEl("p", {
+			text: "Customize the property names used for Chronos Timeline Bases views. If empty, the default value will be used.",
+			cls: "chronos-setting-p",
+		});
+
+		const propNames = Object.keys(BASES_PROP_NAMES_DEFAULTS);
+		const basesPropNames = this.plugin.settings.basesPropNames as Record<
+			string,
+			string
+		>;
+		const defaultPropNames = BASES_PROP_NAMES_DEFAULTS as any;
+
+		propNames.forEach((prop: string) => {
+			new Setting(containerEl)
+				.setName(`${prop}`)
+				// .setDesc(`Customize the name for '${prop}' property`)
+				.addText((text) => {
+					const value =
+						basesPropNames[prop] ?? defaultPropNames[prop];
+					text.setValue(value)
+						.setPlaceholder(defaultPropNames[prop])
+						.onChange(async (inputValue) => {
+							const trimmed = inputValue.trim();
+							if (trimmed === "") {
+								basesPropNames[prop] = defaultPropNames[prop];
+							} else {
+								basesPropNames[prop] = trimmed;
+							}
+							await this.plugin.saveSettings();
+						});
+				});
+		});
 
 		containerEl.createEl("h2", {
 			text: "Performance",

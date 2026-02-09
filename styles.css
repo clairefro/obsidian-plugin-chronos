@@ -156,6 +156,10 @@
 .chronos-setting-header {
 	color: var(--text-muted);
 }
+.chronos-setting-p {
+	color: var(--text-muted);
+	margin-left: 1em;
+}
 
 .chronos-settings-md-container {
 	min-height: 250px;

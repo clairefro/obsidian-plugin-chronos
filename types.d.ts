@@ -5,11 +5,12 @@ export interface Marker {
 	start: string;
 	content: string;
 }
+export type Align = "left" | "center" | "right";
 
 interface ChronosDataItem extends DataItem {
 	cDescription?: string; // prefixed c for chronos - special prop for event tooltips
 	cLink?: string; // optional link
-	align?: "left" | "center" | "right";
+	align?: Align;
 }
 
 export interface ChronosDataSetDataItem {
@@ -27,7 +28,7 @@ export interface ChronosPluginSettings {
 	openaiSecretName?: string;
 	geminiSecretName?: string;
 	aiModels?: Record<string, string>;
-	align: "left" | "center" | "right";
+	align: Align;
 	clickToUse: boolean;
 	roundRanges: boolean;
 	useUtc: boolean;
@@ -35,6 +36,15 @@ export interface ChronosPluginSettings {
 	lastSeenVersion?: string;
 	showChangelogOnUpdate?: boolean;
 	enableCaching?: boolean;
+	basesPropNames: {
+		start?: string;
+		end?: string;
+		group?: string;
+		color?: string;
+		content?: string;
+		type?: string;
+		description: string;
+	};
 }
 
 export type Group = { id: number; content: string };
@@ -56,16 +66,14 @@ export interface ParseResult {
 	flags: Flags;
 }
 
-interface ConstructItemParams {
-	content: string;
+export interface BasePropNames {
 	start: string;
-	separator: string | undefined;
-	end: string | undefined;
-	groupName: string | undefined;
-	color: string | undefined;
-	lineNumber: number;
-	type: "default" | "background" | "point";
-	cLink?: string;
+	end: string;
+	group: string;
+	color: string;
+	type: string;
+	content: string;
+	description: string;
 }
 
 interface ChronosTimelineConstructor {
