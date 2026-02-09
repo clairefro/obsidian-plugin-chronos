@@ -653,11 +653,37 @@ description?
 
 You can change the default property names (`start`,`end` etc) from the Chronos Timeline plugin settings.
 
-## Using formulas to calculate custom values
+## Using formulas to calculate custom values for properties
 
 You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
 
-For example, this can be useful for creating groups by folder name, some other property like "author", or any custom logic you come up with.
+For example, this can be useful for creating groups by folder name, some other property like "author", or any custom logic you come up with. See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
+
+## Grouping
+
+Groups in the Chronos Timeline view are not created via the Bases "Group by" query selector, rather by adding another property on your items called `group` (or the custom name you give this property in your Settings)
+
+There are two options: resolve the `group` property using note frontmatter, or a Bases Formula.
+
+For a Formula example, let's say you wanted to group items by some property like `author`
+
+1. Make sure an `author` property exists on your items
+2. (Optional) Add a filter to target specific items. In this example, we target a folder
+
+<img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
+3. In your Bases view, add a Formula property named `group`, set it's value to `author`
+
+<img width="414" height="334" alt="image" src="https://github.com/user-attachments/assets/31058419-047f-4740-99c7-66d92fbd0e56" />
+
+4. Ensure **all properties related to rendering your timeline are selected**
+
+<img width="481" height="408" alt="image" src="https://github.com/user-attachments/assets/4809d2f3-e91c-4daf-aa47-ef6cf4349726" />
+
+Voila!
+
+<img width="1241" height="403" alt="image" src="https://github.com/user-attachments/assets/24b03a17-7775-4eb7-9fe8-0a4d6e296b0a" />
+
+Formulas also allow for more complex logic to determine groups. See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
 ## How Chronos Timeline Bases view resolves properties
 
