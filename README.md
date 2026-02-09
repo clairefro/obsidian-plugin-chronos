@@ -679,6 +679,7 @@ For a Formula example, let's say you wanted to group items by some property like
 2. (Optional) Add a filter to target specific items. In this example, we target a folder
 
 <img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
+
 3. In your Bases view, add a Formula property named `group`, set it's value to `author`
 
 <img width="414" height="334" alt="image" src="https://github.com/user-attachments/assets/31058419-047f-4740-99c7-66d92fbd0e56" />
