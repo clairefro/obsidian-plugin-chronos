@@ -10,6 +10,11 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
 <a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
 
+
+You can also make dynamic Timelines using Chronos Timeline view in Obsidian Bases
+
+<img width="1267" height="574" alt="image" src="https://github.com/user-attachments/assets/3d039dbb-4a10-4594-9334-6c782a0cea0d" />
+
 ## Features
 
 - Portable plain text data
@@ -34,6 +39,9 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 ````
 
 ![quickstart example](./docs/ex-comment.png)
+
+
+
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
 
