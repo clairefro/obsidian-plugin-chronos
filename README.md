@@ -1,4 +1,4 @@
-# Chronos Timeline: interactive timelines for Obsidian
+ # Chronos Timeline: interactive timelines for Obsidian
 
 Render interactive timelines in your Obsidian notes from simple Markdown. Make time make sense.
 
@@ -652,6 +652,10 @@ description?
 ## Using custom property names
 
 You can change the default property names (`start`,`end` etc) from the Chronos Timeline plugin settings.
+
+For example, if you wanted to use the property name `myStart` instead of `start`:
+
+<img width="892" height="647" alt="image" src="https://github.com/user-attachments/assets/dd12ba2e-219b-4751-8c76-bb1aae5ae2ed" />
 
 ## Using formulas to calculate custom values for properties
 
