@@ -616,7 +616,7 @@ description?
 
 ![example: Chronos Timeline View in Obsidian Bases](./docs/ex-chronos-bases-demo.gif)
 
-## Adding a Chronos Timelines Bases view
+## Bases: Adding a Chronos Timelines Bases view
 
 1. From a base, click "Add View" from the Views dropdown
 
@@ -636,7 +636,7 @@ Dragging your Bases view into the right or left side panels allows you to watch 
 
 (You can also create properties with Formulas. See Formulas section)
 
-## Adding properties to notes
+## Bases: Adding properties to notes
 
 At the very top of a note you'd like to see in the Chronos Timeline Bases view, add properties by typing `---` on the first line (Figure A). Or by using the properties wizard if it is already showing (Figure B).
 
@@ -657,17 +657,17 @@ color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcod
 description?    (Optional)
 ```
 
-## Using custom property names
+## Bases: Using custom property names
 
 You can change the default property names (`start`,`end` etc) from the Chronos Timeline plugin settings.
 
-## Using Formulas to calculate custom values for properties
+## Bases: Using Formulas to calculate custom values for properties
 
 You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
 
 For example, this can be useful for creating groups by folder name, some other property like "author", or any custom logic you come up with. See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
-## Grouping
+## Bases: Grouping
 
 Groups in the Chronos Timeline view are **not** created via the Bases "Group by" query selector, rather by adding another property on your items called `group` (or the custom name you give this property in your Settings)
 
@@ -702,7 +702,7 @@ if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "Ch
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
-## How Chronos Timeline Bases view resolves properties
+## Bases: How Chronos Timeline Bases view resolves properties
 
 There are two rules to know:
 
@@ -712,7 +712,7 @@ There are two rules to know:
 
 This ensures that you can override any existing frontmatter in your notes if you wish (ex: you're already using `start` property for some other purpose, or want to format `start` differently for Chronos)
 
-## Interacting with the Chronos Timeline Bases view
+## Bases: Interacting with the Chronos Timeline view
 
 The Chronos Timeline Bases view automatically links to the related note.
 
