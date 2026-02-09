@@ -1,4 +1,4 @@
- # Chronos Timeline: interactive timelines for Obsidian
+# Chronos Timeline: interactive timelines for Obsidian
 
 Render interactive timelines in your Obsidian notes from simple Markdown. Make time make sense.
 
@@ -9,11 +9,6 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 ![demo](./docs/ex-main-demo.gif)
 
 <a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
-
-
-You can also make dynamic Timelines using Chronos Timeline view in Obsidian Bases
-
-<img width="1267" height="574" alt="image" src="https://github.com/user-attachments/assets/3d039dbb-4a10-4594-9334-6c782a0cea0d" />
 
 ## Features
 
@@ -39,9 +34,6 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 ````
 
 ![quickstart example](./docs/ex-comment.png)
-
-
-
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
 
@@ -627,45 +619,49 @@ description?
 ## Adding a Chronos Timelines Bases view
 
 1. From a base, click "Add View" from the Views dropdown
-   <img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
+
+ <img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
 
 2. Select "Chronos Timeline" view and give a custom name
-   <img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
 
-3. Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
+ <img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
+
+3. (Optional) Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
 
 > Note: Only notes with `start` property will show up in the timeline - other notes will be ignored.
 
 Dragging your Bases view into the right or left side panels allows you to watch your timeline update in realtime as you add notes and update properties.
+
+4. Select **all relevant properties** to rendering your timeline
+
+(You can also create properties with Formulas. See Formulas section)
 
 ## Adding properties to notes
 
 At the very top of a note you'd like to see in the Chronos Timeline Bases view, add properties by typing `---` on the first line (Figure A). Or by using the properties wizard if it is already showing (Figure B).
 
 Figure A
+
 <img width="969" height="360" alt="image" src="https://github.com/user-attachments/assets/9d66d299-b4c7-4c8d-8749-985e7de732dd" />
 
 Figure B
+
 <img width="954" height="449" alt="image" src="https://github.com/user-attachments/assets/19e6b689-96aa-4c2d-895e-32c8b6ea1499" />
 
 ```
 start           (Chronos date)
 end?            (Chronos date)
-content?        (Optional alternate title - defaults to note name)
-type?           (event|point|period|marker - defaults to event)
-color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
-description?
+content?        (Optional alternate item title - defaults to note name)
+type?           (Option: event|point|period|marker - defaults to event)
+color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
+description?    (Optional)
 ```
 
 ## Using custom property names
 
 You can change the default property names (`start`,`end` etc) from the Chronos Timeline plugin settings.
 
-For example, if you wanted to use the property name `myStart` instead of `start`:
-
-<img width="892" height="647" alt="image" src="https://github.com/user-attachments/assets/dd12ba2e-219b-4751-8c76-bb1aae5ae2ed" />
-
-## Using formulas to calculate custom values for properties
+## Using Formulas to calculate custom values for properties
 
 You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
 
@@ -673,7 +669,7 @@ For example, this can be useful for creating groups by folder name, some other p
 
 ## Grouping
 
-Groups in the Chronos Timeline view are not created via the Bases "Group by" query selector, rather by adding another property on your items called `group` (or the custom name you give this property in your Settings)
+Groups in the Chronos Timeline view are **not** created via the Bases "Group by" query selector, rather by adding another property on your items called `group` (or the custom name you give this property in your Settings)
 
 There are two options: resolve the `group` property using note frontmatter, or a Bases Formula.
 
@@ -699,9 +695,13 @@ Formulas also allow for more complex logic to determine groups. See Obsidian's [
 
 ## How Chronos Timeline Bases view resolves properties
 
-The Chronos Timeline Bases view will only display properties that **are selected**.
+There are two rules to know:
 
-If two properties of the same name (ex: `group` in a note frontmatter, and `group` as a custom formula) **Formula value will override the note frontmatter**.
+1. The Chronos Timeline Bases view will **only display properties that are selected**.
+
+2. If two properties of the same name are selected (ex: `group` in a note frontmatter, and `group` as a custom formula) the **Formula value will override the note frontmatter**.
+
+This ensures that you can override any existing frontmatter in your notes if you wish (ex: you're already using `start` property for some other purpose, or want to format `start` differently for Chronos)
 
 ## Interacting with the Chronos Timeline Bases view
 
