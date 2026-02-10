@@ -2,7 +2,7 @@
 
 Render interactive timelines in your Obsidian notes from simple Markdown. Make time make sense.
 
-Powered by [chornos-timeline-md](https://github.com/clairefro/chronos-timeline-md), a markdown wrapper for [vis-timeline](https://www.npmjs.com/package/vis-timeline).
+Powered by [chronos-timeline-md](https://github.com/clairefro/chronos-timeline-md), a markdown wrapper for [vis-timeline](https://www.npmjs.com/package/vis-timeline).
 
 Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
