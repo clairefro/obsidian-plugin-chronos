@@ -243,6 +243,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 			/** automatically postpend a wikilink to this note so users can click to open */
 			const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
+			console.log({ group });
 			return normalizeItemFields({
 				start,
 				end,
@@ -478,6 +479,8 @@ function chronosItemsToMarkdown(
 		if (content) line += ` ${content}`;
 		if (description) line += ` | ${description}`;
 		lines.push(line);
+
+		console.log(lines);
 	}
 	if (lines.length > 15) {
 		lines = ["> HEIGHT 500\n", ...lines];
@@ -506,8 +509,7 @@ function normalizeItemFields(item: {
 	return {
 		start: item.start !== undefined ? String(item.start).trim() : "",
 		end: item.end !== undefined ? String(item.end).trim() : undefined,
-		group:
-			item.content !== undefined ? String(item.group).trim() : undefined,
+		group: item.group !== undefined ? String(item.group).trim() : undefined,
 		content:
 			item.content !== undefined
 				? String(item.content).trim()
