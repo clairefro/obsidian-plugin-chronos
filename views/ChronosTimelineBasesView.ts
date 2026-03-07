@@ -476,7 +476,8 @@ function chronosItemsToMarkdown(
 		if (color) line += ` #${color} `;
 		if (group) line += ` {${group}} `;
 		if (content) line += ` ${content}`;
-		if (description) line += ` | ${description}`;
+		if ((type === "point" || type === "event") && description)
+			line += ` | ${description}`;
 		lines.push(line);
 	}
 	if (lines.length > 15) {
