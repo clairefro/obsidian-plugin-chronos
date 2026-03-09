@@ -469,8 +469,6 @@ function chronosItemsToMarkdown(
 			marker: "=",
 		};
 
-		console.log({ item });
-
 		// default to event if no type present
 		let line = `${type && TYPES[type] ? TYPES[type] : "-"} [${start}`;
 		if (end) line += `~${end}`;
