@@ -469,6 +469,8 @@ function chronosItemsToMarkdown(
 			marker: "=",
 		};
 
+		console.log({ item });
+
 		// default to event if no type present
 		let line = `${type && TYPES[type] ? TYPES[type] : "-"} [${start}`;
 		if (end) line += `~${end}`;
@@ -476,7 +478,10 @@ function chronosItemsToMarkdown(
 		if (color) line += ` #${color} `;
 		if (group) line += ` {${group}} `;
 		if (content) line += ` ${content}`;
-		if ((type === "point" || type === "event") && description)
+		if (
+			(type === undefined || type === "point" || type === "event") &&
+			description
+		)
 			line += ` | ${description}`;
 		lines.push(line);
 	}
