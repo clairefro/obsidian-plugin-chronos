@@ -46,7 +46,7 @@ export class FolderListModal extends SuggestModal<TFolder> {
 			countDisplay = ` <span class="chronos-folder-list-modal-muted-text">(${count} ${itemText})</span>`;
 		}
 
-		const div = el.createEl("div");
+		const div = el.createDiv();
 		const prefixSpan = document.createElement("span");
 		prefixSpan.className = "chronos-folder-list-modal-muted-text";
 		prefixSpan.textContent = prefix;
