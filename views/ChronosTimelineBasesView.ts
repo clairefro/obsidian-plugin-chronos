@@ -368,30 +368,89 @@ export class ChronosTimelineBasesView extends BasesView {
 			)
 			.join("");
 
-		const instructionsHtml = `
-			<div class="chronos-instructions">
-				<p>To enable timeline views, add frontmatter to your notes by typing <code>---</code> at the top of a note, or use formulas to resolve the below prop names.</p>
-				<p>Make sure the prop name is selected in the Properties setting of a Chronos Timeline Bases view.</p>
-				<p>Available properties:</p>
-				<table style="width:100%;border-collapse:collapse;">
-					<thead>
-						<tr>
-							<th style="text-align:left;padding:0.25em;">Prop</th>
-							<th style="text-align:left;padding:0.25em;">Prop name</th>
-							<th style="text-align:left;padding:0.25em;">Notes</th>
-						</tr>
-					</thead>
-					<tbody>
-						${tableRows.replace(/<td>/g, '<td style="padding:0.25em;">')}
-					</tbody>
-				</table>
-				<a href="https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:0.5em;">Learn more about Chronos Timeline Bases view</a>
-			</div>
-		`;
 		const instructionsDiv = this.containerEl.createDiv({
 			cls: "chronos-instructions",
 		});
-		instructionsDiv.innerHTML = instructionsHtml;
+
+		const p1 = document.createElement("p");
+		// Split the sentence to insert <code>---</code> in the right place
+		p1.append(
+			"To enable timeline views, add frontmatter to your notes by typing ",
+			(() => {
+				const code = document.createElement("code");
+				code.textContent = "---";
+				return code;
+			})(),
+			" at the top of a note, or use formulas to resolve the below prop names.",
+		);
+
+		const p2 = document.createElement("p");
+		p2.textContent =
+			"Make sure the prop name is selected in the Properties setting of a Chronos Timeline Bases view.";
+
+		const p3 = document.createElement("p");
+		p3.textContent = "Available properties:";
+
+		const table = document.createElement("table");
+		table.style.width = "100%";
+		table.style.borderCollapse = "collapse";
+
+		const thead = document.createElement("thead");
+		const headerRow = document.createElement("tr");
+		const th1 = document.createElement("th");
+		th1.style.textAlign = "left";
+		th1.style.padding = "0.25em";
+		th1.textContent = "Prop";
+		const th2 = document.createElement("th");
+		th2.style.textAlign = "left";
+		th2.style.padding = "0.25em";
+		th2.textContent = "Prop name";
+		const th3 = document.createElement("th");
+		th3.style.textAlign = "left";
+		th3.style.padding = "0.25em";
+		th3.textContent = "Notes";
+		headerRow.appendChild(th1);
+		headerRow.appendChild(th2);
+		headerRow.appendChild(th3);
+		thead.appendChild(headerRow);
+		table.appendChild(thead);
+
+		const tbody = document.createElement("tbody");
+		// tableRows is a string of <tr>...</tr> blocks, so we need to parse it
+		// tableRows is a string of <tr>...</tr> blocks, so we need to parse it safely
+		// Instead of using innerHTML, parse the rows manually
+		const rowRegex = /<tr>([\s\S]*?)<\/tr>/g;
+		let match;
+		while ((match = rowRegex.exec(tableRows)) !== null) {
+			const tr = document.createElement("tr");
+			const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/g;
+			let tdMatch;
+			while ((tdMatch = tdRegex.exec(match[1])) !== null) {
+				const td = document.createElement("td");
+				td.style.padding = "0.25em";
+				// Remove all HTML tags and set as textContent for safety, without using innerHTML
+				const htmlTagRegex = /<[^>]*>/g;
+				td.textContent = tdMatch[1].replace(htmlTagRegex, "").trim();
+				tr.appendChild(td);
+			}
+			tbody.appendChild(tr);
+		}
+		table.appendChild(tbody);
+
+		const link = document.createElement("a");
+		link.href =
+			"https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view";
+		link.target = "_blank";
+		link.rel = "noopener noreferrer";
+		link.style.display = "block";
+		link.style.marginTop = "0.5em";
+		link.textContent = "Learn more about Chronos Timeline Bases view";
+
+		instructionsDiv.appendChild(p1);
+		instructionsDiv.appendChild(p2);
+		instructionsDiv.appendChild(p3);
+		instructionsDiv.appendChild(table);
+		instructionsDiv.appendChild(link);
 		return;
 	}
 

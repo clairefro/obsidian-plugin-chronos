@@ -46,8 +46,22 @@ export class FolderListModal extends SuggestModal<TFolder> {
 			countDisplay = ` <span class="chronos-folder-list-modal-muted-text">(${count} ${itemText})</span>`;
 		}
 
-		el.createEl("div").innerHTML =
-			`<span class="chronos-folder-list-modal-muted-text">${prefix}</span>${folder.path}${countDisplay}`;
+		const div = el.createEl("div");
+		const prefixSpan = document.createElement("span");
+		prefixSpan.className = "chronos-folder-list-modal-muted-text";
+		prefixSpan.textContent = prefix;
+		div.appendChild(prefixSpan);
+		div.append(document.createTextNode(folder.path));
+		if (countDisplay) {
+			const temp = document.createElement("span");
+			temp.className = "chronos-folder-list-modal-muted-text";
+			// Extract the count and item text from countDisplay string
+			const match = countDisplay.match(/\((\d+) (item|items)\)/);
+			if (match) {
+				temp.textContent = ` (${match[1]} ${match[2]})`;
+			}
+			div.appendChild(temp);
+		}
 	}
 
 	onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent) {
