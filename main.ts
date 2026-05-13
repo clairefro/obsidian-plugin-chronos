@@ -8,6 +8,7 @@ import {
 	TFile,
 	TFolder,
 	SecretComponent,
+	requestUrl,
 } from "obsidian";
 
 import { Align, BasePropNames, ChronosPluginSettings } from "./types";
@@ -896,19 +897,14 @@ export default class ChronosPlugin extends Plugin {
 			"https://api.github.com/repos/clairefro/obsidian-plugin-chronos/releases";
 
 		try {
-			const response = await fetch(url, {
+			const response = await requestUrl({
+				url,
 				headers: {
 					Accept: "application/vnd.github.v3+json",
 				},
 			});
 
-			if (!response.ok) {
-				throw new Error(
-					`GitHub API returned ${response.status}: ${response.statusText}`,
-				);
-			}
-
-			const releases = await response.json();
+			const releases = response.json;
 			return releases;
 		} catch (error) {
 			console.error("[Chronos] Failed to fetch GitHub releases:", error);
