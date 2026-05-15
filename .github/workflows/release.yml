@@ -31,9 +31,8 @@ jobs:
               run: npm run build
 
             - name: Attest Plugin Artifacts
-              uses: actions/attest@v1
+              uses: actions/attest-build-provenance@v1
               with:
-                  predicate-type: "https://slsa.dev/provenance/v1"
                   subject-path: |
                       main.js
                       manifest.json
