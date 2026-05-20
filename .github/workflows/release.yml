@@ -31,7 +31,7 @@ jobs:
               run: npm run build
 
             - name: Attest Plugin Artifacts
-              uses: actions/attest-build-provenance@v1
+              uses: actions/attest-build-provenance@v4
               with:
                   subject-path: |
                       main.js
