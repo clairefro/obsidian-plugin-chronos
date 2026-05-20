@@ -131,16 +131,10 @@
 
 .chronos-timeline-container .is-link .vis-item-content:nth-child(n) {
 	text-transform: none;
-	text-decoration: underline;
-	text-decoration-line: underline;
-	text-decoration-style: solid;
-	text-decoration-color: currentColor;
+	text-decoration: underline solid currentColor;
 	text-underline-offset: 5px;
 }
 
-.chronos-timeline-container .vis-item-content:nth-child(n) {
-	text-decoration: inherit;
-}
 
 .chronos-timeline-container .vis-dot:nth-child(n),
 .chronos-timeline-container .vis-line:nth-child(n) {
