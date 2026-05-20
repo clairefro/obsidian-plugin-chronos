@@ -1,6 +1,7 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "builtin-modules";
+import builtins from "./lib/builtin-modules-shim.js";
+const _builtins = builtins.default || builtins;
 
 const banner =
 `/*
@@ -31,7 +32,7 @@ const context = await esbuild.context({
 		"@lezer/common",
 		"@lezer/highlight",
 		"@lezer/lr",
-		...builtins],
+		..._builtins],
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",
