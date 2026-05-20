@@ -69,25 +69,29 @@
 	padding: 1rem 1.5rem;
 }
 
-.chronos-timeline-container .vis-timeline {
-	border: 2px solid transparent !important;
-	border-radius: 0 !important;
+.chronos-timeline-container .vis-timeline:nth-child(n) {
+	border: 1px solid transparent;
+	border-radius: 0;
 	cursor: default;
 }
 
-.chronos-timeline-container .vis-timeline.vis-active {
-	border-color: hsla(var(--color-accent-hsl), 0.5) !important;
-	border-radius: 0 !important;
+.chronos-timeline-container .vis-timeline:hover:nth-child(n) {
+	border-radius: 0;
 }
 
-.chronos-timeline-container .vis-label {
-	color: var(--text-muted) !important;
+.chronos-timeline-container .vis-timeline.vis-active:nth-child(n) {
+	border-color: hsla(var(--color-accent-hsl), 0.5);
+	border-radius: 0;
 }
 
-.chronos-timeline-container .vis-custom-time,
-.chronos-timeline-container .vis-custom-time-marker {
-	color: var(--color-base-00) !important;
-	background-color: var(--color-base-70) !important;
+.chronos-timeline-container .vis-label:nth-child(n) {
+	color: var(--text-muted);
+}
+
+.chronos-timeline-container .vis-custom-time:nth-child(n),
+.chronos-timeline-container .vis-custom-time-marker:nth-child(n) {
+	color: var(--color-base-00);
+	background-color: var(--color-base-70);
 }
 
 .chronos-timeline-container .vis-item.vis-background {
@@ -95,57 +99,66 @@
 	color: var(--text-on-primary);
 }
 
+.chronos-timeline-container .vis-item:nth-child(n) {
+	border-radius: var(--radius-s);
+}
+
 .chronos-timeline-container .vis-item {
-	border-radius: var(--radius-s) !important;
 	border-color: var(--color-accent);
 }
 
-.chronos-timeline-container .vis-item.with-caps:not(.vis-background) {
-	border-radius: 50px !important;
+.chronos-timeline-container
+	.vis-item.with-caps:not(.vis-background):nth-child(n) {
+	border-radius: 50px;
 }
 
-.chronos-timeline-container .vis-time-axis .vis-grid.vis-minor {
-	border-color: var(--chronos-semi-gray) !important;
+.chronos-timeline-container .vis-time-axis .vis-grid.vis-minor:nth-child(n) {
+	border-color: var(--chronos-semi-gray);
 }
 
-.chronos-timeline-container .vis-minor {
-	color: var(--text-muted) !important;
+.chronos-timeline-container .vis-minor:nth-child(n) {
+	color: var(--text-muted);
 }
 
-.chronos-timeline-container .vis-major {
-	color: var(--text-muted) !important;
+.chronos-timeline-container .vis-major:nth-child(n) {
+	color: var(--text-muted);
 }
 
 /* Link styles*/
-.chronos-timeline-container .is-link {
-	cursor: pointer !important;
+.chronos-timeline-container .is-link:nth-child(n) {
+	cursor: pointer;
 }
 
-.chronos-timeline-container .is-link .vis-item-content {
-	text-transform: none !important;
-	text-decoration: underline !important;
-	text-decoration-line: underline !important;
-	text-decoration-style: solid !important;
-	text-decoration-color: currentColor !important;
-	text-underline-offset: 5px !important;
+.chronos-timeline-container .is-link .vis-item-content:nth-child(n) {
+	text-transform: none;
+	text-decoration: underline;
+	text-decoration-line: underline;
+	text-decoration-style: solid;
+	text-decoration-color: currentColor;
+	text-underline-offset: 5px;
 }
 
-.chronos-timeline-container .vis-item-content {
-	text-decoration: inherit !important;
+.chronos-timeline-container .vis-item-content:nth-child(n) {
+	text-decoration: inherit;
 }
 
-.chronos-timeline-container .vis-dot,
-.chronos-timeline-container .vis-line {
-	background-color: var(--interactive-accent) !important;
-	color: var(--interactive-accent) !important;
+.chronos-timeline-container .vis-dot:nth-child(n),
+.chronos-timeline-container .vis-line:nth-child(n) {
+	background-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+}
+
+/* Prevent Obsidian Live Preview from rounding the block on hover */
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos:hover:nth-child(n) {
+	border-radius: 0;
 }
 
 /* Ensure code editor button is always on top and easy to find with pointer, 
    in chronos blocks only as to not interfer with normal Obsidian behavior 
  */
-.block-language-chronos ~ .edit-block-button {
+.block-language-chronos ~ .edit-block-button:nth-child(n) {
 	z-index: 999;
-	cursor: pointer !important;
+	cursor: pointer;
 }
 
 .vis-custom-time[title]::after {
@@ -169,8 +182,8 @@
 	border: 1px solid var(--interactive-border-color);
 	background-color: var(--color-base-20);
 	border-radius: 5px;
-	font-family: var(--font-monospace), "Source Code Pro", "Courier New",
-		monospace;
+	font-family:
+		var(--font-monospace), "Source Code Pro", "Courier New", monospace;
 }
 
 .chronos-settings .mod-cta,
@@ -187,13 +200,13 @@
 }
 
 /* Width toggle button */
-.chronos-width-toggle {
+.chronos-width-toggle:nth-child(n) {
 	position: absolute;
 	top: 5px;
 	left: 5px;
 	z-index: 1000;
-	color: var(--text-on-accent);
-	background-color: transparent !important;
+	color: var(--text-normal);
+	background-color: transparent;
 	border: none;
 	border-radius: var(--radius-s);
 	padding: 6px 8px;
@@ -205,11 +218,11 @@
 	align-items: center;
 	gap: 4px;
 	white-space: nowrap;
-	box-shadow: none !important;
+	box-shadow: none;
 }
 
-.chronos-width-toggle:hover {
-	background-color: var(--chronos-semi-gray) !important;
+.chronos-width-toggle:hover:nth-child(n) {
+	background-color: var(--chronos-semi-gray);
 }
 
 .chronos-timeline-container:hover .chronos-width-toggle {
@@ -217,8 +230,8 @@
 }
 
 /* Dynamic width using CSS custom property */
-.chronos-width-expanded {
-	width: calc(var(--chronos-editor-width) - 2rem) !important;
+.chronos-width-expanded:nth-child(n) {
+	width: calc(var(--chronos-editor-width) - 2rem);
 	position: relative;
 	left: 50%;
 	transform: translateX(-50%);
@@ -241,8 +254,8 @@
 	color: var(--text-muted);
 }
 
-.chronos-changelog-view {
-	padding: 1.5rem !important;
+.chronos-changelog-view:nth-child(n) {
+	padding: 1.5rem;
 	overflow-y: auto;
 }
 
@@ -484,8 +497,8 @@
 	padding: 2rem;
 }
 
-.chronos-bases-view-container.chronos-sidebar {
-	padding: 0.5rem !important;
+.chronos-bases-view-container.chronos-sidebar:nth-child(n) {
+	padding: 0.5rem;
 }
 
 /* Chronos Bases View Buttons */
@@ -504,6 +517,7 @@
 	margin-left: 0.5rem;
 }
 
-.chronos-bases-view-timeline-container .chronos-error-message-container {
-	color: var(--text-normal) !important;
+.chronos-bases-view-timeline-container
+	.chronos-error-message-container:nth-child(n) {
+	color: var(--text-normal);
 }
