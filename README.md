@@ -669,22 +669,28 @@ For example, this can be useful for creating groups by folder name, some other p
 
 ## Bases: Grouping
 
-Groups in the Chronos Timeline view are **not** created via the Bases "Group by" query selector, rather by adding another property on your items called `group` (or the custom name you give this property in your Settings)
+Groups in the Chronos Timeline view can be created in one of three ways:
 
-There are two options: resolve the `group` property using note frontmatter, or a Bases Formula.
+1. Via the Bases "Group by" query selector.
+2. By adding a formula to your Base called `group` (or the custom name you give this property in your Settings).
+3. By adding a property to your items called `group` (or the custom name you give this property in your Settings).
 
-For a Formula example, let's say you wanted to group items by some property like `author`
+With the "Group by" query selector, you can control the order in which the groups appear, but note that Chronos will force the "no group" row to the bottom of the view regardless of group sorting options.
 
-1. Make sure an `author` property exists on your items
-2. (Optional) Add a filter to target specific items. In this example, we target a folder
+The `group` property (or formula) will be used if no "Group by" query selector is chosen, but note that it must be selected in the property list in order to work.
+
+You can use Formulas for more flexible grouping. For a trivial example, let's say you wanted to group items by some property like `author`:
+
+1. Make sure an `author` property exists on your items.
+2. (Optional) Add a filter to target specific items. In this example, we target a folder.
 
 <img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
 
-3. In your Bases view, add a Formula property named `group`, set it's value to `author`
+3. In your Bases view, add a Formula property named `group`, set its value to `author`.
 
 <img width="414" height="334" alt="image" src="https://github.com/user-attachments/assets/31058419-047f-4740-99c7-66d92fbd0e56" />
 
-4. Ensure **all properties related to rendering your timeline are selected**
+4. Ensure **all properties related to rendering your timeline are selected.** If you are not using the "Group by" query selector, you must explicitly select the `group` formula.
 
 <img width="481" height="408" alt="image" src="https://github.com/user-attachments/assets/4809d2f3-e91c-4daf-aa47-ef6cf4349726" />
 
@@ -692,7 +698,7 @@ Voila!
 
 <img width="1241" height="403" alt="image" src="https://github.com/user-attachments/assets/24b03a17-7775-4eb7-9fe8-0a4d6e296b0a" />
 
-Formulas also allow for more complex logic to determine groups. For example, if you want to assign group labels based on the folder a given note is in:
+This particular example is useful if you are not using the "Group by" query selector, but less useful if you are, since you can just directly select the `author` property as the grouping option. However, formulas also allow for more complex logic to determine groups. For example, if you want to assign group labels based on the folder a given note is in:
 
 ```
 if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "China", ""))
