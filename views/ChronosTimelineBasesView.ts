@@ -93,23 +93,32 @@ export class ChronosTimelineBasesView extends BasesView {
 			//       set of entries has no value for the given grouping key.
 			// * key != undefined && entry.hasKey() means grouping is applied, and this
 			//       set of entries has a non-null/empty value for the given grouping key.
-			const base_group = (groupEntries.key == undefined) ? undefined
-				: (groupEntries.hasKey())? groupEntries.key.toString()
-				: "";
+			const base_group =
+				groupEntries.key == undefined
+					? undefined
+					: groupEntries.hasKey()
+						? groupEntries.key.toString()
+						: "";
 			return groupEntries.entries.map((entry) => {
 				// start --------
 				let start = undefined;
 				if (this.data.properties.includes(`note.${propNames.start}`)) {
 					start =
-						entry.getValue(`note.${propNames.start}`)?.toString() !==
-						"null"
-							? entry.getValue(`note.${propNames.start}`)?.toString()
+						entry
+							.getValue(`note.${propNames.start}`)
+							?.toString() !== "null"
+							? entry
+									.getValue(`note.${propNames.start}`)
+									?.toString()
 							: undefined;
 				}
-				if (this.data.properties.includes(`formula.${propNames.start}`)) {
+				if (
+					this.data.properties.includes(`formula.${propNames.start}`)
+				) {
 					start =
-						entry.getValue(`formula.${propNames.start}`)?.toString() !==
-						"null"
+						entry
+							.getValue(`formula.${propNames.start}`)
+							?.toString() !== "null"
 							? entry
 									.getValue(`formula.${propNames.start}`)
 									?.toString()
@@ -122,14 +131,19 @@ export class ChronosTimelineBasesView extends BasesView {
 					end =
 						entry.getValue(`note.${propNames.end}`)?.toString() !==
 						"null"
-							? entry.getValue(`note.${propNames.end}`)?.toString()
+							? entry
+									.getValue(`note.${propNames.end}`)
+									?.toString()
 							: undefined;
 				}
 				if (this.data.properties.includes(`formula.${propNames.end}`)) {
 					end =
-						entry.getValue(`formula.${propNames.end}`)?.toString() !==
-						"null"
-							? entry.getValue(`formula.${propNames.end}`)?.toString()
+						entry
+							.getValue(`formula.${propNames.end}`)
+							?.toString() !== "null"
+							? entry
+									.getValue(`formula.${propNames.end}`)
+									?.toString()
 							: undefined;
 				}
 
@@ -137,19 +151,28 @@ export class ChronosTimelineBasesView extends BasesView {
 				let group = base_group;
 				// Only fall back to direct property access if the View provided no
 				// grouping settings at all.
-				if (base_group == undefined)
-				{
-					if (this.data.properties.includes(`note.${propNames.group}`)) {
+				if (base_group == undefined) {
+					if (
+						this.data.properties.includes(`note.${propNames.group}`)
+					) {
 						group =
-							entry.getValue(`note.${propNames.group}`)?.toString() !==
-							"null"
-								? entry.getValue(`note.${propNames.group}`)?.toString()
+							entry
+								.getValue(`note.${propNames.group}`)
+								?.toString() !== "null"
+								? entry
+										.getValue(`note.${propNames.group}`)
+										?.toString()
 								: undefined;
 					}
-					if (this.data.properties.includes(`formula.${propNames.group}`)) {
+					if (
+						this.data.properties.includes(
+							`formula.${propNames.group}`,
+						)
+					) {
 						group =
-							entry.getValue(`formula.${propNames.group}`)?.toString() !==
-							"null"
+							entry
+								.getValue(`formula.${propNames.group}`)
+								?.toString() !== "null"
 								? entry
 										.getValue(`formula.${propNames.group}`)
 										?.toString()
@@ -159,16 +182,23 @@ export class ChronosTimelineBasesView extends BasesView {
 
 				// content --------
 				let content = undefined;
-				if (this.data.properties.includes(`note.${propNames.content}`)) {
+				if (
+					this.data.properties.includes(`note.${propNames.content}`)
+				) {
 					content =
-						entry.getValue(`note.${propNames.content}`)?.toString() !==
-						"null"
+						entry
+							.getValue(`note.${propNames.content}`)
+							?.toString() !== "null"
 							? entry
 									.getValue(`note.${propNames.content}`)
 									?.toString()
 							: undefined;
 				}
-				if (this.data.properties.includes(`formula.${propNames.content}`)) {
+				if (
+					this.data.properties.includes(
+						`formula.${propNames.content}`,
+					)
+				) {
 					content =
 						entry
 							.getValue(`formula.${propNames.content}`)
@@ -180,22 +210,29 @@ export class ChronosTimelineBasesView extends BasesView {
 				}
 				if (!content) {
 					content =
-						(entry.getValue("file.name") as any)?.data || "Untitled";
+						(entry.getValue("file.name") as any)?.data ||
+						"Untitled";
 				}
 
 				// color --------
 				let color = undefined;
 				if (this.data.properties.includes(`note.${propNames.color}`)) {
 					color =
-						entry.getValue(`note.${propNames.color}`)?.toString() !==
-						"null"
-							? entry.getValue(`note.${propNames.color}`)?.toString()
+						entry
+							.getValue(`note.${propNames.color}`)
+							?.toString() !== "null"
+							? entry
+									.getValue(`note.${propNames.color}`)
+									?.toString()
 							: undefined;
 				}
-				if (this.data.properties.includes(`formula.${propNames.color}`)) {
+				if (
+					this.data.properties.includes(`formula.${propNames.color}`)
+				) {
 					color =
-						entry.getValue(`formula.${propNames.color}`)?.toString() !==
-						"null"
+						entry
+							.getValue(`formula.${propNames.color}`)
+							?.toString() !== "null"
 							? entry
 									.getValue(`formula.${propNames.color}`)
 									?.toString()
@@ -208,13 +245,18 @@ export class ChronosTimelineBasesView extends BasesView {
 					type =
 						entry.getValue(`note.${propNames.type}`)?.toString() !==
 						"null"
-							? entry.getValue(`note.${propNames.type}`)?.toString()
+							? entry
+									.getValue(`note.${propNames.type}`)
+									?.toString()
 							: undefined;
 				}
-				if (this.data.properties.includes(`formula.${propNames.type}`)) {
+				if (
+					this.data.properties.includes(`formula.${propNames.type}`)
+				) {
 					type =
-						entry.getValue(`formula.${propNames.type}`)?.toString() !==
-						"null"
+						entry
+							.getValue(`formula.${propNames.type}`)
+							?.toString() !== "null"
 							? entry
 									.getValue(`formula.${propNames.type}`)
 									?.toString()
@@ -224,7 +266,9 @@ export class ChronosTimelineBasesView extends BasesView {
 				// description --------
 				let descriptionRaw = undefined;
 				if (
-					this.data.properties.includes(`note.${propNames.description}`)
+					this.data.properties.includes(
+						`note.${propNames.description}`,
+					)
 				) {
 					descriptionRaw =
 						entry
@@ -245,7 +289,9 @@ export class ChronosTimelineBasesView extends BasesView {
 							.getValue(`formula.${propNames.description}`)
 							?.toString() !== "null"
 							? entry
-									.getValue(`formula.${propNames.description}`)
+									.getValue(
+										`formula.${propNames.description}`,
+									)
 									?.toString()
 							: undefined;
 				}

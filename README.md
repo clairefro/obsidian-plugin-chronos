@@ -669,36 +669,40 @@ For example, this can be useful for creating groups by folder name, some other p
 
 ## Bases: Grouping
 
-Groups in the Chronos Timeline view can be created in one of three ways:
+Groups in the Chronos Timeline view can be created in one of two ways:
 
-1. Via the Bases "Group by" query selector.
-2. By adding a formula to your Base called `group` (or the custom name you give this property in your Settings).
-3. By adding a property to your items called `group` (or the custom name you give this property in your Settings).
+1. Via the Bases "Group by" query selector under "Sort"
+2. By adding a property called `group` (or the custom name you give this property in your Settings)
 
 With the "Group by" query selector, you can control the order in which the groups appear, but note that Chronos will force the "no group" row to the bottom of the view regardless of group sorting options.
 
 The `group` property (or formula) will be used if no "Group by" query selector is chosen, but note that it must be selected in the property list in order to work.
 
+### Using the "Group by" method
+
 You can use Formulas for more flexible grouping. For a trivial example, let's say you wanted to group items by some property like `author`:
 
-1. Make sure an `author` property exists on your items.
-2. (Optional) Add a filter to target specific items. In this example, we target a folder.
+1. (Optional) Add a filter to target specific items. In this example, we target a folder.
 
 <img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
 
-3. In your Bases view, add a Formula property named `group`, set its value to `author`.
+1. Select the properties you'd like considered for rendering your timeline. `start` (or the custom name you specify) is what is used for
 
-<img width="414" height="334" alt="image" src="https://github.com/user-attachments/assets/31058419-047f-4740-99c7-66d92fbd0e56" />
+<img width="273" height="349" alt="image" src="https://github.com/user-attachments/assets/11cca871-64d2-4a63-9ca9-ac7b990fabe7" />
 
-4. Ensure **all properties related to rendering your timeline are selected.** If you are not using the "Group by" query selector, you must explicitly select the `group` formula.
+1. Select a property to group by in the "Sort" menu, such as `author` in this example
 
-<img width="481" height="408" alt="image" src="https://github.com/user-attachments/assets/4809d2f3-e91c-4daf-aa47-ef6cf4349726" />
+<img width="736" height="406" alt="chronos-group-by-demo" src="https://github.com/user-attachments/assets/677c9624-41fa-4615-9d03-ceb529c93869" />
 
-Voila!
+### Using manual "group" property on notes
+
+You can also add a property named `group` (or custom name in settings) to notes directly, and select that property in your Chornos Timelines view for Bases.
 
 <img width="1241" height="403" alt="image" src="https://github.com/user-attachments/assets/24b03a17-7775-4eb7-9fe8-0a4d6e296b0a" />
 
-This particular example is useful if you are not using the "Group by" query selector, but less useful if you are, since you can just directly select the `author` property as the grouping option. However, formulas also allow for more complex logic to determine groups. For example, if you want to assign group labels based on the folder a given note is in:
+### Using formulas for grouping
+
+Formulas also allow for more complex logic to determine groups. For example, if you want to assign group labels based on the folder a given note is in:
 
 ```
 if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "China", ""))

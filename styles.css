@@ -135,7 +135,6 @@
 	text-underline-offset: 5px;
 }
 
-
 .chronos-timeline-container .vis-dot:nth-child(n),
 .chronos-timeline-container .vis-line:nth-child(n) {
 	background-color: var(--interactive-accent);
