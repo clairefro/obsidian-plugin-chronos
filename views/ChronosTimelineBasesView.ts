@@ -4,7 +4,6 @@ import {
 	setTooltip,
 	QueryController,
 	Notice,
-	BasesEntry,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "../types";
@@ -62,8 +61,6 @@ export class ChronosTimelineBasesView extends BasesView {
 			this.renderInstructionsOnEmptyResults();
 		}
 
-		const entries = this.data.data; // BasesEntry[]
-
 		// Get property names from plugin settings, fallback to defaults
 		const propNames = {
 			start:
@@ -89,168 +86,184 @@ export class ChronosTimelineBasesView extends BasesView {
 				"description",
 		};
 
-		const items = entries.map((entry) => {
-			// start --------
-			let start = undefined;
-			if (this.data.properties.includes(`note.${propNames.start}`)) {
-				start =
-					entry.getValue(`note.${propNames.start}`)?.toString() !==
-					"null"
-						? entry.getValue(`note.${propNames.start}`)?.toString()
-						: undefined;
-			}
-			if (this.data.properties.includes(`formula.${propNames.start}`)) {
-				start =
-					entry.getValue(`formula.${propNames.start}`)?.toString() !==
-					"null"
-						? entry
-								.getValue(`formula.${propNames.start}`)
-								?.toString()
-						: undefined;
-			}
+		const items = this.data.groupedData.flatMap((groupEntries) => {
+			// NOTE:
+			// * key == undefined means there's no grouping applied to the view at all.
+			// * key != undefined && !entry.hasKey() means grouping is applied, but this
+			//       set of entries has no value for the given grouping key.
+			// * key != undefined && entry.hasKey() means grouping is applied, and this
+			//       set of entries has a non-null/empty value for the given grouping key.
+			const base_group = (groupEntries.key == undefined) ? undefined
+				: (groupEntries.hasKey())? groupEntries.key.toString()
+				: "";
+			return groupEntries.entries.map((entry) => {
+				// start --------
+				let start = undefined;
+				if (this.data.properties.includes(`note.${propNames.start}`)) {
+					start =
+						entry.getValue(`note.${propNames.start}`)?.toString() !==
+						"null"
+							? entry.getValue(`note.${propNames.start}`)?.toString()
+							: undefined;
+				}
+				if (this.data.properties.includes(`formula.${propNames.start}`)) {
+					start =
+						entry.getValue(`formula.${propNames.start}`)?.toString() !==
+						"null"
+							? entry
+									.getValue(`formula.${propNames.start}`)
+									?.toString()
+							: undefined;
+				}
 
-			// end --------
-			let end = undefined;
-			if (this.data.properties.includes(`note.${propNames.end}`)) {
-				end =
-					entry.getValue(`note.${propNames.end}`)?.toString() !==
-					"null"
-						? entry.getValue(`note.${propNames.end}`)?.toString()
-						: undefined;
-			}
-			if (this.data.properties.includes(`formula.${propNames.end}`)) {
-				end =
-					entry.getValue(`formula.${propNames.end}`)?.toString() !==
-					"null"
-						? entry.getValue(`formula.${propNames.end}`)?.toString()
-						: undefined;
-			}
+				// end --------
+				let end = undefined;
+				if (this.data.properties.includes(`note.${propNames.end}`)) {
+					end =
+						entry.getValue(`note.${propNames.end}`)?.toString() !==
+						"null"
+							? entry.getValue(`note.${propNames.end}`)?.toString()
+							: undefined;
+				}
+				if (this.data.properties.includes(`formula.${propNames.end}`)) {
+					end =
+						entry.getValue(`formula.${propNames.end}`)?.toString() !==
+						"null"
+							? entry.getValue(`formula.${propNames.end}`)?.toString()
+							: undefined;
+				}
 
-			// group --------
-			let group = undefined;
-			if (this.data.properties.includes(`note.${propNames.group}`)) {
-				group =
-					entry.getValue(`note.${propNames.group}`)?.toString() !==
-					"null"
-						? entry.getValue(`note.${propNames.group}`)?.toString()
-						: undefined;
-			}
-			if (this.data.properties.includes(`formula.${propNames.group}`)) {
-				group =
-					entry.getValue(`formula.${propNames.group}`)?.toString() !==
-					"null"
-						? entry
-								.getValue(`formula.${propNames.group}`)
-								?.toString()
-						: undefined;
-			}
+				// group --------
+				let group = base_group;
+				// Only fall back to direct property access if the View provided no
+				// grouping settings at all.
+				if (base_group == undefined)
+				{
+					if (this.data.properties.includes(`note.${propNames.group}`)) {
+						group =
+							entry.getValue(`note.${propNames.group}`)?.toString() !==
+							"null"
+								? entry.getValue(`note.${propNames.group}`)?.toString()
+								: undefined;
+					}
+					if (this.data.properties.includes(`formula.${propNames.group}`)) {
+						group =
+							entry.getValue(`formula.${propNames.group}`)?.toString() !==
+							"null"
+								? entry
+										.getValue(`formula.${propNames.group}`)
+										?.toString()
+								: undefined;
+					}
+				}
 
-			// content --------
-			let content = undefined;
-			if (this.data.properties.includes(`note.${propNames.content}`)) {
-				content =
-					entry.getValue(`note.${propNames.content}`)?.toString() !==
-					"null"
-						? entry
-								.getValue(`note.${propNames.content}`)
-								?.toString()
-						: undefined;
-			}
-			if (this.data.properties.includes(`formula.${propNames.content}`)) {
-				content =
-					entry
-						.getValue(`formula.${propNames.content}`)
-						?.toString() !== "null"
-						? entry
-								.getValue(`formula.${propNames.content}`)
-								?.toString()
-						: undefined;
-			}
-			if (!content) {
-				content =
+				// content --------
+				let content = undefined;
+				if (this.data.properties.includes(`note.${propNames.content}`)) {
+					content =
+						entry.getValue(`note.${propNames.content}`)?.toString() !==
+						"null"
+							? entry
+									.getValue(`note.${propNames.content}`)
+									?.toString()
+							: undefined;
+				}
+				if (this.data.properties.includes(`formula.${propNames.content}`)) {
+					content =
+						entry
+							.getValue(`formula.${propNames.content}`)
+							?.toString() !== "null"
+							? entry
+									.getValue(`formula.${propNames.content}`)
+									?.toString()
+							: undefined;
+				}
+				if (!content) {
+					content =
+						(entry.getValue("file.name") as any)?.data || "Untitled";
+				}
+
+				// color --------
+				let color = undefined;
+				if (this.data.properties.includes(`note.${propNames.color}`)) {
+					color =
+						entry.getValue(`note.${propNames.color}`)?.toString() !==
+						"null"
+							? entry.getValue(`note.${propNames.color}`)?.toString()
+							: undefined;
+				}
+				if (this.data.properties.includes(`formula.${propNames.color}`)) {
+					color =
+						entry.getValue(`formula.${propNames.color}`)?.toString() !==
+						"null"
+							? entry
+									.getValue(`formula.${propNames.color}`)
+									?.toString()
+							: undefined;
+				}
+
+				// type --------
+				let type = undefined;
+				if (this.data.properties.includes(`note.${propNames.type}`)) {
+					type =
+						entry.getValue(`note.${propNames.type}`)?.toString() !==
+						"null"
+							? entry.getValue(`note.${propNames.type}`)?.toString()
+							: undefined;
+				}
+				if (this.data.properties.includes(`formula.${propNames.type}`)) {
+					type =
+						entry.getValue(`formula.${propNames.type}`)?.toString() !==
+						"null"
+							? entry
+									.getValue(`formula.${propNames.type}`)
+									?.toString()
+							: undefined;
+				}
+
+				// description --------
+				let descriptionRaw = undefined;
+				if (
+					this.data.properties.includes(`note.${propNames.description}`)
+				) {
+					descriptionRaw =
+						entry
+							.getValue(`note.${propNames.description}`)
+							?.toString() !== "null"
+							? entry
+									.getValue(`note.${propNames.description}`)
+									?.toString()
+							: undefined;
+				}
+				if (
+					this.data.properties.includes(
+						`formula.${propNames.description}`,
+					)
+				) {
+					descriptionRaw =
+						entry
+							.getValue(`formula.${propNames.description}`)
+							?.toString() !== "null"
+							? entry
+									.getValue(`formula.${propNames.description}`)
+									?.toString()
+							: undefined;
+				}
+
+				const fileName =
 					(entry.getValue("file.name") as any)?.data || "Untitled";
-			}
 
-			// color --------
-			let color = undefined;
-			if (this.data.properties.includes(`note.${propNames.color}`)) {
-				color =
-					entry.getValue(`note.${propNames.color}`)?.toString() !==
-					"null"
-						? entry.getValue(`note.${propNames.color}`)?.toString()
-						: undefined;
-			}
-			if (this.data.properties.includes(`formula.${propNames.color}`)) {
-				color =
-					entry.getValue(`formula.${propNames.color}`)?.toString() !==
-					"null"
-						? entry
-								.getValue(`formula.${propNames.color}`)
-								?.toString()
-						: undefined;
-			}
-
-			// type --------
-			let type = undefined;
-			if (this.data.properties.includes(`note.${propNames.type}`)) {
-				type =
-					entry.getValue(`note.${propNames.type}`)?.toString() !==
-					"null"
-						? entry.getValue(`note.${propNames.type}`)?.toString()
-						: undefined;
-			}
-			if (this.data.properties.includes(`formula.${propNames.type}`)) {
-				type =
-					entry.getValue(`formula.${propNames.type}`)?.toString() !==
-					"null"
-						? entry
-								.getValue(`formula.${propNames.type}`)
-								?.toString()
-						: undefined;
-			}
-
-			// description --------
-			let descriptionRaw = undefined;
-			if (
-				this.data.properties.includes(`note.${propNames.description}`)
-			) {
-				descriptionRaw =
-					entry
-						.getValue(`note.${propNames.description}`)
-						?.toString() !== "null"
-						? entry
-								.getValue(`note.${propNames.description}`)
-								?.toString()
-						: undefined;
-			}
-			if (
-				this.data.properties.includes(
-					`formula.${propNames.description}`,
-				)
-			) {
-				descriptionRaw =
-					entry
-						.getValue(`formula.${propNames.description}`)
-						?.toString() !== "null"
-						? entry
-								.getValue(`formula.${propNames.description}`)
-								?.toString()
-						: undefined;
-			}
-
-			const fileName =
-				(entry.getValue("file.name") as any)?.data || "Untitled";
-
-			/** automatically postpend a wikilink to this note so users can click to open */
-			const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
-			return normalizeItemFields({
-				start,
-				end,
-				group,
-				content,
-				color,
-				type,
-				description,
+				/** automatically postpend a wikilink to this note so users can click to open */
+				const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
+				return normalizeItemFields({
+					start,
+					end,
+					group,
+					content,
+					color,
+					type,
+					description,
+				});
 			});
 		});
 
