@@ -90,7 +90,9 @@ export class FileUtils {
 				new (window as any).Notice(msg);
 			}
 		} catch (error) {
-			const msg = `Error opening file: ${error.message}`;
+			const errorMessage =
+				error instanceof Error ? error.message : String(error);
+			const msg = `Error opening file: ${errorMessage}`;
 			console.error(msg);
 			new (window as any).Notice(msg);
 		}

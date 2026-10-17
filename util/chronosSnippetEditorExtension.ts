@@ -34,6 +34,10 @@ function getSnippets(): ChronosSnippet[] {
 			value: `* [${date}] {Group name} Point title`,
 		},
 		{
+			label: "Point with color",
+			value: `* [${date}] #red Point title`,
+		},
+		{
 			label: "Event (single date)",
 			value: `- [${date}] Event title`,
 		},
