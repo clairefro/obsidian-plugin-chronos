@@ -6,7 +6,7 @@ const PROVIDER_DEFAULT_MODELS: Record<string, string> = {
 	openai: "gpt-6-luna",
 	gemini: "gemini-2.5-flash",
 	anthropic: "claude-haiku-5-5",
-	openrouter: "openai/gpt-4o-mini",
+	openrouter: "openai/gpt-6-luna",
 	ollama: "",
 	lmstudio: "",
 };

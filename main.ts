@@ -8,6 +8,9 @@ import {
 	TFile,
 	TFolder,
 	SecretComponent,
+	DropdownComponent,
+	SettingDefinition,
+	SettingDefinitionItem,
 	requestUrl,
 } from "obsidian";
 
@@ -930,33 +933,475 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 	constructor(app: App, plugin: ChronosPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+		this.containerEl.addClass("chronos-settings");
 	}
 
-	private _displayPreservingScroll(): void {
-		const scrollPositions: Array<{
-			element: HTMLElement;
-			scrollTop: number;
-			scrollLeft: number;
-		}> = [];
-		let element: HTMLElement | null = this.containerEl;
-		while (element) {
-			if (element.scrollTop || element.scrollLeft) {
-				scrollPositions.push({
-					element,
-					scrollTop: element.scrollTop,
-					scrollLeft: element.scrollLeft,
+	getSettingDefinitions(): SettingDefinitionItem[] {
+		const settings = this.plugin.settings;
+		const currentProvider = () => settings.aiProvider || "openai";
+		const aiEnabled = () => settings.useAI;
+		const providerIs = (provider: string) => () =>
+			aiEnabled() && currentProvider() === provider;
+		const group = (
+			heading: string,
+			items: SettingDefinition[],
+		): SettingDefinitionItem => ({
+			type: "group" as const,
+			heading,
+			items,
+		});
+		const saveModel = async (provider: string, model: string) => {
+			settings.aiModels = {
+				...settings.aiModels,
+				[provider]: model,
+			};
+			await this.plugin.saveSettings();
+		};
+		const modelDefinition = (provider: string): SettingDefinition => ({
+			name: "Model",
+			desc: "Model used for the selected provider",
+			visible: providerIs(provider),
+			render: (setting) => {
+				const defaultModel = PROVIDER_DEFAULT_MODELS[provider] || "";
+				const configuredModel =
+					settings.aiModels?.[provider] || defaultModel;
+				let modelInput: HTMLInputElement | undefined;
+				if (configuredModel !== defaultModel) {
+					setting
+						.addButton((button) =>
+							button
+								.setButtonText(
+									`Use ${defaultModel} (recommended)`,
+								)
+								.setTooltip(
+									`Replace with recommended model: ${defaultModel}`,
+								)
+								.setCta()
+								.onClick(async () => {
+									await saveModel(provider, defaultModel);
+									if (modelInput) {
+										modelInput.value = defaultModel;
+									}
+									button.buttonEl.style.display = "none";
+								}),
+						)
+						.setClass("chronos-model-default-button");
+				}
+				setting.addText((text) => {
+					modelInput = text.inputEl;
+					text.setValue(configuredModel).onChange(async (value) => {
+						await saveModel(provider, value.trim());
+					});
 				});
-			}
-			element = element.parentElement;
+			},
+		});
+		const localModelDefinition = (
+			provider: "ollama" | "lmstudio",
+		): SettingDefinition => ({
+			name: "Model",
+			desc: "Select a model available from the configured local server",
+			visible: providerIs(provider),
+			render: (setting) => {
+				let active = true;
+				let requestId = 0;
+				const configuredModel =
+					settings.aiModels?.[provider] ||
+					PROVIDER_DEFAULT_MODELS[provider] ||
+					"";
+				let dropdown: DropdownComponent | undefined;
+				const loadModels = async () => {
+					if (!dropdown) return;
+					const currentRequestId = ++requestId;
+					dropdown.selectEl.replaceChildren();
+					dropdown.addOption("", "Loading models...");
+					try {
+						const models = await this._fetchLocalModels(provider);
+						if (!active || currentRequestId !== requestId) return;
+						dropdown.selectEl.replaceChildren();
+						const selectedModel =
+							settings.aiModels?.[provider] || configuredModel;
+						dropdown.addOption(
+							"",
+							models.length
+								? "Select a model"
+								: "No models found",
+						);
+						if (selectedModel && !models.includes(selectedModel)) {
+							dropdown.addOption(
+								selectedModel,
+								`${selectedModel} (saved; not reported)`,
+							);
+						}
+						models.forEach((model) =>
+							dropdown?.addOption(model, model),
+						);
+						dropdown.setValue(selectedModel || "");
+						if (!models.length) {
+							setting.setDesc(
+								"No models found. Check the server and refresh.",
+							);
+						}
+					} catch {
+						if (!active || currentRequestId !== requestId) return;
+						dropdown.selectEl.replaceChildren();
+						dropdown.addOption("", "Unable to load models");
+						const selectedModel =
+							settings.aiModels?.[provider] || configuredModel;
+						if (selectedModel) {
+							dropdown.addOption(
+								selectedModel,
+								`${selectedModel} (saved)`,
+							);
+						}
+						dropdown.setValue(selectedModel || "");
+						setting.setDesc(
+							"Could not reach the local server. Check the base URL, then refresh.",
+						);
+					}
+				};
+
+				setting.addDropdown((control) => {
+					dropdown = control;
+					control.onChange(async (value) => {
+						if (value) await saveModel(provider, value);
+					});
+				});
+				setting.addButton((button) =>
+					button
+						.setButtonText("Refresh models")
+						.onClick(() => void loadModels()),
+				);
+				void loadModels();
+				return () => {
+					active = false;
+					requestId++;
+				};
+			},
+		});
+		const baseUrlDefinition = (
+			provider: "openrouter" | "ollama" | "lmstudio",
+		): SettingDefinition => ({
+			name: "API base URL",
+			desc: "OpenAI-compatible API endpoint",
+			visible: providerIs(provider),
+			render: (setting) => {
+				setting.addText((text) =>
+					text
+						.setPlaceholder(PROVIDER_DEFAULT_BASE_URLS[provider])
+						.setValue(
+							settings.aiBaseUrls?.[provider] ||
+								PROVIDER_DEFAULT_BASE_URLS[provider],
+						)
+						.onChange(async (value) => {
+							settings.aiBaseUrls = {
+								...settings.aiBaseUrls,
+								[provider]: value.trim(),
+							};
+							await this.plugin.saveSettings();
+						}),
+				);
+			},
+		});
+		const secretDefinition = (provider: string): SettingDefinition => ({
+			name: "API key",
+			desc:
+				provider === "ollama" || provider === "lmstudio"
+					? "Select a SecretStorage key (optional for local providers)."
+					: "Select a SecretStorage key for this provider.",
+			visible: providerIs(provider),
+			render: (setting) => {
+				new SecretComponent(this.app, setting.controlEl)
+					.setValue((settings as any)[`${provider}SecretName`] || "")
+					.onChange(async (value) => {
+						(settings as any)[`${provider}SecretName`] =
+							value || "";
+						await this.plugin.saveSettings();
+					});
+			},
+		});
+		const noticeToggle = (
+			name: string,
+			desc: string,
+			key: "clickToUse" | "roundRanges" | "useUtc",
+		): SettingDefinition => ({
+			name,
+			desc,
+			render: (setting) => {
+				setting.addToggle((toggle) =>
+					toggle.setValue(settings[key]).onChange(async (value) => {
+						settings[key] = value;
+						new Notice(
+							"Refresh rendering of timelines for this change to take effect.",
+						);
+						await this.plugin.saveSettings();
+					}),
+				);
+			},
+		});
+
+		const supportedLocales = knownLocales.filter(
+			(locale) =>
+				Intl.DateTimeFormat.supportedLocalesOf(locale).length > 0,
+		);
+		const localeOptions: Record<string, string> = {};
+		for (const locale of supportedLocales) {
+			const name = new Intl.DisplayNames([locale], {
+				type: "language",
+			}).of(locale);
+			localeOptions[locale] = `${name} (${locale})`;
 		}
 
-		this.display();
-		requestAnimationFrame(() => {
-			scrollPositions.forEach(({ element, scrollTop, scrollLeft }) => {
-				element.scrollTop = scrollTop;
-				element.scrollLeft = scrollLeft;
-			});
-		});
+		const basesProperties = Object.keys(BASES_PROP_NAMES_DEFAULTS).map(
+			(property): SettingDefinition => ({
+				name: property,
+				render: (setting) => {
+					setting.addText((text) =>
+						text
+							.setValue(
+								settings.basesPropNames[
+									property as keyof typeof settings.basesPropNames
+								] ??
+									BASES_PROP_NAMES_DEFAULTS[
+										property as keyof typeof BASES_PROP_NAMES_DEFAULTS
+									],
+							)
+							.setPlaceholder(
+								BASES_PROP_NAMES_DEFAULTS[
+									property as keyof typeof BASES_PROP_NAMES_DEFAULTS
+								],
+							)
+							.onChange(async (value) => {
+								const defaultValue =
+									BASES_PROP_NAMES_DEFAULTS[
+										property as keyof typeof BASES_PROP_NAMES_DEFAULTS
+									];
+								settings.basesPropNames[
+									property as keyof typeof settings.basesPropNames
+								] = value.trim() || defaultValue;
+								await this.plugin.saveSettings();
+							}),
+					);
+				},
+			}),
+		);
+
+		return [
+			{
+				name: "Create and share Chronos timelines",
+				searchable: false,
+				render: (setting) => {
+					setting.controlEl.createEl("a", {
+						text: "Create and share Chronos timelines outside Obsidian ↗",
+						attr: {
+							href: "https://clairefro.github.io/chronos-timeline-md/",
+							target: "_blank",
+							rel: "noopener noreferrer",
+						},
+						cls: "chronos-announcement-link",
+					});
+				},
+			},
+			group("Display", [
+				{
+					name: "Select locale",
+					desc: "Choose a locale for displaying dates",
+					control: {
+						type: "dropdown",
+						key: "selectedLocale",
+						defaultValue: DEFAULT_LOCALE,
+						options: localeOptions,
+					},
+				},
+				noticeToggle(
+					"Require click to use",
+					"Require clicking on a timeline to activate features like zoom and scroll.",
+					"clickToUse",
+				),
+				noticeToggle(
+					"Round endcaps on ranges",
+					"Adds rounding to ranged events to make start and end clear.",
+					"roundRanges",
+				),
+				noticeToggle(
+					"Use UTC time (recommended)",
+					"If disabled, Chronos uses system time; local time may shift historical events by a day.",
+					"useUtc",
+				),
+				{
+					name: "Item alignment",
+					desc: "Alignment of event boxes and item text.",
+					control: {
+						type: "dropdown",
+						key: "align",
+						defaultValue: "left",
+						options: {
+							left: "Left",
+							center: "Center",
+							right: "Right",
+						},
+					},
+				},
+			]),
+			group("Bases view", [
+				{
+					name: "Property names",
+					desc: "Customize the property names used by Chronos Timeline Bases views. Empty values use the defaults.",
+				},
+				...basesProperties,
+			]),
+			group("Performance", [
+				{
+					name: "Enhance features with caching",
+					desc: "Improves folder timeline generation by listing only folders with Chronos items; not recommended for massive vaults.",
+					render: (setting) => {
+						setting.addToggle((toggle) =>
+							toggle
+								.setValue(settings.enableCaching ?? false)
+								.onChange(async (value) => {
+									settings.enableCaching = value;
+									await this.plugin.saveSettings();
+									if (value) {
+										new Notice("Initializing cache...");
+										this.plugin.cacheUtils.fileChronosCache.clear();
+										this.plugin.cacheUtils.folderChronosCache.clear();
+										this.plugin.cacheUtils.cacheInitialized = false;
+										await this.plugin.cacheUtils.initializeFolderCache();
+										new Notice(
+											"Cache initialized successfully",
+										);
+									} else {
+										this.plugin.cacheUtils.fileChronosCache.clear();
+										this.plugin.cacheUtils.folderChronosCache.clear();
+										this.plugin.cacheUtils.cacheInitialized = false;
+										await this.plugin.cacheUtils.deleteCache();
+										new Notice("Caching disabled");
+									}
+								}),
+						);
+					},
+				},
+			]),
+			group("Updates", [
+				{
+					name: "Show changelog on update",
+					desc: "Display the What's New modal when the plugin updates.",
+					control: {
+						type: "toggle",
+						key: "showChangelogOnUpdate",
+						defaultValue: true,
+					},
+				},
+				{
+					name: "View full release history",
+					searchable: false,
+					render: (setting) => {
+						setting.controlEl.createEl("a", {
+							text: "View full release history",
+							href: "https://github.com/clairefro/obsidian-plugin-chronos/releases",
+							attr: {
+								target: "_blank",
+								rel: "noopener noreferrer",
+							},
+						});
+					},
+				},
+			]),
+			group("AI", [
+				{
+					name: "Use AI features",
+					desc: "Toggle AI timeline generation commands and settings.",
+					control: { type: "toggle", key: "useAI" },
+				},
+				{
+					name: "AI provider",
+					desc: "Choose the provider for timeline generation.",
+					visible: aiEnabled,
+					control: {
+						type: "dropdown",
+						key: "aiProvider",
+						defaultValue: "openai",
+						options: {
+							openai: "OpenAI",
+							gemini: "Gemini (Google)",
+							anthropic: "Claude (Anthropic)",
+							openrouter: "OpenRouter",
+							ollama: "Ollama (local)",
+							lmstudio: "LM Studio (local)",
+						},
+					},
+				},
+				modelDefinition("openai"),
+				modelDefinition("gemini"),
+				modelDefinition("anthropic"),
+				modelDefinition("openrouter"),
+				localModelDefinition("ollama"),
+				localModelDefinition("lmstudio"),
+				baseUrlDefinition("openrouter"),
+				baseUrlDefinition("ollama"),
+				baseUrlDefinition("lmstudio"),
+				secretDefinition("openai"),
+				secretDefinition("gemini"),
+				secretDefinition("anthropic"),
+				secretDefinition("openrouter"),
+				secretDefinition("ollama"),
+				secretDefinition("lmstudio"),
+			]),
+			group("Cheatsheet", [
+				{
+					name: "Chronos syntax",
+					desc: "Read-only syntax reference.",
+					searchable: false,
+					render: (setting) => {
+						const textarea = setting.controlEl.createEl(
+							"textarea",
+							{
+								cls: "chronos-settings-md-container",
+								text: ChronosTimeline.cheatsheet,
+							},
+						);
+						textarea.readOnly = true;
+					},
+				},
+				{
+					name: "Copy cheatsheet",
+					searchable: false,
+					render: (setting) => {
+						setting.addButton((button) =>
+							button
+								.setButtonText("Copy cheatsheet")
+								.setCta()
+								.onClick(async () => {
+									try {
+										await navigator.clipboard.writeText(
+											ChronosTimeline.cheatsheet,
+										);
+										new Notice(
+											"Cheatsheet copied to clipboard!",
+										);
+									} catch (error) {
+										console.error(
+											"[Chronos] Failed to copy cheatsheet:",
+											error,
+										);
+										new Notice("Failed to copy cheatsheet");
+									}
+								}),
+						);
+					},
+				},
+				{
+					name: "Learn more",
+					searchable: false,
+					render: (setting) => {
+						setting.controlEl.createEl("a", {
+							text: "Learn more",
+							href: "https://github.com/clairefro/obsidian-plugin-chronos",
+							attr: { target: "_blank" },
+						});
+					},
+				},
+			]),
+		];
 	}
 
 	private async _fetchLocalModels(provider: string): Promise<string[]> {
@@ -1251,7 +1696,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 						this.plugin.settings.useAI = value;
 						await this.plugin.saveSettings();
 						// Call display to re-evaluate display conditionals for AI settings
-						this._displayPreservingScroll();
+						this.display();
 					}),
 			);
 
@@ -1275,7 +1720,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					dropdown.onChange(async (value) => {
 						(this.plugin.settings as any).aiProvider = value;
 						await this.plugin.saveSettings();
-						this._displayPreservingScroll();
+						this.display();
 					});
 				});
 
