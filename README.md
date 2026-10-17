@@ -49,6 +49,8 @@ You can insert blank, basic, or advanced templates using the Command Pallete (`c
 
 Highlight text in your notes and run the "Generate" command.
 
+Choose a provider in Chronos settings. Cloud providers use a key selected from Obsidian SecretStorage. OpenRouter, Ollama, and LM Studio use OpenAI-compatible endpoints; the local model list is loaded from the server's `/models` endpoint. Set the base URL first, then use **Refresh models** if you change the server or model list. Ollama and LM Studio do not require an API key.
+
 Input can be long text in your notes with time information, or vague like:
 
 - "Detailed history of the Cold War"

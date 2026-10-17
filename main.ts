@@ -22,6 +22,7 @@ import { FileUtils } from "./util/FileUtils";
 import {
 	DEFAULT_LOCALE,
 	PROVIDER_DEFAULT_MODELS,
+	PROVIDER_DEFAULT_BASE_URLS,
 	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_HTML,
 	DETECTION_PATTERN_CODEBLOCK,
@@ -29,6 +30,7 @@ import {
 } from "./constants";
 
 import { ChronosTimelineBasesView } from "./views/ChronosTimelineBasesView";
+import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
@@ -527,23 +529,13 @@ export default class ChronosPlugin extends Plugin {
 			return;
 		}
 		// open loading modal
-		const provider = (this.settings as any).aiProvider || "openai"; // backwards compatibility: OpenAI used to be sole provider
-
-		const apiKey = this._getApiKey(provider);
-		if (!apiKey) {
-			new Notice(
-				`No API Key found for ${provider}. Please add an API key in Chronos Timeline Plugin Settings`,
-			);
-			return;
-		}
-
-		const model =
-			(this.settings as any).aiModels?.[provider] ||
-			(PROVIDER_DEFAULT_MODELS as any)[provider];
+		const config = this._getAiProviderConfig();
+		const { provider } = config;
+		const model = config.model || "model not set";
 
 		const loadingModal = new TextModal(
 			this.app,
-			`Working on it.... (Provider: ${provider}, Model: ${model})`,
+			`Generating Chronos Timeline.... (Provider: ${provider}, Model: ${model})`,
 		);
 		loadingModal.open();
 		try {
@@ -559,26 +551,23 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private async _textToChronos(selection: string): Promise<string | void> {
-		// Determine provider (if settings include selection) otherwise default to openai
-		const provider = (this.settings as any).aiProvider || "openai"; // backwards compatibility: OpenAI used to be sole provider
-
-		const apiKey = this._getApiKey(provider);
-		if (!apiKey) {
-			new Notice(
-				`No API Key found for ${provider}. Please add an API key in Chronos Timeline Plugin Settings`,
-			);
-			return;
-		}
-
-		const model =
-			(this.settings as any).aiModels?.[provider] ||
-			(PROVIDER_DEFAULT_MODELS as any)[provider];
-
+		const config = this._getAiProviderConfig();
 		const { GenAi } = await import("./lib/ai/GenAi.js");
-		const res = await new GenAi(provider, apiKey, model).toChronos(
-			selection,
-		);
+		const res = await new GenAi(config).toChronos(selection);
 		return res;
+	}
+
+	private _getAiProviderConfig(): AIProviderConfig {
+		const provider = (this.settings.aiProvider ||
+			"openai") as AIProviderConfig["provider"];
+		return {
+			provider,
+			apiKey: this._getApiKey(provider) || undefined,
+			model:
+				(this.settings.aiModels as any)?.[provider] ||
+				PROVIDER_DEFAULT_MODELS[provider],
+			baseUrl: this.settings.aiBaseUrls?.[provider],
+		};
 	}
 
 	private _getApiKey(provider: string = "openai"): string | null {
@@ -943,6 +932,65 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	private _displayPreservingScroll(): void {
+		const scrollPositions: Array<{
+			element: HTMLElement;
+			scrollTop: number;
+			scrollLeft: number;
+		}> = [];
+		let element: HTMLElement | null = this.containerEl;
+		while (element) {
+			if (element.scrollTop || element.scrollLeft) {
+				scrollPositions.push({
+					element,
+					scrollTop: element.scrollTop,
+					scrollLeft: element.scrollLeft,
+				});
+			}
+			element = element.parentElement;
+		}
+
+		this.display();
+		requestAnimationFrame(() => {
+			scrollPositions.forEach(({ element, scrollTop, scrollLeft }) => {
+				element.scrollTop = scrollTop;
+				element.scrollLeft = scrollLeft;
+			});
+		});
+	}
+
+	private async _fetchLocalModels(provider: string): Promise<string[]> {
+		const baseUrl =
+			this.plugin.settings.aiBaseUrls?.[provider] ||
+			PROVIDER_DEFAULT_BASE_URLS[provider];
+		const secretName = (this.plugin.settings as any)[
+			`${provider}SecretName`
+		];
+		const apiKey = secretName
+			? this.app.secretStorage.getSecret(secretName)
+			: null;
+		const headers: Record<string, string> = {};
+		if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+		const response = await requestUrl({
+			url: `${baseUrl.replace(/\/+$/, "")}/models`,
+			method: "GET",
+			headers,
+		});
+		const models = response.json?.data;
+		if (!Array.isArray(models)) return [];
+		return Array.from(
+			new Set(
+				models
+					.map((model: any) => model?.id)
+					.filter(
+						(modelId: unknown): modelId is string =>
+							typeof modelId === "string" && modelId.length > 0,
+					),
+			),
+		);
+	}
+
 	display(): void {
 		const { containerEl } = this;
 
@@ -1203,33 +1251,12 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 						this.plugin.settings.useAI = value;
 						await this.plugin.saveSettings();
 						// Call display to re-evaluate display conditionals for AI settings
-						this.display();
+						this._displayPreservingScroll();
 					}),
 			);
 
 		// AI provider settings only shown when AI features are enabled
 		if (this.plugin.settings.useAI) {
-			const updateApiKeyVisibility = () => {
-				const currentProvider =
-					(this.plugin.settings as any).aiProvider || "openai";
-				const openaiSetting = containerEl.querySelector(
-					".ai-setting-openai",
-				) as HTMLElement;
-				const geminiSetting = containerEl.querySelector(
-					".ai-setting-gemini",
-				) as HTMLElement;
-
-				if (openaiSetting) {
-					openaiSetting.style.display =
-						currentProvider === "openai" ? "block" : "none";
-				}
-				if (geminiSetting) {
-					geminiSetting.style.display =
-						currentProvider === "gemini" ? "block" : "none";
-				}
-			};
-
-			// Call updateApiKeyVisibility whenever the provider dropdown changes
 			new Setting(containerEl)
 				.setName("AI Provider")
 				.setDesc(
@@ -1238,21 +1265,26 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				.addDropdown((dropdown) => {
 					dropdown.addOption("openai", "OpenAI");
 					dropdown.addOption("gemini", "Gemini (Google)");
+					dropdown.addOption("anthropic", "Claude (Anthropic)");
+					dropdown.addOption("openrouter", "OpenRouter");
+					dropdown.addOption("ollama", "Ollama (local)");
+					dropdown.addOption("lmstudio", "LM Studio (local)");
 					const saved =
 						(this.plugin.settings as any).aiProvider || "openai";
 					dropdown.setValue(saved);
 					dropdown.onChange(async (value) => {
 						(this.plugin.settings as any).aiProvider = value;
 						await this.plugin.saveSettings();
-						updateApiKeyVisibility();
-						this.display();
+						this._displayPreservingScroll();
 					});
 				});
 
 			const currentProvider =
 				(this.plugin.settings as any).aiProvider || "openai";
 
-			// Allow editing the model used for this provider (defaults applied on load)
+			const isLocalModelProvider = ["ollama", "lmstudio"].includes(
+				currentProvider,
+			);
 			const configuredModel =
 				(this.plugin.settings as any).aiModels?.[currentProvider] ||
 				(PROVIDER_DEFAULT_MODELS as any)[currentProvider] ||
@@ -1261,91 +1293,183 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			const defaultModel =
 				(PROVIDER_DEFAULT_MODELS as any)[currentProvider] || "";
 
-			// Build the Model setting and only show the "Use recommended model" button
-			// when the configured model differs from the provider default. Re-render
-			// the settings UI on change so the button can appear/disappear dynamically.
 			const modelSetting = new Setting(containerEl)
 				.setName("Model")
 				.setDesc("Model used for the selected provider")
 				.setClass("ai-setting");
 
-			// add "Use default model" button
-			if (configuredModel !== defaultModel) {
-				modelSetting.addButton((btn) => {
-					btn.setButtonText(`Use ${defaultModel} (recommended)`)
-						.setTooltip(
-							`Replace with recommended model: ${defaultModel}`,
-						)
-						.setCta() // Apply Obsidian theme accent color
-						.onClick(async () => {
+			if (isLocalModelProvider) {
+				let refreshModels: () => Promise<void> = async () => {};
+				modelSetting
+					.setDesc(
+						"Select a model available from the configured local server",
+					)
+					.addDropdown((dropdown) => {
+						const loadModels = async () => {
+							dropdown.selectEl.replaceChildren();
+							dropdown.addOption("", "Loading models...");
+							try {
+								const models =
+									await this._fetchLocalModels(
+										currentProvider,
+									);
+								dropdown.selectEl.replaceChildren();
+								const selectedModel =
+									(this.plugin.settings.aiModels as any)?.[
+										currentProvider
+									] || configuredModel;
+								dropdown.addOption(
+									"",
+									models.length
+										? "Select a model"
+										: "No models found",
+								);
+								if (
+									selectedModel &&
+									!models.includes(selectedModel)
+								) {
+									dropdown.addOption(
+										selectedModel,
+										`${selectedModel} (saved; not reported)`,
+									);
+								}
+								models.forEach((model) =>
+									dropdown.addOption(model, model),
+								);
+								dropdown.setValue(selectedModel || "");
+								if (models.length === 0) {
+									modelSetting.setDesc(
+										"No models found. Check the server and refresh.",
+									);
+								}
+							} catch {
+								dropdown.selectEl.replaceChildren();
+								dropdown.addOption("", "Unable to load models");
+								const selectedModel =
+									(this.plugin.settings.aiModels as any)?.[
+										currentProvider
+									] || configuredModel;
+								if (selectedModel) {
+									dropdown.addOption(
+										selectedModel,
+										`${selectedModel} (saved)`,
+									);
+								}
+								dropdown.setValue(selectedModel || "");
+								modelSetting.setDesc(
+									"Could not reach the local server. Check the base URL, then refresh.",
+								);
+							}
+						};
+
+						refreshModels = loadModels;
+						dropdown.onChange(async (value) => {
+							if (!value) return;
 							(this.plugin.settings as any).aiModels = {
 								...(this.plugin.settings as any).aiModels,
-								[currentProvider]: defaultModel,
+								[currentProvider]: value,
 							};
 							await this.plugin.saveSettings();
-							// Update text field and hide button without re-rendering the entire settings UI
-							const textField =
-								modelSetting.settingEl.querySelector("input");
-							if (textField) {
-								textField.value = defaultModel;
-							}
-							btn.buttonEl.style.display = "none";
 						});
+						void loadModels();
+					})
+					.addButton((button) =>
+						button
+							.setButtonText("Refresh models")
+							.onClick(() => void refreshModels()),
+					);
+			} else {
+				if (configuredModel !== defaultModel) {
+					modelSetting.addButton((btn) => {
+						btn.setButtonText(`Use ${defaultModel} (recommended)`)
+							.setTooltip(
+								`Replace with recommended model: ${defaultModel}`,
+							)
+							.setCta()
+							.onClick(async () => {
+								(this.plugin.settings as any).aiModels = {
+									...(this.plugin.settings as any).aiModels,
+									[currentProvider]: defaultModel,
+								};
+								await this.plugin.saveSettings();
+								const textField =
+									modelSetting.settingEl.querySelector(
+										"input",
+									);
+								if (textField) {
+									textField.value = defaultModel;
+								}
+								btn.buttonEl.style.display = "none";
+							});
+					});
+				}
+
+				modelSetting.addText((text) => {
+					text.setValue(configuredModel).onChange(async (value) => {
+						const trimmed = value.trim();
+						(this.plugin.settings as any).aiModels = {
+							...(this.plugin.settings as any).aiModels,
+							[currentProvider]: trimmed,
+						};
+						await this.plugin.saveSettings();
+						const button =
+							modelSetting.settingEl.querySelector("button");
+						if (button) {
+							button.style.display =
+								trimmed === defaultModel ? "none" : "";
+						}
+					});
 				});
 			}
 
-			modelSetting.addText((t) => {
-				t.setValue(configuredModel).onChange(async (value) => {
-					const trimmed = value.trim();
-					(this.plugin.settings as any).aiModels = {
-						...(this.plugin.settings as any).aiModels,
-						[currentProvider]: trimmed,
-					};
-					await this.plugin.saveSettings();
-					// Update button visibility without re-rendering the entire settings UI
-					const button =
-						modelSetting.settingEl.querySelector("button");
-					if (button) {
-						button.style.display =
-							trimmed === defaultModel ? "none" : "";
-					}
-				});
-			});
+			if (
+				["openrouter", "ollama", "lmstudio"].includes(currentProvider)
+			) {
+				new Setting(containerEl)
+					.setName("API Base URL")
+					.setDesc("OpenAI-compatible API endpoint")
+					.addText((text) =>
+						text
+							.setPlaceholder(
+								PROVIDER_DEFAULT_BASE_URLS[currentProvider],
+							)
+							.setValue(
+								(this.plugin.settings.aiBaseUrls as any)?.[
+									currentProvider
+								] ||
+									PROVIDER_DEFAULT_BASE_URLS[currentProvider],
+							)
+							.onChange(async (value) => {
+								const urls =
+									this.plugin.settings.aiBaseUrls || {};
+								this.plugin.settings.aiBaseUrls = {
+									...urls,
+									[currentProvider]: value.trim(),
+								};
+								await this.plugin.saveSettings();
+							}),
+					);
+			}
 
 			new Setting(containerEl)
-				.setName("API Key for OpenAI")
-				.setDesc("Select a secret from SecretStorage")
+				.setName("API Key")
+				.setDesc(
+					"Select a SecretStorage key. Optional for local providers.",
+				)
 				.addComponent((el) =>
 					new SecretComponent(this.app, el)
 						.setValue(
-							(this.plugin.settings as any).openaiSecretName ||
-								"",
+							(this.plugin.settings as any)[
+								`${currentProvider}SecretName`
+							] || "",
 						)
 						.onChange(async (value) => {
-							(this.plugin.settings as any).openaiSecretName =
-								value;
+							(this.plugin.settings as any)[
+								`${currentProvider}SecretName`
+							] = value;
 							await this.plugin.saveSettings();
 						}),
 				);
-
-			new Setting(containerEl)
-				.setName("API Key for Gemini")
-				.setDesc("Select a secret from SecretStorage")
-				.addComponent((el) =>
-					new SecretComponent(this.app, el)
-						.setValue(
-							(this.plugin.settings as any).geminiSecretName ||
-								"",
-						)
-						.onChange(async (value) => {
-							(this.plugin.settings as any).geminiSecretName =
-								value;
-							await this.plugin.saveSettings();
-						}),
-				);
-
-			// Initial visibility update
-			updateApiKeyVisibility();
 		}
 
 		containerEl.createEl("h2", {

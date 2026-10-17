@@ -27,6 +27,11 @@ export interface ChronosPluginSettings {
 	aiProvider?: string;
 	openaiSecretName?: string;
 	geminiSecretName?: string;
+	anthropicSecretName?: string;
+	openrouterSecretName?: string;
+	ollamaSecretName?: string;
+	lmstudioSecretName?: string;
+	aiBaseUrls?: Record<string, string>;
 	aiModels?: Record<string, string>;
 	align: Align;
 	clickToUse: boolean;
