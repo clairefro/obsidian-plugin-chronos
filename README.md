@@ -14,9 +14,10 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
 - Portable plain text data
 - Obsidian Bases view
-- Text-to-timeline with AI
-- Generate combined timeline from all Chronos items in folder
 - Note linking
+- Inline snippets
+- Text-to-timeline with AI (multi-provider)
+- Generate combined timeline from all Chronos items in folder
 - Grouping
 - Colors
 - [Render timelines anywhere](https://clairefro.github.io/chronos-timeline-md) outside Obsidian
@@ -44,6 +45,10 @@ You can insert blank, basic, or advanced templates using the Command Pallete (`c
 ### Insert advanced template
 
 ![palette example advanced](./docs/ex-palette-adv.gif)
+
+### Insert snippet widget
+
+While editing inside a Chronos code block, use **Insert snippet** to add a point, event, period, marker, comment, or flag at the cursor. You can click the button or press `Mod+Shift+Enter` (`Ctrl+Shift+Enter` on Windows/Linux, `Cmd+Shift+Enter` on macOS). This shortcut works only inside a Chronos code block; `Tab` keeps Obsidian's normal indentation behavior.
 
 ### Generate timeline with AI
 
@@ -110,6 +115,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
         - [Insert blank](#insert-blank)
         - [Insert basic template](#insert-basic-template)
         - [Insert advanced template](#insert-advanced-template)
+        - [Insert snippet widget](#insert-snippet-widget)
         - [Generate timeline with AI](#generate-timeline-with-ai)
         - [Generate timeline from folder](#generate-timeline-from-folder)
         - [Cheatsheet](#cheatsheet)

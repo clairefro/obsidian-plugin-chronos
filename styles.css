@@ -146,11 +146,15 @@
 	border-radius: 0;
 }
 
-/* Ensure code editor button is always on top and easy to find with pointer, 
-   in chronos blocks only as to not interfer with normal Obsidian behavior 
- */
+/* Keep Obsidian's code-block edit control above Chronos timeline layers. */
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos {
+	isolation: isolate;
+}
+
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos .edit-block-button,
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos ~ .edit-block-button,
 .block-language-chronos ~ .edit-block-button:nth-child(n) {
-	z-index: 999;
+	z-index: 10001 !important;
 	cursor: pointer;
 }
 
@@ -216,6 +220,30 @@
 
 .chronos-width-toggle:hover:nth-child(n) {
 	background-color: var(--chronos-semi-gray);
+}
+
+.chronos-snippet-menu-button {
+	margin-inline-start: 0.5rem;
+	padding: 1px 8px;
+	margin: 0.25rem 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 999px;
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	line-height: 1.5;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+.chronos-snippet-menu-button:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.chronos-snippet-menu-button:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
 }
 
 .chronos-timeline-container:hover .chronos-width-toggle {

@@ -1,0 +1,239 @@
+import { App, Menu } from "obsidian";
+import {
+	Decoration,
+	DecorationSet,
+	EditorView,
+	keymap,
+	ViewPlugin,
+	ViewUpdate,
+	WidgetType,
+} from "@codemirror/view";
+
+interface ChronosSnippet {
+	label: string;
+	value: string;
+}
+
+function getSnippets(): ChronosSnippet[] {
+	const now = new Date();
+	const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+	const year = String(now.getFullYear());
+	const previousYear = Number(year) - 1;
+	return [
+		{ label: "Point", value: `* [${date}] Point title` },
+		{
+			label: "Point with description",
+			value: `* [${date}] Point title | Description`,
+		},
+		{
+			label: "Point with note link",
+			value: `* [${date}] Point title | [[path/to/note]]`,
+		},
+		{
+			label: "Point with group",
+			value: `* [${date}] {Group name} Point title`,
+		},
+		{
+			label: "Event (single date)",
+			value: `- [${date}] Event title`,
+		},
+		{
+			label: "Event (date range)",
+			value: `- [${previousYear}~${year}] Event title`,
+		},
+		{
+			label: "Event with description",
+			value: `- [${date}] Event title | Description`,
+		},
+		{
+			label: "Event with note link",
+			value: `- [${date}] Event title | [[path/to/note]]`,
+		},
+		{
+			label: "Event with color",
+			value: `- [${date}] #blue Event title | Description`,
+		},
+		{
+			label: "Event with group",
+			value: `- [${date}] {Group name} Event title`,
+		},
+		{
+			label: "Period",
+			value: `@ [${previousYear}~${year}] Period title`,
+		},
+		{
+			label: "Period with color",
+			value: `@ [${previousYear}~${year}] #blue Period title`,
+		},
+		{ label: "Marker", value: `= [${date}] Marker title` },
+		{ label: "Comment", value: "# Comment" },
+	];
+}
+
+function getFlagSnippets(): ChronosSnippet[] {
+	const year = new Date().getFullYear();
+	return [
+		{
+			label: "DEFAULTVIEW - Set date range",
+			value: `> DEFAULTVIEW ${year - 5}|${year + 5}`,
+		},
+		{
+			label: "ORDERBY - Chronological order (no default stacking)",
+			value: "> ORDERBY start",
+		},
+		{
+			label: "ORDERBY - Start date descending",
+			value: "> ORDERBY -start",
+		},
+		{
+			label: "ORDERBY - Color, then start date",
+			value: "> ORDERBY color|start",
+		},
+		{ label: "HEIGHT - Set timeline height (px)", value: "> HEIGHT 500" },
+		{ label: "NOTODAY - Hide today line", value: "> NOTODAY" },
+		{
+			label: "NOSTACK - Prevent items from stacking",
+			value: "> NOSTACK",
+		},
+	];
+}
+
+function findChronosFenceStart(view: EditorView): number | null {
+	const currentLine = view.state.doc.lineAt(view.state.selection.main.head);
+	for (let lineNumber = currentLine.number; lineNumber >= 1; lineNumber--) {
+		const line = view.state.doc.line(lineNumber);
+		const text = line.text.trim();
+		if (!text.startsWith("```")) continue;
+		return /^```chronos(?:\s|$)/i.test(text) ? line.to : null;
+	}
+	return null;
+}
+
+function insertSnippet(view: EditorView, snippet: string): void {
+	const position = view.state.selection.main.head;
+	const line = view.state.doc.lineAt(position);
+	const prefix = position > line.from ? "\n" : "";
+	const suffix = position < line.to ? "\n" : "";
+	const text = `${prefix}${snippet}${suffix}`;
+	const cursor = position + text.length;
+	view.dispatch({
+		changes: { from: position, insert: text },
+		selection: { anchor: cursor },
+	});
+	view.focus();
+}
+
+function showSnippetMenu(
+	view: EditorView,
+	position: { x: number; y: number } | MouseEvent,
+): void {
+	const menu = new Menu();
+	menu.addItem((item) => item.setTitle("Items").setIsLabel(true));
+	getSnippets().forEach((snippet) => {
+		menu.addItem((item) =>
+			item
+				.setTitle(snippet.label)
+				.onClick(() => insertSnippet(view, snippet.value)),
+		);
+	});
+	menu.addSeparator();
+	menu.addItem((item) => item.setTitle("Options").setIsLabel(true));
+	getFlagSnippets().forEach((snippet) => {
+		menu.addItem((item) =>
+			item
+				.setTitle(snippet.label)
+				.onClick(() => insertSnippet(view, snippet.value)),
+		);
+	});
+	if (position instanceof MouseEvent) {
+		menu.showAtMouseEvent(position);
+	} else {
+		menu.showAtPosition(position);
+	}
+}
+
+class ChronosSnippetButton extends WidgetType {
+	constructor(private app: App) {
+		super();
+	}
+
+	toDOM(view: EditorView): HTMLElement {
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = "chronos-snippet-menu-button";
+		button.textContent = "Insert snippet";
+		button.setAttribute("aria-label", "Insert a Chronos snippet");
+		button.setAttribute("aria-haspopup", "menu");
+		button.setAttribute(
+			"aria-keyshortcuts",
+			"Control+Shift+Enter Meta+Shift+Enter",
+		);
+		button.title = "Insert a Chronos snippet (Mod+Shift+Enter)";
+		button.addEventListener("mousedown", (event) => event.preventDefault());
+		button.addEventListener("click", (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			if (event.detail === 0) {
+				const bounds = button.getBoundingClientRect();
+				showSnippetMenu(view, { x: bounds.left, y: bounds.bottom });
+			} else {
+				showSnippetMenu(view, event);
+			}
+		});
+		return button;
+	}
+
+	ignoreEvent(): boolean {
+		return true;
+	}
+
+	eq(other: WidgetType): boolean {
+		return other instanceof ChronosSnippetButton;
+	}
+}
+
+export function createChronosSnippetEditorExtension(app: App) {
+	const widget = new ChronosSnippetButton(app);
+	const chronosWidget = ViewPlugin.fromClass(
+		class {
+			decorations: DecorationSet;
+
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+
+			update(update: ViewUpdate): void {
+				if (
+					update.docChanged ||
+					update.selectionSet ||
+					update.viewportChanged
+				) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+
+			private buildDecorations(view: EditorView): DecorationSet {
+				const position = findChronosFenceStart(view);
+				if (position === null) return Decoration.none;
+				return Decoration.set([
+					Decoration.widget({ widget, side: 1 }).range(position),
+				]);
+			}
+		},
+		{ decorations: (plugin) => plugin.decorations },
+	);
+	// Keyboard users can open the menu with Mod+Shift+Enter inside a Chronos fence; Tab stays available for indentation.
+	const snippetShortcut = keymap.of([
+		{
+			key: "Mod-Shift-Enter",
+			run(view) {
+				if (findChronosFenceStart(view) === null) return false;
+				const cursor = view.coordsAtPos(view.state.selection.main.head);
+				if (!cursor) return false;
+				showSnippetMenu(view, { x: cursor.left, y: cursor.bottom });
+				return true;
+			},
+		},
+	]);
+	return [chronosWidget, snippetShortcut];
+}

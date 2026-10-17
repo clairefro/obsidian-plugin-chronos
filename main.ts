@@ -42,6 +42,7 @@ const ChronosTimeline: any =
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
+import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
@@ -119,6 +120,9 @@ export default class ChronosPlugin extends Plugin {
 		}
 
 		this.addSettingTab(new ChronosPluginSettingTab(this.app, this));
+		this.registerEditorExtension(
+			createChronosSnippetEditorExtension(this.app),
+		);
 
 		// Initialize folder cache in background to track which folders contain chronos blocks (only if caching is enabled)
 		if (this.settings.enableCaching) {
