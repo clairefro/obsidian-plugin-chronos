@@ -146,11 +146,15 @@
 	border-radius: 0;
 }
 
-/* Ensure code editor button is always on top and easy to find with pointer, 
-   in chronos blocks only as to not interfer with normal Obsidian behavior 
- */
+/* Keep Obsidian's code-block edit control above Chronos timeline layers. */
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos {
+	isolation: isolate;
+}
+
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos .edit-block-button,
+.cm-preview-code-block.cm-embed-block.cm-lang-chronos ~ .edit-block-button,
 .block-language-chronos ~ .edit-block-button:nth-child(n) {
-	z-index: 999;
+	z-index: 10001 !important;
 	cursor: pointer;
 }
 
