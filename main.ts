@@ -331,16 +331,7 @@ export default class ChronosPlugin extends Plugin {
 			}
 
 			if (!editorEl) {
-				console.debug(
-					"[Chronos] Could not find .markdown-source-view element after 5 attempts",
-				);
-				// Debug: log the container's ancestors
-				let parent = container.parentElement;
-				let level = 0;
-				while (parent && level < 10) {
-					parent = parent.parentElement;
-					level++;
-				}
+				container.querySelector(".chronos-width-toggle")?.remove();
 				return;
 			}
 
@@ -938,6 +929,16 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 	getSettingDefinitions(): SettingDefinitionItem[] {
 		const settings = this.plugin.settings;
+		const providerNames: Record<string, string> = {
+			openai: "OpenAI",
+			gemini: "Gemini",
+			anthropic: "Claude",
+			openrouter: "OpenRouter",
+			ollama: "Ollama",
+			lmstudio: "LM Studio",
+		};
+		const providerName = (provider: string) =>
+			providerNames[provider] || provider;
 		const currentProvider = () => settings.aiProvider || "openai";
 		const aiEnabled = () => settings.useAI;
 		const providerIs = (provider: string) => () =>
@@ -958,7 +959,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			await this.plugin.saveSettings();
 		};
 		const modelDefinition = (provider: string): SettingDefinition => ({
-			name: "Model",
+			name: `${providerName(provider)} model`,
 			desc: "Model used for the selected provider",
 			visible: providerIs(provider),
 			render: (setting) => {
@@ -998,7 +999,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const localModelDefinition = (
 			provider: "ollama" | "lmstudio",
 		): SettingDefinition => ({
-			name: "Model",
+			name: `${providerName(provider)} model`,
 			desc: "Select a model available from the configured local server",
 			visible: providerIs(provider),
 			render: (setting) => {
@@ -1081,7 +1082,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const baseUrlDefinition = (
 			provider: "openrouter" | "ollama" | "lmstudio",
 		): SettingDefinition => ({
-			name: "API base URL",
+			name: `${providerName(provider)} API base URL`,
 			desc: "OpenAI-compatible API endpoint",
 			visible: providerIs(provider),
 			render: (setting) => {
@@ -1103,7 +1104,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			},
 		});
 		const secretDefinition = (provider: string): SettingDefinition => ({
-			name: "API key",
+			name: `${providerName(provider)} API key`,
 			desc:
 				provider === "ollama" || provider === "lmstudio"
 					? "Select a SecretStorage key (optional for local providers)."
