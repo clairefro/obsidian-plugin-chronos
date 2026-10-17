@@ -19,6 +19,19 @@ function getSnippets(): ChronosSnippet[] {
 	const year = String(now.getFullYear());
 	const previousYear = Number(year) - 1;
 	return [
+		{ label: "Point", value: `* [${date}] Point title` },
+		{
+			label: "Point with description",
+			value: `* [${date}] Point title | Description`,
+		},
+		{
+			label: "Point with note link",
+			value: `* [${date}] Point title | [[path/to/note]]`,
+		},
+		{
+			label: "Point with group",
+			value: `* [${date}] {Group name} Point title`,
+		},
 		{
 			label: "Event (single date)",
 			value: `- [${date}] Event title`,
@@ -30,6 +43,10 @@ function getSnippets(): ChronosSnippet[] {
 		{
 			label: "Event with description",
 			value: `- [${date}] Event title | Description`,
+		},
+		{
+			label: "Event with note link",
+			value: `- [${date}] Event title | [[path/to/note]]`,
 		},
 		{
 			label: "Event with color",
@@ -47,7 +64,6 @@ function getSnippets(): ChronosSnippet[] {
 			label: "Period with color",
 			value: `@ [${previousYear}~${year}] #blue Period title`,
 		},
-		{ label: "Point", value: `* [${date}] Point title` },
 		{ label: "Marker", value: `= [${date}] Marker title` },
 		{ label: "Comment", value: "# Comment" },
 	];
@@ -56,6 +72,10 @@ function getSnippets(): ChronosSnippet[] {
 function getFlagSnippets(): ChronosSnippet[] {
 	const year = new Date().getFullYear();
 	return [
+		{
+			label: "DEFAULTVIEW - Set date range",
+			value: `> DEFAULTVIEW ${year - 5}|${year + 5}`,
+		},
 		{
 			label: "ORDERBY - Chronological order (no default stacking)",
 			value: "> ORDERBY start",
@@ -68,12 +88,8 @@ function getFlagSnippets(): ChronosSnippet[] {
 			label: "ORDERBY - Color, then start date",
 			value: "> ORDERBY color|start",
 		},
-		{
-			label: "DEFAULTVIEW - Set date range",
-			value: `> DEFAULTVIEW ${year - 5}|${year + 5}`,
-		},
-		{ label: "NOTODAY - Hide today line", value: "> NOTODAY" },
 		{ label: "HEIGHT - Set timeline height (px)", value: "> HEIGHT 500" },
+		{ label: "NOTODAY - Hide today line", value: "> NOTODAY" },
 		{
 			label: "NOSTACK - Prevent items from stacking",
 			value: "> NOSTACK",
