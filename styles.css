@@ -246,6 +246,43 @@
 	outline-offset: 2px;
 }
 
+.cm-editor .cm-chronos-comment {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+.cm-editor .cm-chronos-marker,
+.cm-editor .cm-chronos-directive {
+	color: var(--color-accent);
+	font-weight: 600;
+}
+
+.cm-editor .cm-chronos-date {
+	color: var(--color-orange);
+}
+
+.cm-editor .cm-chronos-group {
+	color: var(--color-green);
+}
+
+.cm-editor .cm-chronos-color {
+	color: var(--color-purple);
+}
+
+.cm-editor .cm-chronos-link {
+	color: var(--color-blue);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+
+.cm-editor .cm-chronos-flag {
+	color: var(--color-cyan);
+}
+
+.cm-editor .cm-chronos-separator {
+	color: var(--text-muted);
+}
+
 .chronos-timeline-container:hover .chronos-width-toggle {
 	opacity: 1;
 }

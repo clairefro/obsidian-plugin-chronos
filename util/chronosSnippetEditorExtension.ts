@@ -1,4 +1,5 @@
 import { App, Menu } from "obsidian";
+import type { Range } from "@codemirror/state";
 import {
 	Decoration,
 	DecorationSet,
@@ -113,6 +114,101 @@ function findChronosFenceStart(view: EditorView): number | null {
 	return null;
 }
 
+function isFenceLine(text: string): boolean {
+	return /^ {0,3}(?:`{3,}|~{3,})/.test(text);
+}
+
+function isChronosFenceStart(text: string): boolean {
+	return /^ {0,3}`{3,}\s*chronos(?:\s|$)/i.test(text);
+}
+
+function isInsideChronosFence(view: EditorView, lineNumber: number): boolean {
+	for (let number = lineNumber - 1; number >= 1; number--) {
+		const text = view.state.doc.line(number).text;
+		if (!isFenceLine(text)) continue;
+		return isChronosFenceStart(text);
+	}
+	return false;
+}
+
+function addTokenDecoration(
+	decorations: Range<Decoration>[],
+	from: number,
+	to: number,
+	className: string,
+): void {
+	if (from < to) {
+		decorations.push(Decoration.mark({ class: className }).range(from, to));
+	}
+}
+
+function buildLineHighlightDecorations(
+	line: { from: number; text: string },
+	decorations: Range<Decoration>[],
+): void {
+	const text = line.text;
+	const comment = /^\s*#/.exec(text);
+	if (comment) {
+		addTokenDecoration(
+			decorations,
+			line.from + comment.index,
+			line.from + text.length,
+			"cm-chronos-comment",
+		);
+		return;
+	}
+
+	const flag = /^(\s*>\s*)([A-Za-z]+)\b/.exec(text);
+	if (flag) {
+		const commandStart = flag[1].length;
+		addTokenDecoration(
+			decorations,
+			line.from + text.indexOf(">"),
+			line.from + text.indexOf(">") + 1,
+			"cm-chronos-directive",
+		);
+		addTokenDecoration(
+			decorations,
+			line.from + commandStart,
+			line.from + commandStart + flag[2].length,
+			"cm-chronos-flag",
+		);
+		return;
+	}
+
+	const marker = /^\s*([-*@=])(?=\s|$)/.exec(text);
+	if (marker) {
+		const markerStart = marker.index + marker[0].indexOf(marker[1]);
+		addTokenDecoration(
+			decorations,
+			line.from + markerStart,
+			line.from + markerStart + 1,
+			"cm-chronos-marker",
+		);
+	}
+
+	const tokenPattern = /\[\[[^\]]+\]\]|\[[^\]]+\]|\{[^}]*\}|#[\w-]+|\|/g;
+	let match: RegExpExecArray | null;
+	while ((match = tokenPattern.exec(text)) !== null) {
+		const token = match[0];
+		const className = token.startsWith("[[")
+			? "cm-chronos-link"
+			: token.startsWith("[")
+				? "cm-chronos-date"
+				: token.startsWith("{")
+					? "cm-chronos-group"
+					: token.startsWith("#")
+						? "cm-chronos-color"
+						: "cm-chronos-separator";
+		addTokenDecoration(
+			decorations,
+			line.from + match.index,
+			line.from + match.index + token.length,
+			className,
+		);
+	}
+}
+
 function insertSnippet(view: EditorView, snippet: string): void {
 	const position = view.state.selection.main.head;
 	const line = view.state.doc.lineAt(position);
@@ -217,11 +313,42 @@ export function createChronosSnippetEditorExtension(app: App) {
 			}
 
 			private buildDecorations(view: EditorView): DecorationSet {
+				const decorations: Range<Decoration>[] = [];
 				const position = findChronosFenceStart(view);
-				if (position === null) return Decoration.none;
-				return Decoration.set([
-					Decoration.widget({ widget, side: 1 }).range(position),
-				]);
+				if (position !== null) {
+					decorations.push(
+						Decoration.widget({ widget, side: 1 }).range(position),
+					);
+				}
+
+				for (const visibleRange of view.visibleRanges) {
+					const firstLine = view.state.doc.lineAt(visibleRange.from).number;
+					const lastLine = view.state.doc.lineAt(visibleRange.to).number;
+					let insideChronos = isInsideChronosFence(view, firstLine);
+
+					for (
+						let lineNumber = firstLine;
+						lineNumber <= lastLine;
+						lineNumber++
+					) {
+						const line = view.state.doc.line(lineNumber);
+						if (isChronosFenceStart(line.text)) {
+							insideChronos = true;
+							continue;
+						}
+						if (isFenceLine(line.text)) {
+							insideChronos = false;
+							continue;
+						}
+						if (insideChronos) {
+							buildLineHighlightDecorations(line, decorations);
+						}
+					}
+				}
+
+				return decorations.length
+					? Decoration.set(decorations, true)
+					: Decoration.none;
 			}
 		},
 		{ decorations: (plugin) => plugin.decorations },
