@@ -183,7 +183,17 @@ function buildLineHighlightDecorations(
 			decorations,
 			line.from + markerStart,
 			line.from + markerStart + 1,
-			"cm-chronos-marker",
+			"cm-chronos-item-marker",
+		);
+	}
+
+	const descriptionSeparatorIndex = text.indexOf("|");
+	if (descriptionSeparatorIndex !== -1) {
+		addTokenDecoration(
+			decorations,
+			line.from + descriptionSeparatorIndex + 1,
+			line.from + text.length,
+			"cm-chronos-description",
 		);
 	}
 
@@ -206,6 +216,17 @@ function buildLineHighlightDecorations(
 			line.from + match.index + token.length,
 			className,
 		);
+		if (className === "cm-chronos-date") {
+			const rangeSeparatorIndex = token.indexOf("~");
+			if (rangeSeparatorIndex !== -1) {
+				addTokenDecoration(
+					decorations,
+					line.from + match.index + rangeSeparatorIndex,
+					line.from + match.index + rangeSeparatorIndex + 1,
+					"cm-chronos-date-range-separator",
+				);
+			}
+		}
 	}
 }
 

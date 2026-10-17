@@ -251,14 +251,21 @@
 	font-style: italic;
 }
 
-.cm-editor .cm-chronos-marker,
 .cm-editor .cm-chronos-directive {
 	color: var(--color-accent);
 	font-weight: 600;
 }
 
+.cm-editor .cm-chronos-item-marker {
+	color: var(--text-faint);
+}
+
 .cm-editor .cm-chronos-date {
 	color: var(--color-orange);
+}
+
+.cm-editor .cm-chronos-date-range-separator {
+	color: var(--text-muted);
 }
 
 .cm-editor .cm-chronos-group {
@@ -280,6 +287,10 @@
 }
 
 .cm-editor .cm-chronos-separator {
+	color: var(--text-muted);
+}
+
+.cm-editor .cm-chronos-description {
 	color: var(--text-muted);
 }
 
