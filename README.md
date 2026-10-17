@@ -46,6 +46,10 @@ You can insert blank, basic, or advanced templates using the Command Pallete (`c
 
 ![palette example advanced](./docs/ex-palette-adv.gif)
 
+### Insert snippet widget
+
+While editing inside a Chronos code block, use **Insert snippet** to add a point, event, period, marker, comment, or flag at the cursor. You can click the button or press `Mod+Shift+Enter` (`Ctrl+Shift+Enter` on Windows/Linux, `Cmd+Shift+Enter` on macOS). This shortcut works only inside a Chronos code block; `Tab` keeps Obsidian's normal indentation behavior.
+
 ### Generate timeline with AI
 
 Highlight text in your notes and run the "Generate" command.
@@ -111,6 +115,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
         - [Insert blank](#insert-blank)
         - [Insert basic template](#insert-basic-template)
         - [Insert advanced template](#insert-advanced-template)
+        - [Insert snippet widget](#insert-snippet-widget)
         - [Generate timeline with AI](#generate-timeline-with-ai)
         - [Generate timeline from folder](#generate-timeline-from-folder)
         - [Cheatsheet](#cheatsheet)
