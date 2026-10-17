@@ -3,6 +3,7 @@ import {
 	Decoration,
 	DecorationSet,
 	EditorView,
+	keymap,
 	ViewPlugin,
 	ViewUpdate,
 	WidgetType,
@@ -122,6 +123,35 @@ function insertSnippet(view: EditorView, snippet: string): void {
 	view.focus();
 }
 
+function showSnippetMenu(
+	view: EditorView,
+	position: { x: number; y: number } | MouseEvent,
+): void {
+	const menu = new Menu();
+	menu.addItem((item) => item.setTitle("Items").setIsLabel(true));
+	getSnippets().forEach((snippet) => {
+		menu.addItem((item) =>
+			item
+				.setTitle(snippet.label)
+				.onClick(() => insertSnippet(view, snippet.value)),
+		);
+	});
+	menu.addSeparator();
+	menu.addItem((item) => item.setTitle("Options").setIsLabel(true));
+	getFlagSnippets().forEach((snippet) => {
+		menu.addItem((item) =>
+			item
+				.setTitle(snippet.label)
+				.onClick(() => insertSnippet(view, snippet.value)),
+		);
+	});
+	if (position instanceof MouseEvent) {
+		menu.showAtMouseEvent(position);
+	} else {
+		menu.showAtPosition(position);
+	}
+}
+
 class ChronosSnippetButton extends WidgetType {
 	constructor(private app: App) {
 		super();
@@ -133,29 +163,22 @@ class ChronosSnippetButton extends WidgetType {
 		button.className = "chronos-snippet-menu-button";
 		button.textContent = "Insert snippet";
 		button.setAttribute("aria-label", "Insert a Chronos snippet");
+		button.setAttribute("aria-haspopup", "menu");
+		button.setAttribute(
+			"aria-keyshortcuts",
+			"Control+Shift+Enter Meta+Shift+Enter",
+		);
+		button.title = "Insert a Chronos snippet (Mod+Shift+Enter)";
 		button.addEventListener("mousedown", (event) => event.preventDefault());
 		button.addEventListener("click", (event) => {
 			event.preventDefault();
 			event.stopPropagation();
-			const menu = new Menu();
-			menu.addItem((item) => item.setTitle("Items").setIsLabel(true));
-			getSnippets().forEach((snippet) => {
-				menu.addItem((item) =>
-					item
-						.setTitle(snippet.label)
-						.onClick(() => insertSnippet(view, snippet.value)),
-				);
-			});
-			menu.addSeparator();
-			menu.addItem((item) => item.setTitle("Options").setIsLabel(true));
-			getFlagSnippets().forEach((snippet) => {
-				menu.addItem((item) =>
-					item
-						.setTitle(snippet.label)
-						.onClick(() => insertSnippet(view, snippet.value)),
-				);
-			});
-			menu.showAtMouseEvent(event);
+			if (event.detail === 0) {
+				const bounds = button.getBoundingClientRect();
+				showSnippetMenu(view, { x: bounds.left, y: bounds.bottom });
+			} else {
+				showSnippetMenu(view, event);
+			}
 		});
 		return button;
 	}
@@ -171,7 +194,7 @@ class ChronosSnippetButton extends WidgetType {
 
 export function createChronosSnippetEditorExtension(app: App) {
 	const widget = new ChronosSnippetButton(app);
-	return ViewPlugin.fromClass(
+	const chronosWidget = ViewPlugin.fromClass(
 		class {
 			decorations: DecorationSet;
 
@@ -199,4 +222,18 @@ export function createChronosSnippetEditorExtension(app: App) {
 		},
 		{ decorations: (plugin) => plugin.decorations },
 	);
+	// Keyboard users can open the menu with Mod+Shift+Enter inside a Chronos fence; Tab stays available for indentation.
+	const snippetShortcut = keymap.of([
+		{
+			key: "Mod-Shift-Enter",
+			run(view) {
+				if (findChronosFenceStart(view) === null) return false;
+				const cursor = view.coordsAtPos(view.state.selection.main.head);
+				if (!cursor) return false;
+				showSnippetMenu(view, { x: cursor.left, y: cursor.bottom });
+				return true;
+			},
+		},
+	]);
+	return [chronosWidget, snippetShortcut];
 }

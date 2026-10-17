@@ -14,9 +14,10 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
 - Portable plain text data
 - Obsidian Bases view
-- Text-to-timeline with AI
-- Generate combined timeline from all Chronos items in folder
 - Note linking
+- Inline snippets
+- Text-to-timeline with AI (multi-provider)
+- Generate combined timeline from all Chronos items in folder
 - Grouping
 - Colors
 - [Render timelines anywhere](https://clairefro.github.io/chronos-timeline-md) outside Obsidian
