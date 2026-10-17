@@ -218,6 +218,25 @@
 	background-color: var(--chronos-semi-gray);
 }
 
+.chronos-snippet-menu-button {
+	margin-inline-start: 0.5rem;
+	padding: 1px 8px;
+	margin: 0.25rem 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 999px;
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	line-height: 1.5;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+.chronos-snippet-menu-button:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
 .chronos-timeline-container:hover .chronos-width-toggle {
 	opacity: 1;
 }
