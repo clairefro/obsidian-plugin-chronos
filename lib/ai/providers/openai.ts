@@ -19,15 +19,37 @@ const OLD_SCHEMA_MODELS = [
 	// “o-series” reasoning models
 	"o1",
 	"o1-mini",
-	"o1-pro",
 	"o3",
 	"o3-mini",
-	"o3-pro",
 
 	// Any similar ones in the “o-series” family
 	"o4-mini",
 	"o4",
 ];
+
+function extractResponsesText(json: any): string {
+	const outputs = Array.isArray(json?.output) ? json.output : [];
+	const messages = outputs.filter(
+		(item: any) => item?.type === "message" && item?.role === "assistant",
+	);
+	const finalMessages = messages.filter(
+		(item: any) => item.phase === "final_answer",
+	);
+	const unphasedMessages = messages.filter((item: any) => !item.phase);
+	const answerMessages = finalMessages.length
+		? finalMessages
+		: unphasedMessages;
+	const text = answerMessages
+		.flatMap((message: any) =>
+			Array.isArray(message.content) ? message.content : [],
+		)
+		.filter((item: any) => item?.type === "output_text")
+		.map((item: any) => item.text || "")
+		.join("")
+		.trim();
+
+	return text || json?.output_text?.trim() || "";
+}
 
 export class OpenAIProvider implements AIProviderInterface {
 	private apiKey: string;
@@ -127,48 +149,17 @@ export class OpenAIProvider implements AIProviderInterface {
 				throw new Error("OpenAI responses endpoint returned no JSON");
 			}
 
-			// Try several possible output shapes used by response-style APIs
-			const output = json.output?.[0];
-			const contentArray = output?.content || json.output || [];
-
-			// prefer content items that carry text
-			let textResult: string | undefined;
-			if (Array.isArray(contentArray)) {
-				for (const item of contentArray) {
-					if (!item) continue;
-					if (typeof item.text === "string") {
-						textResult = item.text;
-						break;
-					}
-					if (item.type === "output_text" && item.text) {
-						textResult = item.text;
-						break;
-					}
-					// nested content arrays
-					if (Array.isArray(item.content)) {
-						const nested = item.content.find(
-							(c: any) => typeof c.text === "string",
-						);
-						if (nested) {
-							textResult = nested.text;
-							break;
-						}
-					}
-				}
-			}
-
-			// fallback: some responses include `output_text` or `generated_text` top-level
-			textResult =
-				textResult ||
-				json.output_text ||
-				json.generated_text ||
-				json.text ||
-				undefined;
-
+			const textResult = extractResponsesText(json);
 			if (textResult) return textResult;
 
-			// last resort: return JSON string so user can inspect
-			return JSON.stringify(json);
+			const reason =
+				json.incomplete_details?.reason ||
+				json.error?.message ||
+				json.status ||
+				"unknown";
+			throw new Error(
+				`OpenAI Responses API returned no final text (reason: ${reason})`,
+			);
 		}
 
 		// Old schema: chat/completions

@@ -92,8 +92,12 @@ export class CacheUtils {
 			this.folderChronosCache.set(folder.path, count);
 		}
 
-		const foldersWithItems = Array.from(this.folderChronosCache.values()).filter(count => count > 0).length;
-		console.log(`[Chronos] Cached ${totalItems} chronos items in ${foldersWithItems} folders`);
+		const foldersWithItems = Array.from(
+			this.folderChronosCache.values(),
+		).filter((count) => count > 0).length;
+		console.log(
+			`[Chronos] Cached ${totalItems} chronos items in ${foldersWithItems} folders`,
+		);
 
 		this.cacheInitialized = true;
 		await this.saveCache(); // Save cache after initialization

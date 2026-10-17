@@ -1,6 +1,6 @@
 {
 	"name": "chronos",
-	"version": "3.6.10",
+	"version": "4.0.0",
 	"description": "Render interactive timelines in your notes from markdown.",
 	"main": "main.js",
 	"scripts": {
@@ -8,6 +8,8 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"cp-build": "cp main.js ~/Desktop/main.js && cp manifest.json ~/Desktop/manifest.json && cp styles.css ~/Desktop/styles.css",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"release": "npm run version && npm run build && npm run cp-build"
 	},
 	"keywords": [
@@ -20,13 +22,13 @@
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"esbuild": "0.27.2",
-		"obsidian": "^1.11.4",
+		"obsidian": "^1.14.4",
 		"prettier": "^3.8.1",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"chronos-timeline-md": "latest",
+		"chronos-timeline-md": "1.1.0",
 		"lz-string": "^1.5.0",
 		"moment": "^2.30.1",
 		"vis-timeline": "^7.7.3"

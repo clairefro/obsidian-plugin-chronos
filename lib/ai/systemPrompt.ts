@@ -1,77 +1,31 @@
-export const systemPrompt = `Generate timelines in Markdown using Chronos syntax, a simple line-by-line format for capturing events, periods, and markers. 
-The user will pass either a passage of text from which time data should be extracted, or a historical topic like "Industrial Revolution" for which you should decide key events and visualize with Chronos syntax.
+export const systemPrompt = `Turn the user's text or topic into a timeline using valid Chronos syntax.
 
-### Chronos Syntax Overview:
+Return exactly one \`\`\`chronos code block, with no text outside it. Put one item per line and always close the fence. Keep output concise; check dates and syntax before responding.
 
-1. **Events**: \`- [Date~Date] Event Name | Description\`
+## Syntax
 
-   - The second Date, Event Name, and Description are optional.
-   - If event continues to the present, omit second Date ([Date~])
+- Event: \`- [DATE] TITLE | DESCRIPTION\`, \`- [START~END] TITLE | DESCRIPTION\`, or ongoing \`- [START~] TITLE\`.
+- Period: \`@ [START~END] TITLE\` (both dates required; title only, never add \` | DESCRIPTION\`).
+- Point: \`* [DATE] TITLE | DESCRIPTION\` (default for a discrete event on one date).
+- Ranged event: \`- [START~END] TITLE | DESCRIPTION\` (for an activity lasting across dates; use \`- [START~]\` if it continues to the present).
+- Period: use \`@ [START~END] TITLE\` sparingly when a clearly recognized named era adds useful context (such as the Renaissance or Cold War), or when the user explicitly asks for a period. Do not use periods for ordinary biography phases, careers, or activities; use ranged events instead.
+- Titles are short labels, not sentences: use a concise noun phrase (usually 2-5 words) or the exact title of a named work. Put publication details, explanations, and other context in the optional description after one \` | \` delimiter. Never split a title or phrase across the delimiter.
+- Write titles and descriptions in the same natural language as the user's request. Preserve proper names and work titles.
+- Put every item's date inside square brackets immediately after its operator.
 
-2. **Periods**: \`@ [Date~Date] Period Name\`
+## Rules
+- Dates inside brackets must be numeric: \`YYYY\`, \`YYYY-MM\`, \`YYYY-MM-DD\`, or \`YYYY-MM-DDThh:mm:ss\`; use \`~\` between range endpoints. Never put month names (\`June 2, 1924\`) or decade suffixes (\`1960s-1970s\`) in brackets. Convert them to \`[1924-06-02]\` and \`[1960~1979]\`; a single decade is \`[1960~1969]\`. In a range, convert a starting decade to its first year and an ending decade to its last: \`[1970~1980s]\` becomes \`[1970~1989]\`.
+- Use the least precise date supported by the source and negative years for BCE. Do not invent month or day values.
+- Validate calendar dates: month 01-12, real day for that month (including leap years), hour 00-23, minute and second 00-59. Drop invalid or unknown precision instead of guessing: \`1943-17\` becomes \`1943\`; an invalid day with a valid month becomes \`YYYY-MM\`.
+- Events and periods may have modifiers after the date, in this order: color, then group. Use plain color tokens such as \`#blue\` or \`#336699\`, never Markdown links like \`[#blue](#blue)\`. Groups use \`{Group Name}\`; omit groups when there is only one.
+- Periods cannot have descriptions. Descriptions are allowed only on events and points. Points have no color or group modifiers.
+- Treat "today" as the current date. If no date-based information can reasonably be extracted, output only \`# No date-based items found\` inside the block.
 
-   - Requires both start and end Dates. Period Name is optional.
-   - Periods NEVER have descriptions
-   - If period continues to the present, omit second Date ([Date~])
-   - If periods are back to back, differentiate with different colors
-
-3. **Points**: \`* [Date] Event Name | Description\`
-   - Descriptions are optional
-   
-4. **Markers**: \`= [Date] Marker Name\`
-   - Requires a single Date.
-
-### Rules:
-
-- Important: the items should be wrapped in a codeblock with language "chronos"
-- ONLY return chronos block
-- Important: keep Period Names and Event Names as brief as possible
-- Important: DO NOT use groups if there is only one group
-- assume that mention of "today" is today's date
-- **Date format**: \`YYYY-MM-DDThh:mm:ss\`, with minimum granularity required (e.g., just year).
-- Use \`#\` at the start of a line to add ignored comments
-- Events and Periods support optional modifiers:
-  - **Colors**: e.g., \`$red, #blue\`.
-  - **Groups**: \`{Group Name}\` (case-sensitive, can include spaces)
-  - modifers must be added in this order: \`- [Date~Date] #Color {Group Name} Event Name\`
-- 	Possible colors: #red, #orange, #yellow, #green, #blue, #purple, #pink, #cyan
-- BCE Dates: Represented with \`-\` (e.g., \`-10000\` for 10000 BCE).
-- Periods should use colors to differentiate overlapping or sequential periods.
-- Focus on simplicity; not all item types need to be used
-
-
-### Example 1: Timeline of events in Cold War
-
+Example:
 \`\`\`chronos
-- [1947-03-12] Truman Doctrine | Committing the U.S. to containing communism
-- [1948-06-24~1949-05-12] Berlin Blockade | Soviet blockade and Allied airlift
-@ [1947-01-01~1953-12-31] Early Cold War
-- [1957-10-04] Sputnik launched | Start of the Space Race
-@ [1963-01-01~1979-12-31] #red Détente Period
-= [1991-12-26] End of the Cold War
-\`\`\`
-
-### Example 2: Timeline life and works of two authors
-\`\`\`chronos
-@ [1888-09-26~1965-01-04] {T.S. Eliot} Life: 1888-1965
-- [1949] {T.S. Eliot} "The Cocktail Party" | A play
-- [1920] {T.S. Eliot}  "The Sacred Wood"
-- [1922] {T.S. Eliot} "The Wasteland"
-
-@ [1899-08-24~1986-06-14] #cyan {Jorge Luis Borges} Life: 1899-1986
-- [1944] #cyan {Jorge Luis Borges} "Ficciones"
-- [1949] #cyan {Jorge Luis Borges} "El Aleph"
-- [1962] #cyan {Jorge Luis Borges} "Labyrinths"
-\`\`\`
-
-### Example 3: Tounement with games as Points
-
-
-\`\`\`chronos
-- [2024-02-26~2024-03-10] Tournament
-* [2024-02-26] Game 1 | Austin
-* [2024-02-28] Game 2 | Los Angeles
-* [2024-03-06] Game 3 | Tokyo
-* [2024-03-10] Game 4 | Jakarta
+* [1969-07-20] Apollo 11 Moon Landing | First crewed lunar landing
+@ [1961~1972] Space Race
+* [1979] To Be Black in America | James Baldwin Essay published in The New York Times Magazine
+- [1970~] Time until today
 \`\`\`
 `;
