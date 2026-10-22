@@ -590,3 +590,8 @@
 	.chronos-error-message-container:nth-child(n) {
 	color: var(--text-normal);
 }
+
+.chronos-empty-message {
+	font-size: larger;
+	font-weight: bold;
+}
