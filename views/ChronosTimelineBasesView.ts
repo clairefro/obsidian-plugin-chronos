@@ -30,10 +30,14 @@ export class ChronosTimelineBasesView extends BasesView {
 	//  unique ID that appears in the "Add View" menu
 	static VIEW_TYPE = "chronos-timeline-view";
 	type: string = ChronosTimelineBasesView.VIEW_TYPE;
-	private containerEl: HTMLElement;
 	private pluginSettings: ChronosPluginSettings;
-	private chronosMarkdown: string = "";
 	private fileUtils: FileUtils;
+
+	// The last generated Chronos markdown text. If undefined, none has been generated yet.
+	private chronosMarkdown?: string;
+
+	private resultsEl: HTMLDivElement;
+	private propSourceEls: Record<ItemPropertyName, HTMLElement>;
 
 	constructor(
 		controller: QueryController,
@@ -41,10 +45,14 @@ export class ChronosTimelineBasesView extends BasesView {
 		pluginSettings: ChronosPluginSettings,
 	) {
 		super(controller);
-		this.containerEl = parentEl.createDiv("chronos-bases-view-container");
 		this.pluginSettings = pluginSettings;
+
 		// FileUtils instance for note linking
 		this.fileUtils = new FileUtils({ app: this.app });
+
+		const containerEl = parentEl.createDiv("chronos-bases-view-container");
+		this.resultsEl = containerEl.createDiv();
+		this.propSourceEls = this.setupInstructions(containerEl);
 	}
 
 	public onDataUpdated(): void {
@@ -69,24 +77,19 @@ export class ChronosTimelineBasesView extends BasesView {
 		// called each time data is updated.
 		initializeViewOptions(this.pluginSettings, this.config);
 
-		// refresh state
-		this.chronosMarkdown = "";
-		this.containerEl.empty();
+		// Update the instructions view:
+		for (const prop of itemPropertyNames) {
+			const propEl = this.propSourceEls[prop];
+			propEl.empty();
 
-		// conditionally add styling for sidebar presentation
-		const isSidebar = this.containerEl.closest(
-			".mod-right-split, .mod-left-split",
-		);
-		if (isSidebar) {
-			this.containerEl.addClass("chronos-sidebar");
-		} else {
-			this.containerEl.removeClass("chronos-sidebar");
-		}
-
-		// show helpful message if results are empty
-		if (!this.data || !this.data.data || this.data.data.length === 0) {
-			this.renderInstructionsOnEmptyResults();
-			return;
+			const propId = this.config.getAsPropertyId(configKey(prop));
+			if (propId) {
+				propEl.setText(this.config.getDisplayName(propId));
+			} else {
+				const i = propEl.createEl("i", { text: "(None Selected)" });
+				i.style.color = "var(--text-muted)";
+				i.style.fontSize = "smaller";
+			}
 		}
 
 		const items = this.data.groupedData.flatMap((groupEntries) => {
@@ -132,13 +135,37 @@ export class ChronosTimelineBasesView extends BasesView {
 			});
 		});
 
-		this.chronosMarkdown = chronosItemsToMarkdown(items);
-		if (!this.chronosMarkdown.length) {
-			this.renderInstructionsOnEmptyResults();
+		this.renderResults(chronosItemsToMarkdown(items));
+	}
+
+	private renderResults(newChronosMarkdown: string) {
+		// If there aren't any updates that affected the markdown, we don't need to change anything.
+		if (newChronosMarkdown === this.chronosMarkdown) {
+			return;
+		}
+		this.chronosMarkdown = newChronosMarkdown;
+
+		// Otherwise, we need to rebuild the view.
+		this.resultsEl.empty();
+
+		// If the results are empty now, display a helpful message communicating that.
+		if (newChronosMarkdown === "") {
+			this.resultsEl.createDiv({
+				cls: "chronos-empty-message",
+				text: "No results found!",
+			});
+
+			this.resultsEl.createEl("p", {
+				text:
+					"To enable timeline views, you must have at least one note with a " +
+					"valid value for Start Date.",
+			});
+
 			return;
 		}
 
-		const timelineContainerEl = this.containerEl.createDiv(
+		// Otherwise, render the Chronos Timeline.
+		const timelineContainerEl = this.resultsEl.createDiv(
 			"chronos-bases-view-timeline-container",
 		);
 		const timeline = new ChronosTimeline({
@@ -173,14 +200,14 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 
 	private renderCopyButton() {
-		const copyBtn = this.containerEl.createEl("button", {
+		const copyBtn = this.resultsEl.createEl("button", {
 			cls: "chronos-bases-view-copy-btn",
 		});
 		setTooltip(copyBtn, "Copy timeline markdown");
 		setIcon(copyBtn, "copy");
 		copyBtn.onclick = async () => {
 			try {
-				await navigator.clipboard.writeText(this.chronosMarkdown);
+				await navigator.clipboard.writeText(this.chronosMarkdown ?? "");
 				new Notice("Timeline markdown copied!");
 			} catch (e) {
 				new Notice("Failed to copy timeline markdown");
@@ -189,7 +216,7 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 
 	private renderShareButton() {
-		const shareBtn = this.containerEl.createEl("button", {
+		const shareBtn = this.resultsEl.createEl("button", {
 			cls: "chronos-bases-view-share-btn",
 		});
 		setTooltip(shareBtn, "Copy shareable public link");
@@ -205,21 +232,13 @@ export class ChronosTimelineBasesView extends BasesView {
 		};
 	}
 
-	private renderInstructionsOnEmptyResults() {
-		this.containerEl.empty();
-		this.containerEl.createDiv({
-			cls: "chronos-empty-message",
-			text: "No results found!",
-		});
-
-		const instructionsDiv = this.containerEl.createDiv({
+	// Sets up the initial instructions view, returns the HTML elements we need to
+	// update with the latest item property sources.
+	private setupInstructions(
+		containerEl: HTMLDivElement,
+	): Record<ItemPropertyName, HTMLElement> {
+		const instructionsDiv = containerEl.createDiv({
 			cls: "chronos-instructions",
-		});
-
-		instructionsDiv.createEl("p", {
-			text:
-				"To enable timeline views, you must have at least one note with a " +
-				"valid value for Start Date.",
 		});
 
 		// Split the sentence to insert <code>---</code> in the right place safely.
@@ -253,6 +272,9 @@ export class ChronosTimelineBasesView extends BasesView {
 			th.style.padding = "0.25em";
 		}
 
+		const propSourceEls: Partial<Record<ItemPropertyName, HTMLElement>> =
+			{};
+
 		const tbody = table.createEl("tbody");
 		for (const propName of itemPropertyNames) {
 			const tr = tbody.createEl("tr");
@@ -267,15 +289,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			{
 				const td = tr.createEl("td");
 				td.style.padding = "0.25em";
-
-				const propId = this.config.getAsPropertyId(configKey(propName));
-				if (propId) {
-					td.textContent = this.config.getDisplayName(propId);
-				} else {
-					const i = td.createEl("i", { text: "(None Selected)" });
-					i.style.color = "var(--text-muted)";
-					i.style.fontSize = "smaller";
-				}
+				propSourceEls[propName] = td;
 			}
 			// Required status
 			{
@@ -301,10 +315,12 @@ export class ChronosTimelineBasesView extends BasesView {
 		link.rel = "noopener noreferrer";
 		link.style.display = "block";
 		link.style.marginTop = "0.5em";
+
+		return propSourceEls as Record<ItemPropertyName, HTMLElement>;
 	}
 
 	private buildShareableUrl() {
-		let content = this.chronosMarkdown;
+		let content = this.chronosMarkdown ?? "";
 		// Remove all wikilinks ([[...]]) from the markdown for the shareable link
 		content = content.replace(/\[\[.*?\]\]/g, "").trim();
 		// For each line, if it ends with | and only whitespace, remove the pipe and whitespace
