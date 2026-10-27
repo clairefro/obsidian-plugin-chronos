@@ -6,7 +6,9 @@ Powered by [chronos-timeline-md](https://github.com/clairefro/chronos-timeline-m
 
 Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
-<img width="701" height="266" alt="Image" src="https://github.com/user-attachments/assets/7e892f9b-febf-4699-9ada-cc39f51b4a5f" />
+<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/46adc9ad-338e-4215-811e-d39b230a5b7a" />
+
+<img width="710" height="334" alt="Image" src="https://github.com/user-attachments/assets/26cb7bba-34f3-4f89-a189-ab69a8181f6f" />
 
 ![demo](./docs/ex-main-demo.gif)
 
