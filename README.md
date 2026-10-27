@@ -17,7 +17,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 ## Features
 
 - Portable plain text data
-- Obsidian Bases view
+- Bases view
 - Note linking
 - Inline snippets
 - Text-to-timeline with AI (multi-provider)
