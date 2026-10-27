@@ -1,9 +1,15 @@
 import {
+	BasesAllOptions,
+	BasesEntry,
+	BasesPropertyId,
+	BasesPropertyOption,
 	BasesView,
+	BasesViewConfig,
 	setIcon,
 	setTooltip,
 	QueryController,
 	Notice,
+	NullValue,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "../types";
@@ -22,7 +28,7 @@ import { wireSharedTimelineInteractions } from "../util/wireSharedTimelineIntera
 
 export class ChronosTimelineBasesView extends BasesView {
 	//  unique ID that appears in the "Add View" menu
-	static VIEW_TYPE = "chronos-timeline-bases-view";
+	static VIEW_TYPE = "chronos-timeline-view";
 	type: string = ChronosTimelineBasesView.VIEW_TYPE;
 	private containerEl: HTMLElement;
 	private pluginSettings: ChronosPluginSettings;
@@ -42,6 +48,27 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 
 	public onDataUpdated(): void {
+		// Make sure that the view options are initialized.
+		//
+		// We have to call this here to ensure that legacy views are properly
+		// ported to the new format before running any rendering code. There are
+		// a few reasons for this:
+		//
+		// * The callback for generating the option list (`generateViewOptions`)
+		//   is only called when the options are being viewed, which only happens
+		//   when creating a new view or when explicitly opening the options menu;
+		//   it's not called when opening an already-created view.
+		// * The view constructor and onload callback are called when opening an
+		//   already-created view, but for some bizarre reason, `this.config` has
+		//   not yet been set at any point of either function, so we can't hook
+		//   this into those.
+		//
+		// This initialization call is designed to determine as quickly as possible
+		// whether work needs to be done and exit immediately if no work is needed,
+		// so it shouldn't have significant impact on performance despite being
+		// called each time data is updated.
+		initializeViewOptions(this.pluginSettings, this.config);
+
 		// refresh state
 		this.chronosMarkdown = "";
 		this.containerEl.empty();
@@ -59,32 +86,8 @@ export class ChronosTimelineBasesView extends BasesView {
 		// show helpful message if results are empty
 		if (!this.data || !this.data.data || this.data.data.length === 0) {
 			this.renderInstructionsOnEmptyResults();
+			return;
 		}
-
-		// Get property names from plugin settings, fallback to defaults
-		const propNames = {
-			start:
-				this.pluginSettings?.basesPropNames?.start ||
-				BASES_PROP_NAMES_DEFAULTS.start,
-			end:
-				this.pluginSettings?.basesPropNames?.end ||
-				BASES_PROP_NAMES_DEFAULTS.end,
-			group:
-				this.pluginSettings?.basesPropNames?.group ||
-				BASES_PROP_NAMES_DEFAULTS.group,
-			content:
-				this.pluginSettings?.basesPropNames?.content ||
-				BASES_PROP_NAMES_DEFAULTS.content,
-			color:
-				this.pluginSettings?.basesPropNames?.color ||
-				BASES_PROP_NAMES_DEFAULTS.color,
-			type:
-				this.pluginSettings?.basesPropNames?.type ||
-				BASES_PROP_NAMES_DEFAULTS.type,
-			description:
-				this.pluginSettings?.basesPropNames?.description ||
-				"description",
-		};
 
 		const items = this.data.groupedData.flatMap((groupEntries) => {
 			// NOTE:
@@ -93,223 +96,39 @@ export class ChronosTimelineBasesView extends BasesView {
 			//       set of entries has no value for the given grouping key.
 			// * key != undefined && entry.hasKey() means grouping is applied, and this
 			//       set of entries has a non-null/empty value for the given grouping key.
-			const base_group =
-				groupEntries.key == undefined
+			const baseGroup =
+				groupEntries.key === undefined
 					? undefined
 					: groupEntries.hasKey()
 						? groupEntries.key.toString()
 						: "";
 			return groupEntries.entries.map((entry) => {
-				// start --------
-				let start = undefined;
-				if (this.data.properties.includes(`note.${propNames.start}`)) {
-					start =
-						entry
-							.getValue(`note.${propNames.start}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`note.${propNames.start}`)
-									?.toString()
-							: undefined;
-				}
-				if (
-					this.data.properties.includes(`formula.${propNames.start}`)
-				) {
-					start =
-						entry
-							.getValue(`formula.${propNames.start}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`formula.${propNames.start}`)
-									?.toString()
-							: undefined;
-				}
-
-				// end --------
-				let end = undefined;
-				if (this.data.properties.includes(`note.${propNames.end}`)) {
-					end =
-						entry.getValue(`note.${propNames.end}`)?.toString() !==
-						"null"
-							? entry
-									.getValue(`note.${propNames.end}`)
-									?.toString()
-							: undefined;
-				}
-				if (this.data.properties.includes(`formula.${propNames.end}`)) {
-					end =
-						entry
-							.getValue(`formula.${propNames.end}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`formula.${propNames.end}`)
-									?.toString()
-							: undefined;
-				}
-
-				// group --------
-				let group = base_group;
-				// Only fall back to direct property access if the View provided no
-				// grouping settings at all.
-				if (base_group == undefined) {
-					if (
-						this.data.properties.includes(`note.${propNames.group}`)
-					) {
-						group =
-							entry
-								.getValue(`note.${propNames.group}`)
-								?.toString() !== "null"
-								? entry
-										.getValue(`note.${propNames.group}`)
-										?.toString()
-								: undefined;
-					}
-					if (
-						this.data.properties.includes(
-							`formula.${propNames.group}`,
-						)
-					) {
-						group =
-							entry
-								.getValue(`formula.${propNames.group}`)
-								?.toString() !== "null"
-								? entry
-										.getValue(`formula.${propNames.group}`)
-										?.toString()
-								: undefined;
-					}
-				}
-
-				// content --------
-				let content = undefined;
-				if (
-					this.data.properties.includes(`note.${propNames.content}`)
-				) {
-					content =
-						entry
-							.getValue(`note.${propNames.content}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`note.${propNames.content}`)
-									?.toString()
-							: undefined;
-				}
-				if (
-					this.data.properties.includes(
-						`formula.${propNames.content}`,
-					)
-				) {
-					content =
-						entry
-							.getValue(`formula.${propNames.content}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`formula.${propNames.content}`)
-									?.toString()
-							: undefined;
-				}
-				if (!content) {
-					content =
-						(entry.getValue("file.name") as any)?.data ||
-						"Untitled";
-				}
-
-				// color --------
-				let color = undefined;
-				if (this.data.properties.includes(`note.${propNames.color}`)) {
-					color =
-						entry
-							.getValue(`note.${propNames.color}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`note.${propNames.color}`)
-									?.toString()
-							: undefined;
-				}
-				if (
-					this.data.properties.includes(`formula.${propNames.color}`)
-				) {
-					color =
-						entry
-							.getValue(`formula.${propNames.color}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`formula.${propNames.color}`)
-									?.toString()
-							: undefined;
-				}
-
-				// type --------
-				let type = undefined;
-				if (this.data.properties.includes(`note.${propNames.type}`)) {
-					type =
-						entry.getValue(`note.${propNames.type}`)?.toString() !==
-						"null"
-							? entry
-									.getValue(`note.${propNames.type}`)
-									?.toString()
-							: undefined;
-				}
-				if (
-					this.data.properties.includes(`formula.${propNames.type}`)
-				) {
-					type =
-						entry
-							.getValue(`formula.${propNames.type}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`formula.${propNames.type}`)
-									?.toString()
-							: undefined;
-				}
-
-				// description --------
-				let descriptionRaw = undefined;
-				if (
-					this.data.properties.includes(
-						`note.${propNames.description}`,
-					)
-				) {
-					descriptionRaw =
-						entry
-							.getValue(`note.${propNames.description}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(`note.${propNames.description}`)
-									?.toString()
-							: undefined;
-				}
-				if (
-					this.data.properties.includes(
-						`formula.${propNames.description}`,
-					)
-				) {
-					descriptionRaw =
-						entry
-							.getValue(`formula.${propNames.description}`)
-							?.toString() !== "null"
-							? entry
-									.getValue(
-										`formula.${propNames.description}`,
-									)
-									?.toString()
-							: undefined;
-				}
-
 				const fileName =
-					(entry.getValue("file.name") as any)?.data || "Untitled";
+					getValueAsString(entry, "file.name") || "Untitled";
 
 				/** automatically postpend a wikilink to this note so users can click to open */
+				const descriptionRaw = this.lookupProperty(
+					entry,
+					"description",
+				);
 				const description = `${descriptionRaw ? descriptionRaw + " " : ""}[[${fileName}]]`;
-				return normalizeItemFields({
-					start,
-					end,
+
+				// Only fall back to direct property access if the View provided no
+				// grouping settings at all.
+				const group =
+					baseGroup !== undefined
+						? baseGroup
+						: this.lookupProperty(entry, "group");
+
+				return {
+					start: this.lookupProperty(entry, "start"),
+					end: this.lookupProperty(entry, "end"),
 					group,
-					content,
-					color,
-					type,
+					content: this.lookupProperty(entry, "content") || fileName,
+					color: normalizeColor(this.lookupProperty(entry, "color")),
+					type: normalizeType(this.lookupProperty(entry, "type")),
 					description,
-				});
+				};
 			});
 		});
 
@@ -341,6 +160,16 @@ export class ChronosTimelineBasesView extends BasesView {
 		// render buttons
 		this.renderCopyButton();
 		this.renderShareButton();
+	}
+
+	private lookupProperty(
+		entry: BasesEntry,
+		prop: EventPropertyName,
+	): string | undefined {
+		const propId = this.config.getAsPropertyId(configKey(prop));
+		if (propId) {
+			return getValueAsString(entry, propId);
+		}
 	}
 
 	private renderCopyButton() {
@@ -375,142 +204,103 @@ export class ChronosTimelineBasesView extends BasesView {
 			}
 		};
 	}
+
 	private renderInstructionsOnEmptyResults() {
 		this.containerEl.empty();
 		this.containerEl.createDiv({
 			cls: "chronos-empty-message",
 			text: "No results found!",
 		});
-		// Build a table of properties: canonical, user-selected, notes
-		const propRows = [
-			{
-				canonical: "start",
-				notes: "(required; YYYY-MM-DD...)",
-			},
-			{
-				canonical: "end",
-				notes: "(optional; YYYY-MM-DD...)",
-			},
-			{
-				canonical: "color",
-				notes: "(optional; named colors red|orange|yellow|green|blue|purple|pink|cyan, or valid hexcode color)",
-			},
-			{
-				canonical: "content",
-				notes: "(optional; defaults to note title)",
-			},
-			{
-				canonical: "type",
-				notes: "(event, period, marker, point; defaults to event)",
-			},
-			{
-				canonical: "description",
-				notes: "(optional)",
-			},
-		];
-		// Get user-selected prop names from plugin settings, fallback to defaults
-		const propNames: Record<string, string> =
-			(this.pluginSettings && this.pluginSettings.basesPropNames) || {};
-		const defaultPropNames: Record<string, string> =
-			BASES_PROP_NAMES_DEFAULTS as any;
-		const getUserPropName = (canonical: string) =>
-			propNames[canonical] || defaultPropNames[canonical] || canonical;
-
-		let tableRows = propRows
-			.map(
-				(row) =>
-					`<tr>
-						<td style="padding:0.25em;"><b>${row.canonical}</b></td>
-						<td style="padding:0.25em;"><code>${getUserPropName(row.canonical)}</code></td>
-						<td style="padding:0.25em;"><span style="color: var(--text-muted)">${row.notes}</span></td>
-					</tr>`,
-			)
-			.join("");
 
 		const instructionsDiv = this.containerEl.createDiv({
 			cls: "chronos-instructions",
 		});
 
-		const p1 = document.createElement("p");
-		// Split the sentence to insert <code>---</code> in the right place
-		p1.append(
-			"To enable timeline views, add frontmatter to your notes by typing ",
+		instructionsDiv.createEl("p", {
+			text:
+				"To enable timeline views, you must have at least one note with a " +
+				"valid value for Start Date.",
+		});
+
+		// Split the sentence to insert <code>---</code> in the right place safely.
+		instructionsDiv.createEl("p").append(
+			"To select the source for these values, edit the View settings. ",
+			"To add frontmatter properties to your notes, you can type ",
 			(() => {
 				const code = document.createElement("code");
 				code.textContent = "---";
 				return code;
 			})(),
-			" at the top of a note, or use formulas to resolve the below prop names.",
+			' on an empty line at the top of a note, or click "Add file property" ',
+			"in the note's triple dot menu. You may also use Base formulas.",
 		);
 
-		const p2 = document.createElement("p");
-		p2.textContent =
-			"Make sure the prop name is selected in the Properties setting of a Chronos Timeline Bases view.";
+		instructionsDiv.createEl("p", { text: "Available event properties:" });
 
-		const p3 = document.createElement("p");
-		p3.textContent = "Available properties:";
-
-		const table = document.createElement("table");
+		const table = instructionsDiv.createEl("table");
 		table.style.width = "100%";
 		table.style.borderCollapse = "collapse";
 
-		const thead = document.createElement("thead");
-		const headerRow = document.createElement("tr");
-		const th1 = document.createElement("th");
-		th1.style.textAlign = "left";
-		th1.style.padding = "0.25em";
-		th1.textContent = "Prop";
-		const th2 = document.createElement("th");
-		th2.style.textAlign = "left";
-		th2.style.padding = "0.25em";
-		th2.textContent = "Prop name";
-		const th3 = document.createElement("th");
-		th3.style.textAlign = "left";
-		th3.style.padding = "0.25em";
-		th3.textContent = "Notes";
-		headerRow.appendChild(th1);
-		headerRow.appendChild(th2);
-		headerRow.appendChild(th3);
-		thead.appendChild(headerRow);
-		table.appendChild(thead);
-
-		const tbody = document.createElement("tbody");
-		// tableRows is a string of <tr>...</tr> blocks, so we need to parse it
-		// tableRows is a string of <tr>...</tr> blocks, so we need to parse it safely
-		// Instead of using innerHTML, parse the rows manually
-		const rowRegex = /<tr>([\s\S]*?)<\/tr>/g;
-		let match;
-		while ((match = rowRegex.exec(tableRows)) !== null) {
-			const tr = document.createElement("tr");
-			const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/g;
-			let tdMatch;
-			while ((tdMatch = tdRegex.exec(match[1])) !== null) {
-				const td = document.createElement("td");
-				td.style.padding = "0.25em";
-				// Remove all HTML tags and set as textContent for safety, without using innerHTML
-				const htmlTagRegex = /<[^>]*>/g;
-				td.textContent = tdMatch[1].replace(htmlTagRegex, "").trim();
-				tr.appendChild(td);
-			}
-			tbody.appendChild(tr);
+		const headerRow = table.createEl("thead").createEl("tr");
+		for (const header of [
+			"Property",
+			"Current Source",
+			"Required?",
+			"Notes",
+		]) {
+			const th = headerRow.createEl("th", { text: header });
+			th.style.textAlign = "left";
+			th.style.padding = "0.25em";
 		}
-		table.appendChild(tbody);
 
-		const link = document.createElement("a");
-		link.href =
-			"https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view";
+		const tbody = table.createEl("tbody");
+		for (const propName of eventPropertyNames) {
+			const tr = tbody.createEl("tr");
+			// Display Name
+			{
+				const td = tr.createEl("td", {
+					text: eventProps[propName].displayName,
+				});
+				td.style.padding = "0.25em";
+			}
+			// Currently Selected Property
+			{
+				const td = tr.createEl("td");
+				td.style.padding = "0.25em";
+
+				const propId = this.config.getAsPropertyId(configKey(propName));
+				if (propId) {
+					td.textContent = this.config.getDisplayName(propId);
+				} else {
+					const i = td.createEl("i", { text: "(None Selected)" });
+					i.style.color = "var(--text-muted)";
+					i.style.fontSize = "smaller";
+				}
+			}
+			// Required status
+			{
+				const td = tr.createEl("td", {
+					text: eventProps[propName].required,
+				});
+				td.style.padding = "0.25em";
+			}
+			// Notes
+			{
+				const td = tr.createEl("td", {
+					text: eventProps[propName].notes,
+				});
+				td.style.padding = "0.25em";
+			}
+		}
+
+		const link = instructionsDiv.createEl("a", {
+			text: "Learn more about Chronos Timeline Bases view",
+			href: "https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view",
+		});
 		link.target = "_blank";
 		link.rel = "noopener noreferrer";
 		link.style.display = "block";
 		link.style.marginTop = "0.5em";
-		link.textContent = "Learn more about Chronos Timeline Bases view";
-
-		instructionsDiv.appendChild(p1);
-		instructionsDiv.appendChild(p2);
-		instructionsDiv.appendChild(p3);
-		instructionsDiv.appendChild(table);
-		instructionsDiv.appendChild(link);
-		return;
 	}
 
 	private buildShareableUrl() {
@@ -557,12 +347,204 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 }
 
+/** --- OPTIONS ---- */
+
+export const eventPropertyNames = [
+	"start",
+	"end",
+	"type",
+	"color",
+	"group",
+	"content",
+	"description",
+] as const;
+
+export type EventPropertyName = (typeof eventPropertyNames)[number];
+
+export const eventProps = {
+	start: {
+		displayName: "Start Date",
+		required: "Required",
+		notes: "YYYY-MM-DD format.",
+	},
+	end: {
+		displayName: "End Date",
+		required: "Recommended",
+		notes: "YYYY-MM-DD format.",
+	},
+	type: {
+		displayName: "Event Type",
+		required: "Recommended",
+		notes: "Options: event (default), period, marker, point.",
+	},
+	color: {
+		displayName: "Color",
+		required: "Optional",
+		notes: "Options: valid hexcode color, or one of these: red, orange, yellow, green, blue, purple, pink, cyan.",
+	},
+	group: {
+		displayName: "Group",
+		required: "Optional",
+		notes: "Also manageable via the Base View 'Group by' UI.",
+	},
+	content: {
+		displayName: "Title Content",
+		required: "Optional",
+		notes: "Defaults to note title.",
+	},
+	description: {
+		displayName: "Description",
+		required: "Optional",
+		notes: "Additional text to display on hover.",
+	},
+} as const;
+
+// Converts the name of an event property to its corresponding config key in the View.
+// This is necessary because Obsidian mixes plugin-defined options with the base options,
+// and "type" is already used in the base options to store the View type.
+function configKey(prop: EventPropertyName): string {
+	return `chronos.${prop}`;
+}
+
+// This function makes sure that the view options are set up with the correct
+// default values without preventing the user from clearing the field. It also
+// ports legacy view configuration (via global settings + visible properties)
+// to the new format seamlessly.
+function initializeViewOptions(
+	pluginSettings: ChronosPluginSettings,
+	viewConfig: BasesViewConfig,
+) {
+	// Check the config schema.
+	const SCHEMA_KEY = "chronos.config-schema";
+	const configSchema = viewConfig.get(SCHEMA_KEY);
+	if (configSchema === undefined) {
+		// If the schema is "undefined," this is either a new view, or an
+		// existing view created in an older version of the plugin (<=4.1.2).
+		// We can scan for the legacy prop names to see if any of them are
+		// visible. If they are, we can import them! If none of them are, we
+		// can populate the defaults with the global setting.
+		const legacyPropNames = getDefaultPropNames(
+			pluginSettings.legacyBasesPropNames,
+		);
+		const visibleProps = viewConfig.getOrder();
+
+		const selectedProps = Object.fromEntries(
+			eventPropertyNames.map((prop) => {
+				// To match legacy behaviour, if both the formula version of the base name
+				// *and* the frontmatter version of the base name are visible, prioritize
+				// the formula version.
+				const propName = legacyPropNames[prop];
+				if (visibleProps.contains(`formula.${propName}`)) {
+					return [prop, `formula.${propName}`];
+				}
+				if (visibleProps.contains(`note.${propName}`)) {
+					return [prop, `note.${propName}`];
+				}
+				return [prop, undefined];
+			}),
+		);
+
+		// If we found none of the default properties, this is probably a new View.
+		// Let's initialize it.
+		if (Object.values(selectedProps).every((val) => val === undefined)) {
+			console.info(
+				"[Chronos] New View detected. Configuring with default property sources.",
+			);
+			const propNames = getDefaultPropNames(
+				pluginSettings.basesPropNames,
+			);
+			for (const prop of eventPropertyNames) {
+				viewConfig.set(configKey(prop), `note.${propNames[prop]}`);
+			}
+		}
+		// Otherwise, this is probably a legacy View. Let's port the old settings over.
+		else {
+			console.info("[Chronos] Legacy View detected. Porting settings.");
+			for (const prop of eventPropertyNames) {
+				viewConfig.set(configKey(prop), selectedProps[prop]);
+			}
+		}
+
+		// Set the schema to a defined value so that we don't keep doing this.
+		viewConfig.set(SCHEMA_KEY, 1);
+	}
+}
+
+export function generateViewOptions(
+	pluginSettings: ChronosPluginSettings,
+	viewConfig: BasesViewConfig,
+): BasesAllOptions[] {
+	// This needs to be called here or else the default settings won't show up
+	// in the options menu after creating a new view until you close it and
+	// re-open it.
+	initializeViewOptions(pluginSettings, viewConfig);
+
+	return [
+		{
+			displayName: "Event Property Sources",
+			type: "group",
+			items: eventPropertyNames.map((prop): BasesPropertyOption => {
+				return {
+					key: configKey(prop),
+					type: "property",
+					displayName: eventProps[prop].displayName,
+					placeholder: eventProps[prop].required.toLowerCase(),
+				};
+			}),
+		},
+	];
+}
+
 /** --- HELPERS ---- */
+
+export function getDefaultPropNames(nameSettings?: {
+	start?: string;
+	end?: string;
+	group?: string;
+	content?: string;
+	color?: string;
+	type?: string;
+	description?: string;
+}): {
+	start: string;
+	end: string;
+	group: string;
+	content: string;
+	color: string;
+	type: string;
+	description: string;
+} {
+	return {
+		start: nameSettings?.start || BASES_PROP_NAMES_DEFAULTS.start,
+		end: nameSettings?.end || BASES_PROP_NAMES_DEFAULTS.end,
+		group: nameSettings?.group || BASES_PROP_NAMES_DEFAULTS.group,
+		content: nameSettings?.content || BASES_PROP_NAMES_DEFAULTS.content,
+		color: nameSettings?.color || BASES_PROP_NAMES_DEFAULTS.color,
+		type: nameSettings?.type || BASES_PROP_NAMES_DEFAULTS.type,
+		description:
+			nameSettings?.description || BASES_PROP_NAMES_DEFAULTS.description,
+	};
+}
+
+// Look up a property on an entry, convert it to a string, trim the result.
+// Returns undefined if the entry does not have this property (or its value
+// for the property is null).
+function getValueAsString(
+	entry: BasesEntry,
+	propId: BasesPropertyId,
+): string | undefined {
+	const val = entry.getValue(propId);
+	return val == null
+		? undefined
+		: val.equals(NullValue.value)
+			? undefined
+			: val.toString().trim();
+}
 
 // Convert item object to Chronos markdown string
 function chronosItemsToMarkdown(
 	items: {
-		start: string;
+		start?: string;
 		end?: string;
 		group?: string;
 		content?: string;
@@ -607,48 +589,7 @@ function chronosItemsToMarkdown(
 	return lines.join("\n");
 }
 
-// enforce strings for non-undefined vals; trim whitespace
-function normalizeItemFields(item: {
-	start: any;
-	end?: any;
-	group?: any;
-	content?: any;
-	color?: any;
-	type?: any;
-	description?: any;
-}): {
-	start: string;
-	end?: string;
-	group?: string;
-	content?: string;
-	color?: string;
-	type?: string;
-	description?: string;
-} {
-	return {
-		start: item.start !== undefined ? String(item.start).trim() : "",
-		end: item.end !== undefined ? String(item.end).trim() : undefined,
-		group: item.group !== undefined ? String(item.group).trim() : undefined,
-		content:
-			item.content !== undefined
-				? String(item.content).trim()
-				: undefined,
-		color:
-			item.color !== undefined
-				? normalizeColor(String(item.color).trim())
-				: undefined,
-		type:
-			item.type !== undefined
-				? normalizeType(String(item.type).trim())
-				: undefined,
-		description:
-			item.description !== undefined
-				? String(item.description).trim()
-				: undefined,
-	};
-}
-
-function normalizeColor(color: string): string | undefined {
+function normalizeColor(color: string | undefined): string | undefined {
 	if (!color) return undefined;
 	const VALID_PRESET_COLORS = [
 		"red",
@@ -677,7 +618,7 @@ function normalizeColor(color: string): string | undefined {
 	return undefined;
 }
 
-function normalizeType(type: string) {
+function normalizeType(type: string | undefined): string | undefined {
 	if (!type) return undefined;
 	const VALID_TYPES = ["event", "period", "point", "marker"];
 

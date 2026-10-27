@@ -48,7 +48,18 @@ export interface ChronosPluginSettings {
 		color?: string;
 		content?: string;
 		type?: string;
-		description: string;
+		description?: string;
+	};
+	// Used for migrating older timeline views.
+	// Copied from basesPropNames on startup if it doesn't exist already.
+	legacyBasesPropNames?: {
+		start?: string;
+		end?: string;
+		group?: string;
+		color?: string;
+		content?: string;
+		type?: string;
+		description?: string;
 	};
 }
 

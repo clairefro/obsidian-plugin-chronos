@@ -32,7 +32,13 @@ import {
 	BASES_PROP_NAMES_DEFAULTS,
 } from "./constants";
 
-import { ChronosTimelineBasesView } from "./views/ChronosTimelineBasesView";
+import {
+	ChronosTimelineBasesView,
+	eventProps,
+	eventPropertyNames,
+	generateViewOptions,
+	getDefaultPropNames,
+} from "./views/ChronosTimelineBasesView";
 import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
@@ -73,6 +79,15 @@ export default class ChronosPlugin extends Plugin {
 			...(await this.loadData()),
 		};
 
+		// Check if we've saved the old, <=4.1.2 property names for base view
+		// migration purposes. If not, save a copy.
+		if (!this.settings.legacyBasesPropNames) {
+			this.settings.legacyBasesPropNames = getDefaultPropNames(
+				this.settings.basesPropNames,
+			);
+			await this.saveSettings();
+		}
+
 		// Register the changelog view
 		// Pass settings and callback to ChangelogView
 		this.registerView(
@@ -88,7 +103,7 @@ export default class ChronosPlugin extends Plugin {
 				}),
 		);
 		// register bases view
-		this.registerBasesView("chronos-timeline-view", {
+		this.registerBasesView(ChronosTimelineBasesView.VIEW_TYPE, {
 			name: "Chronos Timeline",
 			icon: "chart-no-axes-gantt",
 			factory: (controller, containerEl) =>
@@ -97,6 +112,7 @@ export default class ChronosPlugin extends Plugin {
 					containerEl,
 					this.settings,
 				),
+			options: (config) => generateViewOptions(this.settings, config),
 		});
 
 		// Remove old insecure aiKeys property (LEGACY)
@@ -1156,33 +1172,22 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			localeOptions[locale] = `${name} (${locale})`;
 		}
 
-		const basesProperties = Object.keys(BASES_PROP_NAMES_DEFAULTS).map(
+		const basesProperties = eventPropertyNames.map(
 			(property): SettingDefinition => ({
-				name: property,
+				name: eventProps[property].displayName,
 				render: (setting) => {
 					setting.addText((text) =>
 						text
 							.setValue(
-								settings.basesPropNames[
-									property as keyof typeof settings.basesPropNames
-								] ??
-									BASES_PROP_NAMES_DEFAULTS[
-										property as keyof typeof BASES_PROP_NAMES_DEFAULTS
-									],
+								settings.basesPropNames[property] ??
+									BASES_PROP_NAMES_DEFAULTS[property],
 							)
-							.setPlaceholder(
-								BASES_PROP_NAMES_DEFAULTS[
-									property as keyof typeof BASES_PROP_NAMES_DEFAULTS
-								],
-							)
+							.setPlaceholder(BASES_PROP_NAMES_DEFAULTS[property])
 							.onChange(async (value) => {
 								const defaultValue =
-									BASES_PROP_NAMES_DEFAULTS[
-										property as keyof typeof BASES_PROP_NAMES_DEFAULTS
-									];
-								settings.basesPropNames[
-									property as keyof typeof settings.basesPropNames
-								] = value.trim() || defaultValue;
+									BASES_PROP_NAMES_DEFAULTS[property];
+								settings.basesPropNames[property] =
+									value.trim() || defaultValue;
 								await this.plugin.saveSettings();
 							}),
 					);
@@ -1250,7 +1255,11 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			group("Bases view", [
 				{
 					name: "Property names",
-					desc: "Customize the property names used by Chronos Timeline Bases views. Empty values use the defaults.",
+					desc:
+						"Customize the default property names used for new Chronos Timeline " +
+						"Bases Views. If empty, a default property name will be used. " +
+						"Changes to these settings apply only to Views created after the " +
+						"settings are changed. Existing Views are not changed.",
 				},
 				...basesProperties,
 			]),
@@ -1582,32 +1591,36 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		});
 
 		containerEl.createEl("p", {
-			text: "Customize the property names used for Chronos Timeline Bases views. If empty, the default value will be used.",
+			text:
+				"Customize the default property names used for new Chronos Timeline " +
+				"Bases Views. If empty, a default property name will be used.",
+			cls: "chronos-setting-p",
+		});
+		containerEl.createEl("p", {
+			text:
+				"Changes to these settings apply only to Views created after the " +
+				"settings are changed. Existing Views are not changed.",
 			cls: "chronos-setting-p",
 		});
 
-		const propNames = Object.keys(BASES_PROP_NAMES_DEFAULTS);
-		const basesPropNames = this.plugin.settings.basesPropNames as Record<
-			string,
-			string
-		>;
-		const defaultPropNames = BASES_PROP_NAMES_DEFAULTS as any;
-
-		propNames.forEach((prop: string) => {
+		eventPropertyNames.forEach((prop) => {
 			new Setting(containerEl)
-				.setName(`${prop}`)
+				.setName(eventProps[prop].displayName)
 				// .setDesc(`Customize the name for '${prop}' property`)
 				.addText((text) => {
 					const value =
-						basesPropNames[prop] ?? defaultPropNames[prop];
+						this.plugin.settings.basesPropNames[prop] ??
+						BASES_PROP_NAMES_DEFAULTS[prop];
 					text.setValue(value)
-						.setPlaceholder(defaultPropNames[prop])
+						.setPlaceholder(BASES_PROP_NAMES_DEFAULTS[prop])
 						.onChange(async (inputValue) => {
 							const trimmed = inputValue.trim();
 							if (trimmed === "") {
-								basesPropNames[prop] = defaultPropNames[prop];
+								this.plugin.settings.basesPropNames[prop] =
+									BASES_PROP_NAMES_DEFAULTS[prop];
 							} else {
-								basesPropNames[prop] = trimmed;
+								this.plugin.settings.basesPropNames[prop] =
+									trimmed;
 							}
 							await this.plugin.saveSettings();
 						});
