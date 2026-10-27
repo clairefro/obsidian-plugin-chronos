@@ -6,6 +6,8 @@ Powered by [chronos-timeline-md](https://github.com/clairefro/chronos-timeline-m
 
 Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
+<img width="701" height="266" alt="Image" src="https://github.com/user-attachments/assets/7e892f9b-febf-4699-9ada-cc39f51b4a5f" />
+
 ![demo](./docs/ex-main-demo.gif)
 
 <a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
@@ -611,7 +613,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 
 # Obsidian Bases view
 
-By adding frontmatter properties to your notes, you can easily make dynamic and highly portable timelines! Any note with at least a `start` property will show. Properties marked with `?` below are optional
+By adding frontmatter properties to your notes or using formulas, you can easily make dynamic and highly portable timelines! Any note with at least a `start` property will show. Properties marked with `?` below are optional
 
 ```
 start           (Chronos date)
@@ -640,9 +642,7 @@ description?
 
 Dragging your Bases view into the right or left side panels allows you to watch your timeline update in realtime as you add notes and update properties.
 
-4. Select **all relevant properties** to rendering your timeline
-
-(You can also create properties with Formulas. See Formulas section)
+You can also create properties with Formulas. See Formulas section.
 
 ## Bases: Adding properties to notes
 
@@ -665,22 +665,30 @@ color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcod
 description?    (Optional)
 ```
 
-## Bases: Using custom property names
+## Bases: Changing property values
 
-You can change the default property names (`start`,`end` etc) from the Chronos Timeline plugin settings.
+You can change the default values for properties using the Item Property Sources configuration.
+
+<img width="425" height="587" alt="Image" src="https://github.com/user-attachments/assets/096adebe-3ed8-439d-a37c-c7368de6a647" />
+
+You can configure the default property names for new Bases views in the plugin Settings.
 
 ## Bases: Using Formulas to calculate custom values for properties
 
 You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
 
-For example, this can be useful for creating groups by folder name, some other property like "author", or any custom logic you come up with. See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
+This can be useful for creating custom logic for coloring or event types, for example.
+
+<img width="255" height="311" alt="Image" src="https://github.com/user-attachments/assets/7fa6c92c-244b-45b6-bbb9-7543d1215cf3" />
+
+See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
 ## Bases: Grouping
 
 Groups in the Chronos Timeline view can be created in one of two ways:
 
 1. Via the Bases "Group by" query selector under "Sort"
-2. By adding a property called `group` (or the custom name you give this property in your Settings)
+2. By adding a `group` value in the Item Property Sources
 
 With the "Group by" query selector, you can control the order in which the groups appear, but note that Chronos will force the "no group" row to the bottom of the view regardless of group sorting options.
 
@@ -694,13 +702,9 @@ You can use Formulas for more flexible grouping. For a trivial example, let's sa
 
 <img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
 
-1. Select the properties you'd like considered for rendering your timeline. `start` (or the custom name you specify) is what is used for
+2. Select a property to group by in the "Sort" menu, such as `author` in this example
 
-<img width="273" height="349" alt="image" src="https://github.com/user-attachments/assets/11cca871-64d2-4a63-9ca9-ac7b990fabe7" />
-
-1. Select a property to group by in the "Sort" menu, such as `author` in this example
-
-<img width="736" height="406" alt="chronos-group-by-demo" src="https://github.com/user-attachments/assets/677c9624-41fa-4615-9d03-ceb529c93869" />
+<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/684058c8-c9a3-4f69-8277-4a1e0577bf47" />
 
 ### Using manual "group" property on notes
 

@@ -164,7 +164,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 	private lookupProperty(
 		entry: BasesEntry,
-		prop: EventPropertyName,
+		prop: ItemPropertyName,
 	): string | undefined {
 		const propId = this.config.getAsPropertyId(configKey(prop));
 		if (propId) {
@@ -254,7 +254,7 @@ export class ChronosTimelineBasesView extends BasesView {
 		}
 
 		const tbody = table.createEl("tbody");
-		for (const propName of eventPropertyNames) {
+		for (const propName of itemPropertyNames) {
 			const tr = tbody.createEl("tr");
 			// Display Name
 			{
@@ -349,7 +349,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 /** --- OPTIONS ---- */
 
-export const eventPropertyNames = [
+export const itemPropertyNames = [
 	"start",
 	"end",
 	"type",
@@ -359,7 +359,7 @@ export const eventPropertyNames = [
 	"description",
 ] as const;
 
-export type EventPropertyName = (typeof eventPropertyNames)[number];
+export type ItemPropertyName = (typeof itemPropertyNames)[number];
 
 export const eventProps = {
 	start: {
@@ -399,10 +399,10 @@ export const eventProps = {
 	},
 } as const;
 
-// Converts the name of an event property to its corresponding config key in the View.
+// Converts the name of an item property to its corresponding config key in the View.
 // This is necessary because Obsidian mixes plugin-defined options with the base options,
 // and "type" is already used in the base options to store the View type.
-function configKey(prop: EventPropertyName): string {
+function configKey(prop: ItemPropertyName): string {
 	return `chronos.${prop}`;
 }
 
@@ -429,7 +429,7 @@ function initializeViewOptions(
 		const visibleProps = viewConfig.getOrder();
 
 		const selectedProps = Object.fromEntries(
-			eventPropertyNames.map((prop) => {
+			itemPropertyNames.map((prop) => {
 				// To match legacy behaviour, if both the formula version of the base name
 				// *and* the frontmatter version of the base name are visible, prioritize
 				// the formula version.
@@ -453,14 +453,14 @@ function initializeViewOptions(
 			const propNames = getDefaultPropNames(
 				pluginSettings.basesPropNames,
 			);
-			for (const prop of eventPropertyNames) {
+			for (const prop of itemPropertyNames) {
 				viewConfig.set(configKey(prop), `note.${propNames[prop]}`);
 			}
 		}
 		// Otherwise, this is probably a legacy View. Let's port the old settings over.
 		else {
 			console.info("[Chronos] Legacy View detected. Porting settings.");
-			for (const prop of eventPropertyNames) {
+			for (const prop of itemPropertyNames) {
 				viewConfig.set(configKey(prop), selectedProps[prop]);
 			}
 		}
@@ -481,9 +481,9 @@ export function generateViewOptions(
 
 	return [
 		{
-			displayName: "Event Property Sources",
+			displayName: "Item Property Sources",
 			type: "group",
-			items: eventPropertyNames.map((prop): BasesPropertyOption => {
+			items: itemPropertyNames.map((prop): BasesPropertyOption => {
 				return {
 					key: configKey(prop),
 					type: "property",
