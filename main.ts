@@ -37,6 +37,7 @@ import {
 	eventProps,
 	eventPropertyNames,
 	generateViewOptions,
+	getDefaultPropNames,
 } from "./views/ChronosTimelineBasesView";
 import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
@@ -77,6 +78,15 @@ export default class ChronosPlugin extends Plugin {
 			...DEFAULT_SETTINGS,
 			...(await this.loadData()),
 		};
+
+		// Check if we've saved the old, <=4.1.2 property names for base view
+		// migration purposes. If not, save a copy.
+		if (!this.settings.legacyBasesPropNames) {
+			this.settings.legacyBasesPropNames = getDefaultPropNames(
+				this.settings.basesPropNames,
+			);
+			await this.saveSettings();
+		}
 
 		// Register the changelog view
 		// Pass settings and callback to ChangelogView

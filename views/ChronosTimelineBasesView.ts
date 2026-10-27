@@ -423,7 +423,9 @@ function initializeViewOptions(
 		// We can scan for the legacy prop names to see if any of them are
 		// visible. If they are, we can import them! If none of them are, we
 		// can populate the defaults with the global setting.
-		const propNames = getDefaultPropNames(pluginSettings);
+		const legacyPropNames = getDefaultPropNames(
+			pluginSettings.legacyBasesPropNames,
+		);
 		const visibleProps = viewConfig.getOrder();
 
 		const selectedProps = Object.fromEntries(
@@ -431,7 +433,7 @@ function initializeViewOptions(
 				// To match legacy behaviour, if both the formula version of the base name
 				// *and* the frontmatter version of the base name are visible, prioritize
 				// the formula version.
-				const propName = propNames[prop];
+				const propName = legacyPropNames[prop];
 				if (visibleProps.contains(`formula.${propName}`)) {
 					return [prop, `formula.${propName}`];
 				}
@@ -447,6 +449,9 @@ function initializeViewOptions(
 		if (Object.values(selectedProps).every((val) => val === undefined)) {
 			console.info(
 				"[Chronos] New View detected. Configuring with default property sources.",
+			);
+			const propNames = getDefaultPropNames(
+				pluginSettings.basesPropNames,
 			);
 			for (const prop of eventPropertyNames) {
 				viewConfig.set(configKey(prop), `note.${propNames[prop]}`);
@@ -492,7 +497,15 @@ export function generateViewOptions(
 
 /** --- HELPERS ---- */
 
-function getDefaultPropNames(pluginSettings: ChronosPluginSettings): {
+export function getDefaultPropNames(nameSettings?: {
+	start?: string;
+	end?: string;
+	group?: string;
+	content?: string;
+	color?: string;
+	type?: string;
+	description?: string;
+}): {
 	start: string;
 	end: string;
 	group: string;
@@ -502,25 +515,14 @@ function getDefaultPropNames(pluginSettings: ChronosPluginSettings): {
 	description: string;
 } {
 	return {
-		start:
-			pluginSettings.basesPropNames.start ||
-			BASES_PROP_NAMES_DEFAULTS.start,
-		end: pluginSettings.basesPropNames.end || BASES_PROP_NAMES_DEFAULTS.end,
-		group:
-			pluginSettings.basesPropNames.group ||
-			BASES_PROP_NAMES_DEFAULTS.group,
-		content:
-			pluginSettings.basesPropNames.content ||
-			BASES_PROP_NAMES_DEFAULTS.content,
-		color:
-			pluginSettings.basesPropNames.color ||
-			BASES_PROP_NAMES_DEFAULTS.color,
-		type:
-			pluginSettings.basesPropNames.type ||
-			BASES_PROP_NAMES_DEFAULTS.type,
+		start: nameSettings?.start || BASES_PROP_NAMES_DEFAULTS.start,
+		end: nameSettings?.end || BASES_PROP_NAMES_DEFAULTS.end,
+		group: nameSettings?.group || BASES_PROP_NAMES_DEFAULTS.group,
+		content: nameSettings?.content || BASES_PROP_NAMES_DEFAULTS.content,
+		color: nameSettings?.color || BASES_PROP_NAMES_DEFAULTS.color,
+		type: nameSettings?.type || BASES_PROP_NAMES_DEFAULTS.type,
 		description:
-			pluginSettings.basesPropNames.description ||
-			BASES_PROP_NAMES_DEFAULTS.description,
+			nameSettings?.description || BASES_PROP_NAMES_DEFAULTS.description,
 	};
 }
 
