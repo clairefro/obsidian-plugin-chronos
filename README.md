@@ -74,6 +74,8 @@ Input can be long text in your notes with time information, or vague like:
 
 Automatically create combined timelines from all Chronos items found in a folder.
 
+> NOTE: This is for statically generating a timeline from a folder. For dynamic timelines, use the Chronos Timeline Bases view.
+
 ![gen from folder example](./docs/ex-combined-timeline-from-folder.gif)
 
 Use the command palette (`Cmd`/`Ctrl` + `P`): `Chronos > Generate Timeline from Folder`
