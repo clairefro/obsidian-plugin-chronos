@@ -704,7 +704,7 @@ You can use Formulas for more flexible grouping. For a trivial example, let's sa
 
 2. Select a property to group by in the "Sort" menu, such as `author` in this example
 
-<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/684058c8-c9a3-4f69-8277-4a1e0577bf47" />
+<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/46adc9ad-338e-4215-811e-d39b230a5b7a" />
 
 ### Using manual "group" property on notes
 
