@@ -57,7 +57,7 @@ While editing inside a Chronos code block, use **Insert snippet** to add a point
 
 You can click the button or press `Mod+Shift+Enter` (`Ctrl+Shift+Enter` on Windows/Linux, `Cmd+Shift+Enter` on macOS). This shortcut works only inside a Chronos code block; `Tab` keeps Obsidian's normal indentation behavior.
 
-<img width="693" height="587" alt="Image" src="https://github.com/user-attachments/assets/33974d95-7f14-4f1b-81cb-a53bcb9dcda9" />
+<img alt="Image" src="./docs/chronos-insert-snippet.png" />
 
 ### Generate timeline with AI
 
@@ -312,7 +312,7 @@ Periods are spans of time displayed with a semi-transparent background. **Period
 ```
 ````
 
-<img width="712" height="224" alt="Image" src="https://github.com/user-attachments/assets/1b2e46b1-8874-499e-9e0d-e17c87503e24" />
+<img alt="Image" src="./docs//chronos-periods.png" />
 
 ## Points `*`
 
@@ -332,7 +332,7 @@ Points are ideal for marking a point in time. You can optionally add a `Descript
 ```
 ````
 
-<img width="702" height="215" alt="Image" src="https://github.com/user-attachments/assets/eaa8d378-6bfb-4bdb-aeb5-459851a4bb29" />
+<img alt="Image" src="./docs/chronos-points.png" />
 
 ## Markers `=`
 
@@ -354,7 +354,7 @@ Markers can be used to highlight a key milestone in time. **Markers must be a si
 ```
 ````
 
-<img width="705" height="219" alt="Image" src="https://github.com/user-attachments/assets/7c9426ae-0c20-4a74-9d28-bc156bb39fe4" />
+<img alt="Image" src="./docs/chronos-markers.png4" />
 
 ## Comments `#`
 
@@ -375,7 +375,7 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 ```
 ````
 
-<img width="706" height="239" alt="Image" src="https://github.com/user-attachments/assets/1ff15afc-a6fb-4649-9e80-3e59ace168cd" />
+<img alt="Image" src="./docs/chronos-comments.png" />
 
 ## Flags `>`
 
@@ -672,7 +672,7 @@ description?    (Optional)
 
 You can change the default sources for item properties using the Item Property Sources configuration.
 
-<img width="751" height="663" alt="Image" src="https://github.com/user-attachments/assets/37e3eed5-c56b-45b4-acbd-eb3b87bb321c" />
+<img alt="Image" src="./docs/chronos-propert-source.png" />
 
 You can configure the default property names for new Bases views in the plugin Settings.
 
@@ -682,7 +682,7 @@ You can use Obsidian's formulas feature in Bases to implement custom logic for y
 
 This can be useful for creating custom logic for coloring or item types, for example.
 
-<img width="255" height="311" alt="Image" src="https://github.com/user-attachments/assets/7fa6c92c-244b-45b6-bbb9-7543d1215cf3" />
+<img alt="Image" src="./docs/chronos-bases-formula.png" />
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
