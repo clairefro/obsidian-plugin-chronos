@@ -10,10 +10,10 @@ if ! npm run lint --silent >/dev/null 2>&1; then
 	warned=1
 fi
 
-if ! npm run format:check --silent >/dev/null 2>&1; then
+if ! npm run format --silent >/dev/null 2>&1; then
 	echo ""
 	echo "⚠️  Chronos: formatting problems found."
-	echo "   Run 'npm run format' to fix them."
+	echo "   Run 'npm run format:fix' to fix them."
 	warned=1
 fi
 

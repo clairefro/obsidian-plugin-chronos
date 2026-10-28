@@ -8,10 +8,11 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"cp-build": "cp main.js ~/Desktop/main.js && cp manifest.json ~/Desktop/manifest.json && cp styles.css ~/Desktop/styles.css",
+		"prepare": "git config core.hooksPath .githooks || true",
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
-		"format": "prettier --write .",
-		"format:check": "prettier --check .",
+		"format": "prettier --check .",
+		"format:fix": "prettier --write .",
 		"release": "npm run version && npm run build && npm run cp-build"
 	},
 	"keywords": [

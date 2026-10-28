@@ -20,8 +20,8 @@ Before opening a PR, run:
 ```sh
 npm run lint          # report lint problems
 npm run lint:fix      # auto-fix what can be fixed
-npm run format        # format with Prettier
-npm run format:check  # verify formatting
+npm run format        # check formatting
+npm run format:fix    # format with Prettier
 npm run build         # type-check and bundle
 ```
 
