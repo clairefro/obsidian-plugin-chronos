@@ -30,6 +30,17 @@ export default defineConfig([
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-return": "off",
+			"obsidianmd/ui/sentence-case": [
+				"warn",
+				{
+					brands: [
+						"Chronos",
+						"Chronos Timeline",
+						"Bases",
+						"What's New in Chronos Timeline",
+					],
+				},
+			],
 		},
 	},
 ]);

@@ -279,10 +279,11 @@ class ChronosSnippetButton extends WidgetType {
 	}
 
 	toDOM(view: EditorView): HTMLElement {
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = "chronos-snippet-menu-button";
-		button.textContent = "Insert snippet";
+		const button = createEl("button", {
+			type: "button",
+			cls: "chronos-snippet-menu-button",
+			text: "Insert snippet",
+		});
 		button.setAttribute("aria-label", "Insert a Chronos snippet");
 		button.setAttribute("aria-haspopup", "menu");
 		button.setAttribute(

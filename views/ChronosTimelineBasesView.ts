@@ -198,9 +198,9 @@ export class ChronosTimelineBasesView extends BasesView {
 		copyBtn.onclick = async () => {
 			try {
 				await navigator.clipboard.writeText(this.chronosMarkdown ?? "");
-				new Notice("Timeline Markdown copied!");
+				new Notice("Timeline markdown copied!");
 			} catch {
-				new Notice("Failed to copy timeline Markdown");
+				new Notice("Failed to copy timeline markdown");
 			}
 		};
 	}
@@ -230,7 +230,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		const link = instructionsDiv.createEl("a", {
 			cls: "chronos-instructions-link",
-			text: "Learn more about Chronos Timeline Bases View",
+			text: "Learn more about Chronos Timeline Bases view",
 			href: "https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view",
 		});
 		link.target = "_blank";

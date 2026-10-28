@@ -20,6 +20,7 @@
 	"author": "Claire Froelich",
 	"license": "MIT",
 	"devDependencies": {
+		"@codemirror/view": "^6.43.15",
 		"@eslint/js": "^10.0.1",
 		"@types/node": "^16.11.6",
 		"esbuild": "0.27.2",
