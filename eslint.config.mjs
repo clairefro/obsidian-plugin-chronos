@@ -9,6 +9,7 @@ export default defineConfig([
 		"dist",
 		"esbuild.config.mjs",
 		"version-bump.mjs",
+		"scripts",
 		"versions.json",
 		"main.js",
 		"package.json",
@@ -31,6 +32,17 @@ export default defineConfig([
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-return": "off",
 			"eslint-comments/no-restricted-disable": "off",
+			// No suppression comments allowed (the local-only chronos-lint-ignore markers are handled by scripts/lint.mjs)
+			"eslint-comments/no-use": ["error", { allow: [] }],
+			"@typescript-eslint/ban-ts-comment": [
+				"error",
+				{
+					"ts-expect-error": true,
+					"ts-ignore": true,
+					"ts-nocheck": true,
+					"ts-check": false,
+				},
+			],
 			"obsidianmd/ui/sentence-case": [
 				"warn",
 				{

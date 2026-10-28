@@ -38,14 +38,18 @@ import {
 	generateViewOptions,
 	getDefaultPropNames,
 } from "./views/ChronosTimelineBasesView";
+
 import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
+// chronos-lint-ignore-start
+// !!! DO NOT MODIFY THIS BLOCK!! LET TYPES BE MESSY! !!!
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+// chronos-lint-ignore-end
 
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
