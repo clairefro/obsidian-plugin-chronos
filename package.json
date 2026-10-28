@@ -1,6 +1,6 @@
 {
 	"name": "chronos",
-	"version": "4.2.2",
+	"version": "4.2.3",
 	"description": "Render interactive timelines in your notes from markdown.",
 	"main": "main.js",
 	"scripts": {
@@ -21,7 +21,7 @@
 	"author": "Claire Froelich",
 	"license": "MIT",
 	"devDependencies": {
-		"@codemirror/view": "^6.43.15",
+		"@codemirror/view": "6.43.13",
 		"@eslint/js": "^10.0.1",
 		"@types/node": "^16.11.6",
 		"esbuild": "0.27.2",
