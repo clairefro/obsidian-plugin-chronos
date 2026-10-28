@@ -8,6 +8,8 @@
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"cp-build": "cp main.js ~/Desktop/main.js && cp manifest.json ~/Desktop/manifest.json && cp styles.css ~/Desktop/styles.css",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"release": "npm run version && npm run build && npm run cp-build"
@@ -18,14 +20,18 @@
 	"author": "Claire Froelich",
 	"license": "MIT",
 	"devDependencies": {
+		"@eslint/js": "^10.0.1",
 		"@types/node": "^16.11.6",
-		"@typescript-eslint/eslint-plugin": "5.29.0",
-		"@typescript-eslint/parser": "5.29.0",
 		"esbuild": "0.27.2",
+		"eslint": "^10.13.0",
+		"eslint-plugin-obsidianmd": "^0.4.2",
+		"globals": "^17.13.0",
+		"jiti": "^2.7.0",
 		"obsidian": "^1.14.4",
 		"prettier": "^3.8.1",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4"
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.72.1"
 	},
 	"dependencies": {
 		"chronos-timeline-md": "^1.2.2",
