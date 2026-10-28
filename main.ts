@@ -42,12 +42,10 @@ import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
-/* eslint-disable @typescript-eslint/no-explicit-any -- untyped lib import to accommodate symlinks in local dev */
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
-/* eslint-enable @typescript-eslint/no-explicit-any -- end of lib import */
 
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
