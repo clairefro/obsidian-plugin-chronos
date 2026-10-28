@@ -47,14 +47,15 @@ export class FolderListModal extends SuggestModal<TFolder> {
 		}
 
 		const div = el.createDiv();
-		const prefixSpan = document.createElement("span");
-		prefixSpan.className = "chronos-folder-list-modal-muted-text";
-		prefixSpan.textContent = prefix;
-		div.appendChild(prefixSpan);
+		div.createSpan({
+			cls: "chronos-folder-list-modal-muted-text",
+			text: prefix,
+		});
 		div.append(document.createTextNode(folder.path));
 		if (countDisplay) {
-			const temp = document.createElement("span");
-			temp.className = "chronos-folder-list-modal-muted-text";
+			const temp = createSpan({
+				cls: "chronos-folder-list-modal-muted-text",
+			});
 			// Extract the count and item text from countDisplay string
 			const match = countDisplay.match(/\((\d+) (item|items)\)/);
 			if (match) {

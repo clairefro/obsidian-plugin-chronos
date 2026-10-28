@@ -376,9 +376,9 @@ function initializeViewOptions(
 		// If we found none of the default properties, this is probably a new View.
 		// Let's initialize it.
 		if (Object.values(selectedProps).every((val) => val === undefined)) {
-			console.info(
-				"[Chronos] New View detected. Configuring with default property sources.",
-			);
+			// console.info(
+			// 	"[Chronos] New View detected. Configuring with default property sources.",
+			// );
 			const propNames = getDefaultPropNames(
 				pluginSettings.basesPropNames,
 			);
@@ -388,10 +388,10 @@ function initializeViewOptions(
 		}
 		// Otherwise, this is probably a legacy View. Let's port the old settings over.
 		else {
-			console.info("[Chronos] Legacy View detected. Porting settings.");
-			for (const prop of itemPropertyNames) {
-				viewConfig.set(configKey(prop), selectedProps[prop]);
-			}
+			// console.info("[Chronos] Legacy View detected. Porting settings.");
+			// for (const prop of itemPropertyNames) {
+			// 	viewConfig.set(configKey(prop), selectedProps[prop]);
+			// }
 		}
 
 		// Set the schema to a defined value so that we don't keep doing this.

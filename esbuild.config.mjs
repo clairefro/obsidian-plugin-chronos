@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
-import builtins from "./lib/builtin-modules-shim.js";
+import { builtinModules as builtins } from "node:module";
 const _builtins = builtins.default || builtins;
 
 const banner = `/*

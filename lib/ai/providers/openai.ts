@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { requestUrl, RequestUrlResponse } from "obsidian";
 import { OPENAI_MODEL } from "../../../constants";
 import { AIProviderInterface } from "./providerFactory";
 import { systemPrompt } from "../systemPrompt";
@@ -27,24 +27,44 @@ const OLD_SCHEMA_MODELS = [
 	"o4",
 ];
 
-function extractResponsesText(json: any): string {
+interface OpenAIContentItem {
+	type?: string;
+	text?: string;
+}
+
+interface OpenAIOutputMessage {
+	type?: string;
+	role?: string;
+	phase?: string;
+	content?: OpenAIContentItem[];
+}
+
+interface OpenAIResponsesJson {
+	output?: OpenAIOutputMessage[];
+	output_text?: string;
+	incomplete_details?: { reason?: string };
+	error?: { message?: string };
+	status?: string;
+}
+
+function extractResponsesText(json: OpenAIResponsesJson): string {
 	const outputs = Array.isArray(json?.output) ? json.output : [];
 	const messages = outputs.filter(
-		(item: any) => item?.type === "message" && item?.role === "assistant",
+		(item) => item?.type === "message" && item?.role === "assistant",
 	);
 	const finalMessages = messages.filter(
-		(item: any) => item.phase === "final_answer",
+		(item) => item.phase === "final_answer",
 	);
-	const unphasedMessages = messages.filter((item: any) => !item.phase);
+	const unphasedMessages = messages.filter((item) => !item.phase);
 	const answerMessages = finalMessages.length
 		? finalMessages
 		: unphasedMessages;
 	const text = answerMessages
-		.flatMap((message: any) =>
+		.flatMap((message) =>
 			Array.isArray(message.content) ? message.content : [],
 		)
-		.filter((item: any) => item?.type === "output_text")
-		.map((item: any) => item.text || "")
+		.filter((item) => item?.type === "output_text")
+		.map((item) => item.text || "")
 		.join("")
 		.trim();
 
@@ -66,7 +86,7 @@ export class OpenAIProvider implements AIProviderInterface {
 		const usesOldSchema = OLD_SCHEMA_MODELS.some((prefix) =>
 			this.model.startsWith(prefix),
 		);
-		let data: any;
+		let data: Record<string, unknown>;
 		let url: string;
 
 		if (!usesOldSchema) {
@@ -130,21 +150,22 @@ export class OpenAIProvider implements AIProviderInterface {
 		};
 
 		// Perform request with error handling and robust parsing for both schemas
-		let response: any;
+		let response: RequestUrlResponse;
 		try {
 			response = await requestUrl(options);
-		} catch (err: any) {
-			console.error("OpenAI request failed:", err);
+		} catch (e: unknown) {
+			console.error("OpenAI request failed:", e);
+			const err = e as { responseText?: string; message?: string };
 			// attempt to surface a helpful message
 			const msg =
-				err?.responseText || err?.message || JSON.stringify(err);
+				err?.responseText || err?.message || JSON.stringify(e);
 			throw new Error(`OpenAI request failed: ${msg}`);
 		}
 
 		// Parse response depending on schema used
 		if (!usesOldSchema) {
 			// New `responses` endpoint: try common places for textual output
-			const json = response?.json;
+			const json = response?.json as OpenAIResponsesJson | undefined;
 			if (!json) {
 				throw new Error("OpenAI responses endpoint returned no JSON");
 			}
@@ -163,7 +184,10 @@ export class OpenAIProvider implements AIProviderInterface {
 		}
 
 		// Old schema: chat/completions
-		return response.json.choices[0].message.content;
+		const chatJson = response.json as {
+			choices: { message: { content: string } }[];
+		};
+		return chatJson.choices[0].message.content;
 	}
 }
 
