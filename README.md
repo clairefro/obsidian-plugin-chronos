@@ -767,7 +767,7 @@ Examples:
 ```
 ````
 
-![example: note linking 2](./docs/ex-note-linking-2.png)
+<img width="701" height="230" alt="Image" src="https://github.com/user-attachments/assets/fc0e51ac-1f14-4e6c-9b48-23fad847ef89" />
 
 You can link directly to a section heading in a note by adding `#section name` to the path
 
