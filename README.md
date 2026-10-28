@@ -668,9 +668,9 @@ color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcod
 description?    (Optional)
 ```
 
-## Bases: Changing property values
+## Bases: Changing property sources
 
-You can change the default values for properties using the Item Property Sources configuration.
+You can change the default sources for item properties using the Item Property Sources configuration.
 
 <img width="751" height="663" alt="Image" src="https://github.com/user-attachments/assets/37e3eed5-c56b-45b4-acbd-eb3b87bb321c" />
 
@@ -695,7 +695,7 @@ Groups in the Chronos Timeline view can be created in one of two ways:
 
 With the "Group by" query selector, you can control the order in which the groups appear, but note that Chronos will force the "no group" row to the bottom of the view regardless of group sorting options.
 
-The `group` property (or formula) will be used if no "Group by" query selector is chosen, but note that it must be selected in the property list in order to work.
+The `group` property will be used if no "Group by" query selector is chosen.
 
 ### Using the "Group by" method
 
@@ -726,16 +726,6 @@ if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "Ch
 <img width="318" height="281" alt="image" src="https://github.com/user-attachments/assets/2491e75a-853d-4bc1-bf83-0a19ecd0dc09" />
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
-
-## Bases: How Chronos Timeline Bases view resolves properties
-
-There are two rules to know:
-
-1. The Chronos Timeline Bases view will **only display properties that are selected**.
-
-2. If two properties of the same name are selected (ex: `group` in a note frontmatter, and `group` as a custom formula) the **Formula value will override the note frontmatter**.
-
-This ensures that you can override any existing frontmatter in your notes if you wish (ex: you're already using `start` property for some other purpose, or want to format `start` differently for Chronos)
 
 ## Bases: Interacting with the Chronos Timeline view
 
