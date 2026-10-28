@@ -2,14 +2,14 @@ import { App, SuggestModal, TFolder } from "obsidian";
 
 export class FolderListModal extends SuggestModal<TFolder> {
 	folders: TFolder[];
-	suggestionCallback: (f: TFolder) => void;
+	suggestionCallback: (f: TFolder) => void | Promise<void>;
 	folderCounts: Map<string, number>;
 	getCachingEnabled: () => boolean;
 
 	constructor(
 		app: App,
 		_text: TFolder[],
-		suggestionCallback: (f: TFolder) => void,
+		suggestionCallback: (f: TFolder) => void | Promise<void>,
 		folderCounts?: Map<string, number>,
 		getCachingEnabled?: () => boolean,
 	) {
@@ -66,6 +66,6 @@ export class FolderListModal extends SuggestModal<TFolder> {
 	}
 
 	onChooseSuggestion(folder: TFolder, _evt: MouseEvent | KeyboardEvent) {
-		this.suggestionCallback(folder);
+		void this.suggestionCallback(folder);
 	}
 }

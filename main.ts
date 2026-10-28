@@ -142,7 +142,7 @@ export default class ChronosPlugin extends Plugin {
 
 		// Initialize folder cache in background to track which folders contain chronos blocks (only if caching is enabled)
 		if (this.settings.enableCaching) {
-			this.cacheUtils.initializeFolderCache();
+			void this.cacheUtils.initializeFolderCache();
 		}
 
 		this.registerEvent(
@@ -251,7 +251,7 @@ export default class ChronosPlugin extends Plugin {
 			id: "generate-timeline-folder",
 			name: "Generate timeline from folder",
 			editorCallback: (editor, _view) => {
-				this._generateTimelineFromFolder(editor);
+				void this._generateTimelineFromFolder(editor);
 			},
 		});
 
@@ -262,7 +262,7 @@ export default class ChronosPlugin extends Plugin {
 				if (checking) {
 					return this.settings.useAI;
 				} else {
-					this._generateTimelineWithAi(editor);
+					void this._generateTimelineWithAi(editor);
 				}
 			},
 		});
@@ -346,7 +346,10 @@ export default class ChronosPlugin extends Plugin {
 
 			if (!editorEl && attempt <= 5) {
 				// Wait and try again - DOM might not be ready
-				setTimeout(() => attemptSetup(attempt + 1), attempt * 100);
+				window.setTimeout(
+					() => attemptSetup(attempt + 1),
+					attempt * 100,
+				);
 				return;
 			}
 
@@ -415,7 +418,7 @@ export default class ChronosPlugin extends Plugin {
 			attr: { title: "Toggle timeline width" },
 		});
 
-		const icon = button.createEl("span", { text: "⟷" });
+		const icon = button.createSpan({ text: "⟷" });
 
 		return { button, icon };
 	}
@@ -463,7 +466,7 @@ export default class ChronosPlugin extends Plugin {
 
 	/* Trigger timeline refit after width changes */
 	private _refitTimeline(timeline: any): void {
-		setTimeout(() => {
+		window.setTimeout(() => {
 			if (timeline?.timeline) {
 				timeline.timeline.redraw();
 				timeline.timeline.fit();
@@ -472,7 +475,7 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private _renderChronosBlock(source: string, el: HTMLElement) {
-		const container = el.createEl("div", {
+		const container = el.createDiv({
 			cls: "chronos-timeline-container",
 		});
 
@@ -636,73 +639,69 @@ export default class ChronosPlugin extends Plugin {
 
 					const tasks: Promise<string[]>[] = allFiles
 						.filter((file: TFile) => file.extension === "md")
-						.map((file: TFile) => {
-							return this.app.vault
-								.cachedRead(file as TFile)
-								.then((text) => {
-									const rex_match: string[] = [];
-									let current_match;
+						.map(async (file: TFile): Promise<string[]> => {
+							try {
+								const text =
+									await this.app.vault.cachedRead(file);
+								const rex_match: string[] = [];
+								let current_match;
 
-									// Extract inline chronos blocks (check for indicators)
-									const inlineMatches = [];
-									while (
-										(current_match =
-											DETECTION_PATTERN_TEXT.exec(
-												text,
-											)) !== null
-									) {
-										const content =
-											current_match[1] as string;
-										const trimmed = content.trim();
-										const hasIndicator = /^[-@*~]/.test(
-											trimmed,
-										);
-										inlineMatches.push(
-											hasIndicator
-												? trimmed
-												: `- ${trimmed}`,
-										);
-									}
-
-									// Extract full chronos code blocks (check for indicators)
-									while (
-										(current_match =
-											DETECTION_PATTERN_CODEBLOCK.exec(
-												text,
-											)) !== null
-									) {
-										// Extract all non-blank, non-comment lines from the code block
-										const blockContent = current_match[1];
-										const lines = blockContent.split("\n");
-										lines.forEach((line) => {
-											const trimmed = line.trim();
-											// Include any line that isn't blank, doesn't start with #, and doesn't start with > (flags)
-											if (
-												trimmed &&
-												!trimmed.startsWith("#") &&
-												!trimmed.startsWith(">")
-											) {
-												// Check if line already has an indicator (-, @, *, etc)
-												const hasIndicator =
-													/^[-@*~]/.test(trimmed);
-												rex_match.push(
-													hasIndicator
-														? trimmed
-														: `- ${trimmed}`,
-												);
-											}
-										});
-									}
-
-									// Combine all matches (already have prefixes applied)
-									return [...inlineMatches, ...rex_match];
-								})
-								.catch((_error) => {
-									new Notice(
-										`Error while processing ${file.name}`,
+								// Extract inline chronos blocks (check for indicators)
+								const inlineMatches = [];
+								while (
+									(current_match =
+										DETECTION_PATTERN_TEXT.exec(text)) !==
+									null
+								) {
+									const content = current_match[1];
+									const trimmed = content.trim();
+									const hasIndicator = /^[-@*~]/.test(
+										trimmed,
 									);
-									return [];
-								});
+									inlineMatches.push(
+										hasIndicator ? trimmed : `- ${trimmed}`,
+									);
+								}
+
+								// Extract full chronos code blocks (check for indicators)
+								while (
+									(current_match =
+										DETECTION_PATTERN_CODEBLOCK.exec(
+											text,
+										)) !== null
+								) {
+									// Extract all non-blank, non-comment lines from the code block
+									const blockContent = current_match[1];
+									const lines = blockContent.split("\n");
+									lines.forEach((line) => {
+										const trimmed = line.trim();
+										// Include any line that isn't blank, doesn't start with #, and doesn't start with > (flags)
+										if (
+											trimmed &&
+											!trimmed.startsWith("#") &&
+											!trimmed.startsWith(">")
+										) {
+											// Check if line already has an indicator (-, @, *, etc)
+											const hasIndicator = /^[-@*~]/.test(
+												trimmed,
+											);
+											rex_match.push(
+												hasIndicator
+													? trimmed
+													: `- ${trimmed}`,
+											);
+										}
+									});
+								}
+
+								// Combine all matches (already have prefixes applied)
+								return [...inlineMatches, ...rex_match];
+							} catch {
+								new Notice(
+									`Error while processing ${file.name}`,
+								);
+								return [];
+							}
 						});
 
 					await Promise.allSettled(tasks).then((results) => {
@@ -740,7 +739,7 @@ export default class ChronosPlugin extends Plugin {
 				() => this.settings.enableCaching ?? false,
 			).open();
 		} catch (error) {
-			new Notice("Error scanning for chronos items");
+			new Notice("Error scanning for Chronos items");
 			console.error(
 				"[Chronos] Error in _generateTimelineFromFolder:",
 				error,
@@ -1055,9 +1054,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 								`${selectedModel} (saved; not reported)`,
 							);
 						}
-						models.forEach((model) =>
-							dropdown?.addOption(model, model),
-						);
+						for (const model of models) {
+							dropdown.addOption(model, model);
+						}
 						dropdown.setValue(selectedModel || "");
 						if (!models.length) {
 							setting.setDesc(
@@ -1134,10 +1133,15 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			visible: providerIs(provider),
 			render: (setting) => {
 				new SecretComponent(this.app, setting.controlEl)
-					.setValue((settings as any)[`${provider}SecretName`] || "")
+					.setValue(
+						(settings as unknown as SecretNames)[
+							`${provider}SecretName`
+						] || "",
+					)
 					.onChange(async (value) => {
-						(settings as any)[`${provider}SecretName`] =
-							value || "";
+						(settings as unknown as SecretNames)[
+							`${provider}SecretName`
+						] = value || "";
 						await this.plugin.saveSettings();
 					});
 			},
@@ -1424,7 +1428,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const baseUrl =
 			this.plugin.settings.aiBaseUrls?.[provider] ||
 			PROVIDER_DEFAULT_BASE_URLS[provider];
-		const secretName = (this.plugin.settings as any)[
+		const secretName = (this.plugin.settings as unknown as SecretNames)[
 			`${provider}SecretName`
 		];
 		const apiKey = secretName
@@ -1443,7 +1447,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		return Array.from(
 			new Set(
 				models
-					.map((model: any) => model?.id)
+					.map((model: { id?: unknown } | null) => model?.id)
 					.filter(
 						(modelId: unknown): modelId is string =>
 							typeof modelId === "string" && modelId.length > 0,
