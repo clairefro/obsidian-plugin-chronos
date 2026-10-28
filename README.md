@@ -254,7 +254,7 @@ Only `[Date]` is required. If no `Event Name` is provided, the event title will 
 ```
 ````
 
-![single date event example](./docs/ex-event-single.png)
+![alt text](./docs/image-11.png)
 
 ### Events with start and end dates
 
@@ -274,7 +274,7 @@ A date range is represented with a tilde (`~`) between the start and end dates.
 ```
 ````
 
-![event with range example](./docs/ex-event-range.png)
+![alt text](./docs/image-12.png)
 
 ### Events with descriptions
 
@@ -288,7 +288,7 @@ You can add additional information to an event by adding a pipe `|` after the Ev
 ```
 ````
 
-![event with range example](./docs/ex-event-range-desc.png)
+![alt text](./docs/image-13.png)
 
 ## Periods `@`
 
@@ -312,7 +312,7 @@ Periods are spans of time displayed with a semi-transparent background. **Period
 ```
 ````
 
-<img alt="Image" src="./docs//chronos-periods.png" />
+<img alt="Image" src="./docs/chronos-periods.png" />
 
 ## Points `*`
 
@@ -405,22 +405,22 @@ Hide the vertical bar that marks today's time
 
 ````markdown
 ```chronos
-- [2025-02-02~2025-03-28] foo
+- [2026-10-02~2026-11-28] foo
 ```
 ````
 
-![notday without flag example](./docs/ex-notoday-without-flag.png)
+![alt text](./docs/image-14.png)
 
 (with flag)
 
 ````markdown
 ```chronos
 > NOTODAY
-- [2025-02-02~2025-03-28] foo
+- [2026-10-02~2026-11-28] foo
 ```
 ````
 
-![notday with flag example](./docs/ex-notoday-with-flag.png)
+![alt text](./docs/image-15.png)
 
 ### HEIGHT flag
 
@@ -483,7 +483,7 @@ The `ORDERBY` flag can be used to specify an ordering
 ```
 ````
 
-![order by start date](./docs/ex-order-by-start.png)
+![alt text](./docs/image-16.png)
 
 **Order by color and start**
 
@@ -498,7 +498,7 @@ The `ORDERBY` flag can be used to specify an ordering
 ```
 ````
 
-![order by color and start date](./docs/ex-order-by-color-start.png)
+![alt text](./docs/image-17.png)
 
 ### DEFAULTVIEW flag
 
@@ -510,7 +510,7 @@ Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates fo
 - [2024] AGI
 ```
 
-![default view example](./docs/ex-default-view.png)
+![alt text](./docs/image-18.png)
 
 ## Modifiers
 
@@ -541,7 +541,7 @@ To give items a specific color, you can include an available color after the dat
 ```
 ````
 
-![color example](./docs/ex-color.png)
+![alt text](./docs/image-19.png)
 
 ### Groups `{}`
 
@@ -565,7 +565,7 @@ The order of items does not matter, but the example below lumps items together b
 ```
 ````
 
-![groups example](./docs/ex-groups.png)
+![alt text](./docs/image-20.png)
 
 ## Advanced example
 
@@ -575,7 +575,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ```chronos
 - [1945-07-17] {Europe} Potsdam Conference | where post-WWII Europe is divided
 - [1947-03-12] {USA} Truman Doctrine | committing the U.S. to containing communism
-- [1948-06-24~1949-05-12] {Europe} Berlin Blockade | and Airlift in response to Soviet actions in Berlin
+* [1948-06-24] {Europe} Berlin Blockade | and Airlift in response to Soviet actions in Berlin
 - [1949-04-04] {Europe} Formation of NATO
 
 # Early Cold War
@@ -612,7 +612,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ```
 ````
 
-![advanced example](./docs/ex-advanced.png)
+![alt text](./docs/image-21.png)
 
 # Obsidian Bases view
 
@@ -682,7 +682,7 @@ You can use Obsidian's formulas feature in Bases to implement custom logic for y
 
 This can be useful for creating custom logic for coloring or item types, for example.
 
-<img alt="Image" src="./docs/chronos-bases-formula.png" />
+<img alt="Image" style="max-width:250px" src="./docs/chronos-bases-formula.png" />
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
