@@ -65,6 +65,8 @@ Highlight text in your notes and run the "Generate" command.
 
 Choose a provider in Chronos settings. Cloud providers use a key selected from Obsidian SecretStorage. OpenRouter, Ollama, and LM Studio use OpenAI-compatible endpoints; the local model list is loaded from the server's `/models` endpoint. Set the base URL first, then use **Refresh models** if you change the server or model list. Ollama and LM Studio do not require an API key.
 
+Any OpenAI-compatible server works as a base URL (custom ports, LAN hosts, `http://`). Because the base URL is stored in the plugin's `data.json`, which travels with a shared or synced vault, Chronos only attaches your API key to the provider's default host, loopback addresses (`localhost`, `127.0.0.1`, `[::1]`), or a host you approve in settings (**API key host** > **Approve**). Approvals are stored on this device only. Servers used without an API key need no approval.
+
 Input can be long text in your notes with time information, or vague like:
 
 - "Detailed history of the Cold War"
