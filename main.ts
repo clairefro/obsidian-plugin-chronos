@@ -16,6 +16,7 @@ import {
 
 import { Align, BasePropNames, ChronosPluginSettings } from "./types";
 
+import { decideAiEndpoint, resolveAiRequest } from "./lib/ai/endpoint";
 import { TextModal } from "./components/TextModal";
 import { FolderListModal } from "./components/FolderListModal";
 import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./views/ChangelogView";
@@ -64,6 +65,8 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	enableCaching: false,
 	basesPropNames: BASES_PROP_NAMES_DEFAULTS,
 };
+
+const AI_APPROVED_ORIGINS_KEY = "chronos-ai-approved-origins";
 
 export default class ChronosPlugin extends Plugin {
 	settings!: ChronosPluginSettings;
@@ -581,7 +584,44 @@ export default class ChronosPlugin extends Plugin {
 				(this.settings.aiModels as any)?.[provider] ||
 				PROVIDER_DEFAULT_MODELS[provider],
 			baseUrl: this.settings.aiBaseUrls?.[provider],
+			approvedOrigins: this.getApprovedAiOrigins(),
 		};
+	}
+
+	// Approvals are kept in device-local storage, not data.json, because
+	// data.json travels with the vault and a shared vault could forge them
+	getApprovedAiOrigins(): string[] {
+		const stored = this.app.loadLocalStorage(AI_APPROVED_ORIGINS_KEY);
+		return Array.isArray(stored)
+			? stored.filter((o: unknown) => typeof o === "string")
+			: [];
+	}
+
+	approveAiOrigin(origin: string): void {
+		const origins = this.getApprovedAiOrigins();
+		if (!origins.includes(origin)) {
+			this.app.saveLocalStorage(AI_APPROVED_ORIGINS_KEY, [
+				...origins,
+				origin,
+			]);
+		}
+	}
+
+	// Origin of the configured base URL if it holds a key but isn't approved
+	aiOriginNeedingApproval(provider: string): string | null {
+		const rawBaseUrl =
+			this.settings.aiBaseUrls?.[provider] ||
+			PROVIDER_DEFAULT_BASE_URLS[provider];
+		try {
+			const decision = decideAiEndpoint(
+				rawBaseUrl,
+				PROVIDER_DEFAULT_BASE_URLS[provider],
+				this.getApprovedAiOrigins(),
+			);
+			return decision.sendKey ? null : decision.origin;
+		} catch {
+			return null;
+		}
 	}
 
 	private _getApiKey(provider: string = "openai"): string | null {
@@ -947,6 +987,25 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		this.containerEl.addClass("chronos-settings");
 	}
 
+	// Lets the user approve the configured host to receive the API key
+	private _renderKeyApproval(setting: Setting, provider: string) {
+		const origin = this.plugin.aiOriginNeedingApproval(provider);
+		if (!origin) {
+			setting.setDesc("This base URL can receive your API key.");
+			return;
+		}
+		setting.setDesc(
+			`${origin} is not approved to receive your API key. Requests that use a key will fail until you approve it. Only approve servers you trust.`,
+		);
+		setting.addButton((button) =>
+			button.setButtonText("Approve").onClick(() => {
+				this.plugin.approveAiOrigin(origin);
+				new Notice(`Approved ${origin} to receive your API key`);
+				button.setButtonText("Approved").setDisabled(true);
+			}),
+		);
+	}
+
 	getSettingDefinitions(): SettingDefinitionItem[] {
 		const settings = this.plugin.settings;
 		const providerNames: Record<string, string> = {
@@ -1122,6 +1181,13 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 						}),
 				);
 			},
+		});
+		const keyApprovalDefinition = (
+			provider: "openrouter" | "ollama" | "lmstudio",
+		): SettingDefinition => ({
+			name: `${providerName(provider)} API key host`,
+			visible: providerIs(provider),
+			render: (setting) => this._renderKeyApproval(setting, provider),
 		});
 		const secretDefinition = (provider: string): SettingDefinition => ({
 			name: `${providerName(provider)} API key`,
@@ -1353,6 +1419,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				baseUrlDefinition("openrouter"),
 				baseUrlDefinition("ollama"),
 				baseUrlDefinition("lmstudio"),
+				keyApprovalDefinition("openrouter"),
+				keyApprovalDefinition("ollama"),
+				keyApprovalDefinition("lmstudio"),
 				secretDefinition("openai"),
 				secretDefinition("gemini"),
 				secretDefinition("anthropic"),
@@ -1419,7 +1488,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 	}
 
 	private async _fetchLocalModels(provider: string): Promise<string[]> {
-		const baseUrl =
+		const rawBaseUrl =
 			this.plugin.settings.aiBaseUrls?.[provider] ||
 			PROVIDER_DEFAULT_BASE_URLS[provider];
 		const secretName = (this.plugin.settings as any)[
@@ -1428,11 +1497,16 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const apiKey = secretName
 			? this.app.secretStorage.getSecret(secretName)
 			: null;
-		const headers: Record<string, string> = {};
-		if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+		const { baseUrl, headers } = resolveAiRequest(
+			provider,
+			rawBaseUrl,
+			apiKey,
+			PROVIDER_DEFAULT_BASE_URLS[provider],
+			this.plugin.getApprovedAiOrigins(),
+		);
 
 		const response = await requestUrl({
-			url: `${baseUrl.replace(/\/+$/, "")}/models`,
+			url: `${baseUrl}/models`,
 			method: "GET",
 			headers,
 		});
@@ -1912,6 +1986,10 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 								await this.plugin.saveSettings();
 							}),
 					);
+				this._renderKeyApproval(
+					new Setting(containerEl).setName("API key host"),
+					currentProvider,
+				);
 			}
 
 			new Setting(containerEl)

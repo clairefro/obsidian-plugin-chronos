@@ -3,6 +3,7 @@ import {
 	PROVIDER_DEFAULT_BASE_URLS,
 	PROVIDER_DEFAULT_MODELS,
 } from "../../../constants";
+import { resolveAiRequest } from "../endpoint";
 import { systemPrompt } from "../systemPrompt";
 import { AIProviderConfig, AIProviderInterface } from "./providerFactory";
 
@@ -43,14 +44,20 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 			);
 		}
 
-		const baseUrl = (
-			this.config.baseUrl || PROVIDER_DEFAULT_BASE_URLS[provider]
-		).replace(/\/+$/, "");
-		if (!baseUrl) {
+		const rawBaseUrl =
+			this.config.baseUrl || PROVIDER_DEFAULT_BASE_URLS[provider];
+		if (!rawBaseUrl) {
 			throw new Error(
 				`Set a base URL for ${provider} in plugin settings`,
 			);
 		}
+		const { baseUrl, headers: authHeaders } = resolveAiRequest(
+			provider,
+			rawBaseUrl,
+			apiKey,
+			PROVIDER_DEFAULT_BASE_URLS[provider],
+			this.config.approvedOrigins ?? [],
+		);
 		const useLMStudioChatApi =
 			provider === "lmstudio" && /gpt-oss/i.test(model);
 		const requestUrlValue = useLMStudioChatApi
@@ -59,8 +66,8 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
+			...authHeaders,
 		};
-		if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 		if (provider === "openrouter") {
 			headers["HTTP-Referer"] =
 				"https://github.com/clairefro/obsidian-plugin-chronos";

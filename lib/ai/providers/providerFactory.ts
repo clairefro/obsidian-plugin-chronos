@@ -16,6 +16,8 @@ export interface AIProviderConfig {
 	apiKey?: string;
 	model?: string;
 	baseUrl?: string;
+	/** Origins the user approved on this device to receive the API key */
+	approvedOrigins?: string[];
 }
 
 export interface AIProviderInterface {
