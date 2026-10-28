@@ -792,7 +792,7 @@ While hovering a timeline item with a link, press Control or Command to show a p
 To enter **Edit** mode an update your `chronos` Markdown, hover over the timeline and click the code icon that appears in the upper-right corner.
 
 ![edit example](./docs/ex-edit.png)
-![edit example - markdown mode](./docs/ex-edit-2.png)
+<img width="703" height="273" alt="Image" src="https://github.com/user-attachments/assets/461ed58b-f9f2-42d5-84fd-ef3e6770ece4" />
 
 ## Refit
 
