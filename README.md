@@ -633,11 +633,11 @@ description?
 
 1. From a base, click "Add View" from the Views dropdown
 
-![alt text](./docs/chronos-base-add.png)
+<img height="250px" src ="./docs/chronos-base-add.png" />
 
 2. Select "Chronos Timeline" view and give a custom name
 
-![alt text](./docs/image.png)
+<img height="250px" src ="./docs/image.png" />
 
 3. (Optional) Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
 
@@ -682,7 +682,7 @@ You can use Obsidian's formulas feature in Bases to implement custom logic for y
 
 This can be useful for creating custom logic for coloring or item types, for example.
 
-<img alt="Image" style="max-width:250px" src="./docs/chronos-bases-formula.png" />
+<img alt="Image" width="250px" src="./docs/chronos-bases-formula.png" />
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
