@@ -596,3 +596,8 @@
 	font-size: larger;
 	font-weight: bold;
 }
+
+.chronos-instructions-link {
+	display: block;
+	margin-top: 0.5em;
+}

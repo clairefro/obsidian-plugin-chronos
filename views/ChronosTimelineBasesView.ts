@@ -37,7 +37,6 @@ export class ChronosTimelineBasesView extends BasesView {
 	private chronosMarkdown?: string;
 
 	private resultsEl: HTMLDivElement;
-	private propSourceEls: Record<ItemPropertyName, HTMLElement>;
 
 	constructor(
 		controller: QueryController,
@@ -52,7 +51,6 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		const containerEl = parentEl.createDiv("chronos-bases-view-container");
 		this.resultsEl = containerEl.createDiv();
-		this.propSourceEls = this.setupInstructions(containerEl);
 	}
 
 	public onDataUpdated(): void {
@@ -76,21 +74,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		// so it shouldn't have significant impact on performance despite being
 		// called each time data is updated.
 		initializeViewOptions(this.pluginSettings, this.config);
-
-		// Update the instructions view:
-		for (const prop of itemPropertyNames) {
-			const propEl = this.propSourceEls[prop];
-			propEl.empty();
-
-			const propId = this.config.getAsPropertyId(configKey(prop));
-			if (propId) {
-				propEl.setText(this.config.getDisplayName(propId));
-			} else {
-				const i = propEl.createEl("i", { text: "(None Selected)" });
-				i.style.color = "var(--text-muted)";
-				i.style.fontSize = "smaller";
-			}
-		}
 
 		const items = this.data.groupedData.flatMap((groupEntries) => {
 			// NOTE:
@@ -158,8 +141,10 @@ export class ChronosTimelineBasesView extends BasesView {
 			this.resultsEl.createEl("p", {
 				text:
 					"To enable timeline views, you must have at least one note with a " +
-					"valid value for Start Date.",
+					"valid value for Start Date in Item Property Sources.",
 			});
+
+			this.renderInstructions();
 
 			return;
 		}
@@ -232,91 +217,19 @@ export class ChronosTimelineBasesView extends BasesView {
 		};
 	}
 
-	// Sets up the initial instructions view, returns the HTML elements we need to
-	// update with the latest item property sources.
-	private setupInstructions(
-		containerEl: HTMLDivElement,
-	): Record<ItemPropertyName, HTMLElement> {
-		const instructionsDiv = containerEl.createDiv({
+	// Help text and link, shown only when no timeline is rendered.
+	private renderInstructions() {
+		const instructionsDiv = this.resultsEl.createDiv({
 			cls: "chronos-instructions",
 		});
 
-		// Split the sentence to insert <code>---</code> in the right place safely.
-		instructionsDiv.createEl("p").append(
-			"To select the source for these values, edit the View settings. ",
-			"To add frontmatter properties to your notes, you can type ",
-			(() => {
-				const code = document.createElement("code");
-				code.textContent = "---";
-				return code;
-			})(),
-			' on an empty line at the top of a note, or click "Add file property" ',
-			"in the note's triple dot menu. You may also use Base formulas.",
-		);
-
-		instructionsDiv.createEl("p", { text: "Available item properties:" });
-
-		const table = instructionsDiv.createEl("table");
-		table.style.width = "100%";
-		table.style.borderCollapse = "collapse";
-
-		const headerRow = table.createEl("thead").createEl("tr");
-		for (const header of [
-			"Property",
-			"Current Source",
-			"Required?",
-			"Notes",
-		]) {
-			const th = headerRow.createEl("th", { text: header });
-			th.style.textAlign = "left";
-			th.style.padding = "0.25em";
-		}
-
-		const propSourceEls: Partial<Record<ItemPropertyName, HTMLElement>> =
-			{};
-
-		const tbody = table.createEl("tbody");
-		for (const propName of itemPropertyNames) {
-			const tr = tbody.createEl("tr");
-			// Display Name
-			{
-				const td = tr.createEl("td", {
-					text: itemProps[propName].displayName,
-				});
-				td.style.padding = "0.25em";
-			}
-			// Currently Selected Property
-			{
-				const td = tr.createEl("td");
-				td.style.padding = "0.25em";
-				propSourceEls[propName] = td;
-			}
-			// Required status
-			{
-				const td = tr.createEl("td", {
-					text: itemProps[propName].required,
-				});
-				td.style.padding = "0.25em";
-			}
-			// Notes
-			{
-				const td = tr.createEl("td", {
-					text: itemProps[propName].notes,
-				});
-				td.style.padding = "0.25em";
-			}
-		}
-
 		const link = instructionsDiv.createEl("a", {
+			cls: "chronos-instructions-link",
 			text: "Learn more about Chronos Timeline Bases view",
 			href: "https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view",
 		});
 		link.target = "_blank";
 		link.rel = "noopener noreferrer";
-		link.style.display = "block";
-		link.style.marginTop = "0.5em";
-
-		return propSourceEls as Record<ItemPropertyName, HTMLElement>;
 	}
 
 	private buildShareableUrl() {
