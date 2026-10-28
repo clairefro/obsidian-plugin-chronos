@@ -39,7 +39,7 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 ```
 ````
 
-<img width="707" height="243" alt="Image" src="https://github.com/user-attachments/assets/da49b763-2c48-4aec-8f68-3f49a5df8783" />
+<img src="./docs/chronos-revolutions.png/>
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
 
