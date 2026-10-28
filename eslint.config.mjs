@@ -30,6 +30,7 @@ export default defineConfig([
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/no-unsafe-argument": "off",
 			"@typescript-eslint/no-unsafe-return": "off",
+			"eslint-comments/no-restricted-disable": "off",
 			"obsidianmd/ui/sentence-case": [
 				"warn",
 				{

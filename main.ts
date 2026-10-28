@@ -1,7 +1,6 @@
 import {
 	Plugin,
 	App,
-	Setting,
 	PluginSettingTab,
 	Notice,
 	Editor,
@@ -43,15 +42,28 @@ import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
+/* eslint-disable @typescript-eslint/no-explicit-any -- untyped lib import to accommodate symlinks in local dev */
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+/* eslint-enable @typescript-eslint/no-explicit-any -- end of lib import */
+
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
+
+interface ObservedEditorEl extends HTMLElement {
+	_chronosResizeObserver?: ResizeObserver;
+}
+
+interface GitHubRelease {
+	tag_name: string;
+	body?: string | null;
+	published_at: string;
+}
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	selectedLocale: DEFAULT_LOCALE,
@@ -116,14 +128,18 @@ export default class ChronosPlugin extends Plugin {
 		});
 
 		// Remove old insecure aiKeys property (LEGACY)
-		if ((this.settings as any).aiKeys) {
-			delete (this.settings as any).aiKeys;
+		const legacySettings = this.settings as unknown as Record<
+			string,
+			unknown
+		>;
+		if (legacySettings.aiKeys) {
+			delete legacySettings.aiKeys;
 			await this.saveSettings();
 		}
 
 		// Remove legacy key property (LEGACY LEGACY)
-		if ((this.settings as any).key) {
-			delete (this.settings as any).key;
+		if (legacySettings.key) {
+			delete legacySettings.key;
 			await this.saveSettings();
 		}
 
@@ -276,11 +292,12 @@ export default class ChronosPlugin extends Plugin {
 	onunload() {
 		// Clean up resize observers
 		this.observedEditors.forEach((editorEl) => {
-			const observer = (editorEl as any)._chronosResizeObserver;
+			const observer = (editorEl as ObservedEditorEl)
+				._chronosResizeObserver;
 
 			if (observer) {
 				observer.disconnect();
-				delete (editorEl as any)._chronosResizeObserver;
+				delete (editorEl as ObservedEditorEl)._chronosResizeObserver;
 			}
 		});
 		this.observedEditors.clear();
@@ -401,7 +418,8 @@ export default class ChronosPlugin extends Plugin {
 			this.observedEditors.add(editorEl);
 
 			// Store the observer so we can remove it later
-			(editorEl as any)._chronosResizeObserver = resizeObserver;
+			(editorEl as ObservedEditorEl)._chronosResizeObserver =
+				resizeObserver;
 		};
 
 		// Start the attempt process
@@ -465,7 +483,7 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	/* Trigger timeline refit after width changes */
-	private _refitTimeline(timeline: any): void {
+	private _refitTimeline(timeline: ChronosLib.ChronosTimeline): void {
 		window.setTimeout(() => {
 			if (timeline?.timeline) {
 				timeline.timeline.redraw();
@@ -558,10 +576,10 @@ export default class ChronosPlugin extends Plugin {
 		try {
 			const chronos = await this._textToChronos(selection);
 			chronos && this._insertTextAfterSelection(editor, chronos);
-		} catch (e: any) {
+		} catch (e) {
 			console.error(e);
 
-			loadingModal.setText(e.message);
+			loadingModal.setText(e instanceof Error ? e.message : String(e));
 			return;
 		}
 		loadingModal.close();
@@ -581,14 +599,16 @@ export default class ChronosPlugin extends Plugin {
 			provider,
 			apiKey: this._getApiKey(provider) || undefined,
 			model:
-				(this.settings.aiModels as any)?.[provider] ||
+				this.settings.aiModels?.[provider] ||
 				PROVIDER_DEFAULT_MODELS[provider],
 			baseUrl: this.settings.aiBaseUrls?.[provider],
 		};
 	}
 
 	private _getApiKey(provider: string = "openai"): string | null {
-		const secretName = (this.settings as any)[`${provider}SecretName`];
+		const secretName = (this.settings as unknown as SecretNames)[
+			`${provider}SecretName`
+		];
 		if (!secretName) return null;
 		return this.app.secretStorage.getSecret(secretName);
 	}
@@ -823,7 +843,7 @@ export default class ChronosPlugin extends Plugin {
 		// Update the view with the new entries
 		const view = leaf.view as ChangelogView;
 		if (view) {
-			(view as any).entries = entries;
+			(view as unknown as { entries: typeof entries }).entries = entries;
 			await view.onOpen();
 		}
 	}
@@ -894,7 +914,7 @@ export default class ChronosPlugin extends Plugin {
 		}
 	}
 
-	private async _fetchGitHubReleases(): Promise<any[]> {
+	private async _fetchGitHubReleases(): Promise<GitHubRelease[]> {
 		const url =
 			"https://api.github.com/repos/clairefro/obsidian-plugin-chronos/releases";
 
@@ -906,8 +926,7 @@ export default class ChronosPlugin extends Plugin {
 				},
 			});
 
-			const releases = response.json;
-			return releases;
+			return response.json as GitHubRelease[];
 		} catch (error) {
 			console.error("[Chronos] Failed to fetch GitHub releases:", error);
 			throw error;
