@@ -312,7 +312,7 @@ Periods are spans of time displayed with a semi-transparent background. **Period
 ```
 ````
 
-![period example](./docs/ex-period.png)
+<img width="712" height="224" alt="Image" src="https://github.com/user-attachments/assets/1b2e46b1-8874-499e-9e0d-e17c87503e24" />
 
 ## Points `*`
 
@@ -332,7 +332,7 @@ Points are ideal for marking a point in time. You can optionally add a `Descript
 ```
 ````
 
-![point example](./docs/ex-point.png)
+<img width="702" height="215" alt="Image" src="https://github.com/user-attachments/assets/eaa8d378-6bfb-4bdb-aeb5-459851a4bb29" />
 
 ## Markers `=`
 
@@ -354,7 +354,7 @@ Markers can be used to highlight a key milestone in time. **Markers must be a si
 ```
 ````
 
-![marker example](./docs/ex-marker.png)
+<img width="705" height="219" alt="Image" src="https://github.com/user-attachments/assets/7c9426ae-0c20-4a74-9d28-bc156bb39fe4" />
 
 ## Comments `#`
 
@@ -375,7 +375,7 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 ```
 ````
 
-![comment example](./docs/ex-comment.png)
+<img width="706" height="239" alt="Image" src="https://github.com/user-attachments/assets/1ff15afc-a6fb-4649-9e80-3e59ace168cd" />
 
 ## Flags `>`
 
