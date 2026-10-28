@@ -38,6 +38,7 @@ export default defineConfig([
 						"Chronos Timeline",
 						"Bases",
 						"What's New in Chronos Timeline",
+						"Obsidian",
 					],
 				},
 			],
