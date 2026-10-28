@@ -1,4 +1,11 @@
-import { App, TFile, TFolder, MarkdownView, Notice } from "obsidian";
+import {
+	App,
+	TAbstractFile,
+	TFile,
+	TFolder,
+	MarkdownView,
+	Notice,
+} from "obsidian";
 
 export class FileUtils {
 	plugin: { app: App };
@@ -114,33 +121,62 @@ export class FileUtils {
 		return headingLine !== -1 ? headingLine : 0;
 	}
 
-	async updateWikiLinks(oldPath: string, newPath: string) {
+	/** Handles a vault rename event for a file or a folder (including its contents). */
+	async handleRename(file: TAbstractFile, oldPath: string) {
+		const pairs: { oldPath: string; newPath: string }[] = [];
+		if (file instanceof TFolder) {
+			for (const child of this.getAllFilesInFolder(file)) {
+				pairs.push({
+					oldPath: oldPath + child.path.slice(file.path.length),
+					newPath: child.path,
+				});
+			}
+		} else {
+			pairs.push({ oldPath, newPath: file.path });
+		}
+		await this.updateWikiLinks(pairs);
+	}
+
+	async updateWikiLinks(pairs: { oldPath: string; newPath: string }[]) {
+		if (!pairs.length) return;
 		const files = this.plugin.app.vault.getMarkdownFiles();
 
-		const updatedFiles = [];
+		// Basename links are only rewritten when the note was renamed and the old name was unambiguous
+		const resolved = pairs.map((pair) => {
+			const oldBase = this.normalizePath(pair.oldPath).split("/").pop();
+			const newBase = this.normalizePath(pair.newPath).split("/").pop();
+			const basenameIsUnique =
+				oldBase !== newBase &&
+				!files.some(
+					(f: TFile) =>
+						f.path !== pair.newPath && f.basename === oldBase,
+				);
+			return { ...pair, basenameIsUnique };
+		});
+
+		const updatedFiles: string[] = [];
 		for (const file of files) {
 			const content = await this.plugin.app.vault.read(file);
-			const hasChronosBlock = /```(?:\s*)chronos/.test(content);
-			if (hasChronosBlock) {
-				const updatedContent = this.updateLinksInChronosBlocks(
-					content,
-					oldPath,
-					newPath,
+			if (!/```(?:\s*)chronos/.test(content)) continue;
+
+			let updatedContent = content;
+			for (const r of resolved) {
+				updatedContent = this.updateLinksInChronosBlocks(
+					updatedContent,
+					r.oldPath,
+					r.newPath,
+					r.basenameIsUnique,
 				);
+			}
 
-				if (updatedContent !== content) {
-					new Notice(`Chronos: updating ${file.path}`);
-					updatedFiles.push(file.path);
-
-					await this.plugin.app.vault.modify(file, updatedContent);
-				}
+			if (updatedContent !== content) {
+				updatedFiles.push(file.path);
+				await this.plugin.app.vault.modify(file, updatedContent);
 			}
 		}
 		if (updatedFiles.length) {
 			new Notice(
-				`Updated links to ${this.normalizePath(newPath)} in ${
-					updatedFiles.length
-				} files`,
+				`[Chronos] Updated timeline links in ${updatedFiles.length} ${updatedFiles.length > 1 ? "files" : "file"}`,
 			);
 		}
 	}
@@ -149,35 +185,30 @@ export class FileUtils {
 		content: string,
 		oldPath: string,
 		newPath: string,
+		matchByBasename = true,
 	): string {
-		const codeFenceRegex = /```(?:\s*)chronos([\s\S]*?)```/g;
-		let match: RegExpExecArray | null;
-		let modifiedContent = content;
+		const oldFull = this.normalizePath(oldPath);
+		const newFull = this.normalizePath(newPath);
+		const oldBase = oldFull.split("/").pop() as string;
+		const newBase = newFull.split("/").pop() as string;
 
-		while ((match = codeFenceRegex.exec(content)) !== null) {
-			const originalFence = match[0];
-			const fenceContent = match[1];
+		const linkRegex = /\[\[([^\]|#]+)(#[^\]|]*)?(\|[^\]]*)?\]\]/g;
 
-			const normalizedOldPath = this.normalizePath(oldPath);
-			const normalizedNewPath = this.normalizePath(newPath);
-
-			// Replace wiki links inside the code fence
-			const updatedFenceContent = fenceContent.replace(
-				new RegExp(
-					`\\[\\[${this.escapeRegExp(normalizedOldPath)}\\]\\]`,
-					"g",
-				),
-				`[[${normalizedNewPath}]]`,
-			);
-
-			// Replace the entire code fence in the content
-			modifiedContent = modifiedContent.replace(
-				originalFence,
-				`\`\`\`chronos${updatedFenceContent}\`\`\``,
-			);
-		}
-
-		return modifiedContent;
+		return content.replace(/```(?:\s*)chronos[\s\S]*?```/g, (fence) =>
+			fence.replace(
+				linkRegex,
+				(whole, target: string, heading = "", alias = "") => {
+					const t = target.trim().replace(/\.md$/, "");
+					if (t === oldFull) {
+						return `[[${newFull}${heading}${alias}]]`;
+					}
+					if (matchByBasename && t === oldBase) {
+						return `[[${newBase}${heading}${alias}]]`;
+					}
+					return whole;
+				},
+			),
+		);
 	}
 
 	normalizePath(path: string) {

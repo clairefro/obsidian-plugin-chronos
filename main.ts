@@ -147,7 +147,7 @@ export default class ChronosPlugin extends Plugin {
 
 		this.registerEvent(
 			this.app.vault.on("rename", async (file, oldPath) => {
-				await this.fileUtils.updateWikiLinks(oldPath, file.path);
+				await this.fileUtils.handleRename(file, oldPath);
 			}),
 		);
 
