@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"version": "node version-bump.mjs && prettier --write manifest.json versions.json && git add manifest.json versions.json",
 		"cp-build": "cp main.js ~/Desktop/main.js && cp manifest.json ~/Desktop/manifest.json && cp styles.css ~/Desktop/styles.css",
 		"prepare": "git config core.hooksPath .githooks || true",
 		"lint": "eslint .",

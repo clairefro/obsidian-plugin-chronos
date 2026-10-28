@@ -33,9 +33,12 @@ Tips:
 - If a disable comment is truly necessary, scope it narrowly (`eslint-disable-next-line`) and include a description explaining why.
 - For UI text, brand names such as Chronos are configured as exceptions to the sentence-case rule in `eslint.config.mjs`. Add new proper nouns there.
 
-## Git hook
+## Git hooks
 
-A `pre-push` hook (in `.githooks/`) runs the linter and the Prettier check and prints a warning if problems are found. It never blocks your push. It's a reminder, not a gate.
+Two hooks live in `.githooks/`. Neither ever blocks you.
+
+- `pre-commit` auto-formats your staged files with Prettier and re-stages them. Files that also have unstaged changes are skipped with a warning.
+- `pre-push` runs the linter and the Prettier check and prints a warning if problems are found. It's a reminder, not a gate.
 
 If hooks aren't active, run `npm run prepare` once.
 
