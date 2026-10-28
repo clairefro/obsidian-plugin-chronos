@@ -1,0 +1,27 @@
+#!/bin/sh
+# Warn (never block) when lint or formatting problems exist before pushing.
+
+warned=0
+
+if ! npm run lint --silent >/dev/null 2>&1; then
+	echo ""
+	echo "⚠️  Chronos: lint problems found."
+	echo "   Run 'npm run lint' to see them (or 'npm run lint:fix' to auto-fix)."
+	warned=1
+fi
+
+if ! npm run format:check --silent >/dev/null 2>&1; then
+	echo ""
+	echo "⚠️  Chronos: formatting problems found."
+	echo "   Run 'npm run format' to fix them."
+	warned=1
+fi
+
+if [ "$warned" -eq 1 ]; then
+	echo ""
+	echo "   PRs should be lint-clean and formatted. See CONTRIBUTING.md."
+	echo "   Push will continue."
+	echo ""
+fi
+
+exit 0
