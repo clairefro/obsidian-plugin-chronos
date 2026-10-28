@@ -566,7 +566,8 @@
 	padding: 2rem;
 }
 
-.chronos-bases-view-container.chronos-sidebar:nth-child(n) {
+/* Reduce padding when in the side-bars. */
+:is(.mod-right-split, .mod-left-split) .chronos-bases-view-container {
 	padding: 0.5rem;
 }
 
