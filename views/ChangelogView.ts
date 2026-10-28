@@ -81,7 +81,7 @@ export class ChangelogView extends ItemView {
 			const newValue = checkbox.checked;
 			this.settings.showChangelogOnUpdate = newValue;
 			if (this.settings.onToggleNotification) {
-				this.settings.onToggleNotification(newValue);
+				void this.settings.onToggleNotification(newValue);
 			}
 		});
 
@@ -110,7 +110,7 @@ export class ChangelogView extends ItemView {
 				? `Version ${entry.version} — ${this._formatDate(entry.date)}`
 				: `Version ${entry.version}`;
 
-			entryContainer.createEl("div", {
+			entryContainer.createDiv({
 				cls: "chronos-changelog-header",
 				text: headerText,
 			});
@@ -125,7 +125,7 @@ export class ChangelogView extends ItemView {
 				entry.content,
 				contentDiv,
 				"",
-				this as any,
+				this,
 			);
 		}
 
@@ -140,21 +140,20 @@ export class ChangelogView extends ItemView {
 		});
 
 		// Add text message
-		const supportText = supportMsg.createDiv({
+		supportMsg.createDiv({
 			cls: "chronos-changelog-support-text",
 			text: "Love Chronos? Your support means a lot!",
 		});
 
 		// Create Buy Me a Coffee button
-		const bmcStyledLink = document.createElement("a");
-		bmcStyledLink.href = "https://www.buymeacoffee.com/clairefro";
+		const bmcStyledLink = supportMsg.createEl("a", {
+			cls: "bmc-styled-link",
+			text: "🍠 Buy me a potato",
+			href: "https://www.buymeacoffee.com/clairefro",
+		});
 		bmcStyledLink.target = "_blank";
 		bmcStyledLink.rel = "noopener noreferrer";
-		bmcStyledLink.textContent = "🍠 Buy me a potato";
-		bmcStyledLink.className = "bmc-styled-link";
 		bmcStyledLink.tabIndex = 0;
-
-		supportMsg.appendChild(bmcStyledLink);
 
 		// Add hire me message
 		const hireMeDiv = supportMsg.createDiv({
@@ -165,7 +164,7 @@ export class ChangelogView extends ItemView {
 			"Need a custom Obsidian plugin? I'm taking on freelance work during pregnancy. [Reach out!](https://clairefro.dev/)",
 			hireMeDiv,
 			"",
-			this as any,
+			this,
 		);
 	}
 

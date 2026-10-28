@@ -19,10 +19,15 @@ import {
 } from "../constants";
 import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
-const ChronosTimeline: any =
-	(ChronosLib as any).ChronosTimeline ??
-	(ChronosLib as any).default ??
-	(ChronosLib as any);
+type ChronosTimelineCtor = typeof ChronosLib.ChronosTimeline;
+const chronosLibExports = ChronosLib as unknown as {
+	ChronosTimeline?: ChronosTimelineCtor;
+	default?: ChronosTimelineCtor;
+};
+const ChronosTimeline: ChronosTimelineCtor =
+	chronosLibExports.ChronosTimeline ??
+	chronosLibExports.default ??
+	(ChronosLib as unknown as ChronosTimelineCtor);
 import { FileUtils } from "../util/FileUtils";
 import { wireSharedTimelineInteractions } from "../util/wireSharedTimelineInteractions";
 
@@ -193,9 +198,9 @@ export class ChronosTimelineBasesView extends BasesView {
 		copyBtn.onclick = async () => {
 			try {
 				await navigator.clipboard.writeText(this.chronosMarkdown ?? "");
-				new Notice("Timeline markdown copied!");
-			} catch (e) {
-				new Notice("Failed to copy timeline markdown");
+				new Notice("Timeline Markdown copied!");
+			} catch {
+				new Notice("Failed to copy timeline Markdown");
 			}
 		};
 	}
@@ -211,7 +216,7 @@ export class ChronosTimelineBasesView extends BasesView {
 				const url = this.buildShareableUrl();
 				await navigator.clipboard.writeText(url);
 				new Notice("Shareable public link copied to clipboard!");
-			} catch (e) {
+			} catch {
 				new Notice("Failed to create shareable link");
 			}
 		};
@@ -225,7 +230,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		const link = instructionsDiv.createEl("a", {
 			cls: "chronos-instructions-link",
-			text: "Learn more about Chronos Timeline Bases view",
+			text: "Learn more about Chronos Timeline Bases View",
 			href: "https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view",
 		});
 		link.target = "_blank";
@@ -262,7 +267,7 @@ export class ChronosTimelineBasesView extends BasesView {
 				} else {
 					url.searchParams.set("content", raw);
 				}
-			} catch (e) {
+			} catch {
 				// On any error, fall back to raw content
 				url.searchParams.set("content", content);
 			}
