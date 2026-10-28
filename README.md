@@ -34,11 +34,12 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 ```chronos
 - [1789~1799] French Revolution
 - [1791~1804] Haitian Revolution
-- [1776] American Declaration of Independence
+- [1765~1783] American Revolution
+* [1776] American Declaration of Independence
 ```
 ````
 
-![quickstart example](./docs/ex-comment.png)
+<img width="707" height="243" alt="Image" src="https://github.com/user-attachments/assets/da49b763-2c48-4aec-8f68-3f49a5df8783" />
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
 
@@ -52,7 +53,11 @@ You can insert blank, basic, or advanced templates using the Command Pallete (`c
 
 ### Insert snippet widget
 
-While editing inside a Chronos code block, use **Insert snippet** to add a point, event, period, marker, comment, or flag at the cursor. You can click the button or press `Mod+Shift+Enter` (`Ctrl+Shift+Enter` on Windows/Linux, `Cmd+Shift+Enter` on macOS). This shortcut works only inside a Chronos code block; `Tab` keeps Obsidian's normal indentation behavior.
+While editing inside a Chronos code block, use **Insert snippet** to add a point, event, period, marker, comment, or flag at the cursor.
+
+You can click the button or press `Mod+Shift+Enter` (`Ctrl+Shift+Enter` on Windows/Linux, `Cmd+Shift+Enter` on macOS). This shortcut works only inside a Chronos code block; `Tab` keeps Obsidian's normal indentation behavior.
+
+<img width="693" height="587" alt="Image" src="https://github.com/user-attachments/assets/33974d95-7f14-4f1b-81cb-a53bcb9dcda9" />
 
 ### Generate timeline with AI
 
@@ -149,12 +154,6 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Advanced example](#advanced-example)
 - [Obsidian Bases view](#obsidian-bases-view)
 - [Note linking (beta)](#note-linking-beta)
-- [Dynamic Timelines](#dynamic-timelines)
-    - [Prerequisites](#prerequisites)
-    - [Basic Example](#basic-example)
-    - [Advanced Usage](#advanced-usage)
-    - [Combining Dynamic and Static Events](#combining-dynamic-and-static-events)
-    - [Tips](#tips)
 - [Actions](#actions)
     - [Edit](#edit)
     - [Refit](#refit)
