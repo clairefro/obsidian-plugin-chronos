@@ -601,3 +601,7 @@
 	display: block;
 	margin-top: 0.5em;
 }
+
+.chronos-underlined-link {
+	text-decoration: underline;
+}
