@@ -1,10 +1,9 @@
-import { TFile, TFolder, Editor, MarkdownView } from "obsidian";
-import { DETECTION_PATTERN_CODEBLOCK } from "../constants";
+import { App, TFile, TFolder, MarkdownView, Notice } from "obsidian";
 
 export class FileUtils {
-	plugin: any;
+	plugin: { app: App };
 
-	constructor(plugin: any) {
+	constructor(plugin: { app: App }) {
 		this.plugin = plugin;
 	}
 
@@ -73,7 +72,7 @@ export class FileUtils {
 
 				/* set cursor to heading if present */
 				line &&
-					setTimeout(() => {
+					window.setTimeout(() => {
 						const editor =
 							this.plugin.app.workspace.getActiveViewOfType(
 								MarkdownView,
@@ -86,15 +85,14 @@ export class FileUtils {
 			} else {
 				const msg = `Linked note not found: ${filename}`;
 				console.warn(msg);
-				// Assuming Notice is imported or available
-				new (window as any).Notice(msg);
+				new Notice(msg);
 			}
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error ? error.message : String(error);
 			const msg = `Error opening file: ${errorMessage}`;
 			console.error(msg);
-			new (window as any).Notice(msg);
+			new Notice(msg);
 		}
 	}
 
@@ -131,7 +129,7 @@ export class FileUtils {
 				);
 
 				if (updatedContent !== content) {
-					console.log("UPDATING ", file.path);
+					new Notice(`Chronos: updating ${file.path}`);
 					updatedFiles.push(file.path);
 
 					await this.plugin.app.vault.modify(file, updatedContent);
@@ -139,11 +137,10 @@ export class FileUtils {
 			}
 		}
 		if (updatedFiles.length) {
-			console.log(
+			new Notice(
 				`Updated links to ${this.normalizePath(newPath)} in ${
 					updatedFiles.length
-				} files: `,
-				updatedFiles,
+				} files`,
 			);
 		}
 	}
