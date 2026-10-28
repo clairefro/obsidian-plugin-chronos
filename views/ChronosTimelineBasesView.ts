@@ -373,7 +373,7 @@ export const eventProps = {
 		notes: "YYYY-MM-DD format.",
 	},
 	type: {
-		displayName: "Event Type",
+		displayName: "Item Type",
 		required: "Recommended",
 		notes: "Options: event (default), period, marker, point.",
 	},

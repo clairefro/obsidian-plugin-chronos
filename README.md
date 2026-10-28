@@ -680,7 +680,7 @@ You can configure the default property names for new Bases views in the plugin S
 
 You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
 
-This can be useful for creating custom logic for coloring or event types, for example.
+This can be useful for creating custom logic for coloring or item types, for example.
 
 <img width="255" height="311" alt="Image" src="https://github.com/user-attachments/assets/7fa6c92c-244b-45b6-bbb9-7543d1215cf3" />
 
