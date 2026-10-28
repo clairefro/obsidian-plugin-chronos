@@ -57,7 +57,10 @@ export function wireSharedTimelineInteractions(
 			const isShiftClick = event.event.shiftKey;
 			const shouldOpenInNewLeaf =
 				isMiddleClick || isCmdClick || isShiftClick;
-			void fileUtils.openFileFromWikiLink(item.cLink, shouldOpenInNewLeaf);
+			void fileUtils.openFileFromWikiLink(
+				item.cLink,
+				shouldOpenInNewLeaf,
+			);
 		}
 	});
 

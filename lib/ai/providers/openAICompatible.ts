@@ -113,8 +113,7 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 			});
 		} catch (e: unknown) {
 			const error = e as { responseText?: string; message?: string };
-			const message =
-				error?.responseText || error?.message || String(e);
+			const message = error?.responseText || error?.message || String(e);
 			throw new Error(`${provider} request failed: ${message}`);
 		}
 

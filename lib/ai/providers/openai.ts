@@ -157,8 +157,7 @@ export class OpenAIProvider implements AIProviderInterface {
 			console.error("OpenAI request failed:", e);
 			const err = e as { responseText?: string; message?: string };
 			// attempt to surface a helpful message
-			const msg =
-				err?.responseText || err?.message || JSON.stringify(e);
+			const msg = err?.responseText || err?.message || JSON.stringify(e);
 			throw new Error(`OpenAI request failed: ${msg}`);
 		}
 

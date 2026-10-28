@@ -344,8 +344,12 @@ export function createChronosSnippetEditorExtension(app: App) {
 				}
 
 				for (const visibleRange of view.visibleRanges) {
-					const firstLine = view.state.doc.lineAt(visibleRange.from).number;
-					const lastLine = view.state.doc.lineAt(visibleRange.to).number;
+					const firstLine = view.state.doc.lineAt(
+						visibleRange.from,
+					).number;
+					const lastLine = view.state.doc.lineAt(
+						visibleRange.to,
+					).number;
 					let insideChronos = isInsideChronosFence(view, firstLine);
 
 					for (
