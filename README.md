@@ -12,7 +12,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
 ![demo](./docs/ex-main-demo.gif)
 
-<a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
+<a href="https://www.buymeacoffee.com/clairefro"><img src="./docs/image-10.png" /></a>
 
 ## Features
 
@@ -633,11 +633,11 @@ description?
 
 1. From a base, click "Add View" from the Views dropdown
 
- <img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
+![alt text](./docs/chronos-base-add.png)
 
 2. Select "Chronos Timeline" view and give a custom name
 
- <img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
+![alt text](./docs/image.png)
 
 3. (Optional) Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
 
@@ -653,11 +653,11 @@ At the very top of a note you'd like to see in the Chronos Timeline Bases view, 
 
 Figure A
 
-<img width="969" height="360" alt="image" src="https://github.com/user-attachments/assets/9d66d299-b4c7-4c8d-8749-985e7de732dd" />
+![alt text](./docs/image-1.png)
 
 Figure B
 
-<img width="954" height="449" alt="image" src="https://github.com/user-attachments/assets/19e6b689-96aa-4c2d-895e-32c8b6ea1499" />
+![alt text](./docs/image-2.png)
 
 ```
 start           (Chronos date)
@@ -703,17 +703,17 @@ You can use Formulas for more flexible grouping. For a trivial example, let's sa
 
 1. (Optional) Add a filter to target specific items. In this example, we target a folder.
 
-<img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
+![alt text](./docs/image-3.png)
 
 2. Select a property to group by in the "Sort" menu, such as `author` in this example
 
-<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/46adc9ad-338e-4215-811e-d39b230a5b7a" />
+<img width="744" height="452" alt="Image" src="./docs/chronos-bases-group-by.gif" />
 
 ### Using manual "group" property on notes
 
 You can also add a property named `group` (or custom name in settings) to notes directly, and select that property in your Chornos Timelines view for Bases.
 
-<img width="1241" height="403" alt="image" src="https://github.com/user-attachments/assets/24b03a17-7775-4eb7-9fe8-0a4d6e296b0a" />
+![alt text](./docs/image-4.png)
 
 ### Using formulas for grouping
 
@@ -723,7 +723,7 @@ Formulas also allow for more complex logic to determine groups. For example, if 
 if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "China", ""))
 ```
 
-<img width="318" height="281" alt="image" src="https://github.com/user-attachments/assets/2491e75a-853d-4bc1-bf83-0a19ecd0dc09" />
+![alt text](./docs/image-5.png)
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
@@ -757,7 +757,7 @@ Examples:
 ```
 ````
 
-<img width="701" height="230" alt="Image" src="https://github.com/user-attachments/assets/fc0e51ac-1f14-4e6c-9b48-23fad847ef89" />
+![alt text](./docs/image-6.png)
 
 You can link directly to a section heading in a note by adding `#section name` to the path
 
@@ -781,21 +781,21 @@ While hovering a timeline item with a link, press Control or Command to show a p
 
 To enter **Edit** mode an update your `chronos` Markdown, hover over the timeline and click the code icon that appears in the upper-right corner.
 
-<img width="711" height="329" alt="Image" src="https://github.com/user-attachments/assets/6fe99b31-fa80-4636-9841-5f4d0f784111" />
+![alt text](./docs/image-7.png)
 
-<img width="707" height="278" alt="Image" src="https://github.com/user-attachments/assets/96042124-dd68-4870-a18d-dede74847005" />
+![alt text](./docs/image-8.png)
 
 ## Refit
 
 Click the **Refit** button (crosshairs icon) in the lower-right corner to adjust all items to fit within the view window.
 
-<img width="709" height="250" alt="Image" src="https://github.com/user-attachments/assets/c8cfdbeb-61a3-4409-9063-db99791fc09e" />
+![alt text](./docs/image-9.png)
 
 ## Toggle width
 
 Hover on the timeline and click the width toggle in the upper left to expand the timeline to the width of your editor.
 
-![chronos-width-expand](https://github.com/user-attachments/assets/d7390230-8205-48c4-835f-4b69b40dba4d)
+![chronos-width-expand](./docs/chronos-width-expand.gif)
 
 # Localization
 
