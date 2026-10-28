@@ -235,7 +235,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			"in the note's triple dot menu. You may also use Base formulas.",
 		);
 
-		instructionsDiv.createEl("p", { text: "Available event properties:" });
+		instructionsDiv.createEl("p", { text: "Available item properties:" });
 
 		const table = instructionsDiv.createEl("table");
 		table.style.width = "100%";
@@ -259,7 +259,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			// Display Name
 			{
 				const td = tr.createEl("td", {
-					text: eventProps[propName].displayName,
+					text: itemProps[propName].displayName,
 				});
 				td.style.padding = "0.25em";
 			}
@@ -280,14 +280,14 @@ export class ChronosTimelineBasesView extends BasesView {
 			// Required status
 			{
 				const td = tr.createEl("td", {
-					text: eventProps[propName].required,
+					text: itemProps[propName].required,
 				});
 				td.style.padding = "0.25em";
 			}
 			// Notes
 			{
 				const td = tr.createEl("td", {
-					text: eventProps[propName].notes,
+					text: itemProps[propName].notes,
 				});
 				td.style.padding = "0.25em";
 			}
@@ -361,7 +361,7 @@ export const itemPropertyNames = [
 
 export type ItemPropertyName = (typeof itemPropertyNames)[number];
 
-export const eventProps = {
+export const itemProps = {
 	start: {
 		displayName: "Start Date",
 		required: "Required",
@@ -487,8 +487,8 @@ export function generateViewOptions(
 				return {
 					key: configKey(prop),
 					type: "property",
-					displayName: eventProps[prop].displayName,
-					placeholder: eventProps[prop].required.toLowerCase(),
+					displayName: itemProps[prop].displayName,
+					placeholder: itemProps[prop].required.toLowerCase(),
 				};
 			}),
 		},

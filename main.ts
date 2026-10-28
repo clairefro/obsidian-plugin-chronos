@@ -34,7 +34,7 @@ import {
 
 import {
 	ChronosTimelineBasesView,
-	eventProps,
+	itemProps,
 	itemPropertyNames,
 	generateViewOptions,
 	getDefaultPropNames,
@@ -1174,7 +1174,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		const basesProperties = itemPropertyNames.map(
 			(property): SettingDefinition => ({
-				name: eventProps[property].displayName,
+				name: itemProps[property].displayName,
 				render: (setting) => {
 					setting.addText((text) =>
 						text
@@ -1605,7 +1605,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		itemPropertyNames.forEach((prop) => {
 			new Setting(containerEl)
-				.setName(eventProps[prop].displayName)
+				.setName(itemProps[prop].displayName)
 				// .setDesc(`Customize the name for '${prop}' property`)
 				.addText((text) => {
 					const value =
