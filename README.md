@@ -672,7 +672,7 @@ description?    (Optional)
 
 You can change the default values for properties using the Item Property Sources configuration.
 
-<img width="425" height="587" alt="Image" src="https://github.com/user-attachments/assets/096adebe-3ed8-439d-a37c-c7368de6a647" />
+<img width="751" height="663" alt="Image" src="https://github.com/user-attachments/assets/37e3eed5-c56b-45b4-acbd-eb3b87bb321c" />
 
 You can configure the default property names for new Bases views in the plugin Settings.
 
