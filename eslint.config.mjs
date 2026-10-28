@@ -1,18 +1,20 @@
 import tseslint from "typescript-eslint";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import globals from "globals";
-import { defineConfig } from "eslint/config";
+import { globalIgnores, defineConfig } from "eslint/config";
 
 export default defineConfig([
-	{
-		ignores: [
-			"main.js",
-			"node_modules/**",
-			"esbuild.config.mjs",
-			"version-bump.mjs",
-			"eslint.config.mjs",
-		],
-	},
+	globalIgnores([
+		"node_modules",
+		"dist",
+		"esbuild.config.mjs",
+		"version-bump.mjs",
+		"versions.json",
+		"main.js",
+		"package.json",
+		"package-lock.json",
+		"tsconfig.json",
+	]),
 	...obsidianmd.configs.recommended,
 	{
 		files: ["**/*.ts"],
