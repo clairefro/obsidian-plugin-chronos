@@ -141,7 +141,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			this.resultsEl.createEl("p", {
 				text:
 					"To enable timeline views, you must have at least one note with a " +
-					"valid value for Start Date in Item Property Sources.",
+					"valid value (YYYY, YYYY-MM, YYYY-MM-DD...) for Start Date in Item Property Sources.",
 			});
 
 			this.renderInstructions();
