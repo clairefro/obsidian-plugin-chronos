@@ -574,14 +574,33 @@ export default class ChronosPlugin extends Plugin {
 	private _getAiProviderConfig(): AIProviderConfig {
 		const provider = (this.settings.aiProvider ||
 			"openai") as AIProviderConfig["provider"];
+		const baseUrl = this.settings.aiBaseUrls?.[provider];
+		const apiKey = this._getApiKey(provider) || undefined;
+		if (apiKey && baseUrl && !this._isTrustedAiEndpoint(baseUrl)) {
+			throw new Error(
+				`Refusing to send ${provider} API key to untrusted endpoint "${baseUrl}". Base URL must use HTTPS or point to a local address.`,
+			);
+		}
 		return {
 			provider,
-			apiKey: this._getApiKey(provider) || undefined,
+			apiKey,
 			model:
 				(this.settings.aiModels as any)?.[provider] ||
 				PROVIDER_DEFAULT_MODELS[provider],
-			baseUrl: this.settings.aiBaseUrls?.[provider],
+			baseUrl,
 		};
+	}
+
+	// Avoid leaking provider API keys to endpoints that aren't TLS-protected
+	// or a trusted local address (e.g. a spoofed/misconfigured base URL).
+	private _isTrustedAiEndpoint(rawUrl: string): boolean {
+		try {
+			const { protocol, hostname } = new URL(rawUrl);
+			if (protocol === "https:") return true;
+			return ["localhost", "127.0.0.1", "::1"].includes(hostname);
+		} catch {
+			return false;
+		}
 	}
 
 	private _getApiKey(provider: string = "openai"): string | null {
