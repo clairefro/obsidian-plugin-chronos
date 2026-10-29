@@ -1,6 +1,6 @@
 {
 	"name": "chronos",
-	"version": "4.2.4",
+	"version": "4.3.0",
 	"description": "Render interactive timelines in your notes from markdown.",
 	"main": "main.js",
 	"scripts": {
@@ -26,7 +26,7 @@
 		"@types/node": "^16.11.6",
 		"esbuild": "0.27.2",
 		"eslint": "^10.13.0",
-		"eslint-plugin-obsidianmd": "^0.4.2",
+		"eslint-plugin-obsidianmd": "^0.1.8",
 		"globals": "^17.13.0",
 		"jiti": "^2.7.0",
 		"obsidian": "^1.14.4",
@@ -36,7 +36,7 @@
 		"typescript-eslint": "^8.72.1"
 	},
 	"dependencies": {
-		"chronos-timeline-md": "^1.2.2",
+		"chronos-timeline-md": "^1.3.0",
 		"lz-string": "^1.5.0",
 		"moment": "^2.30.1",
 		"vis-timeline": "^7.7.3"
