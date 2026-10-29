@@ -737,7 +737,9 @@ You can also **Copy** the generated markdown (to paste in `chronos` blocks in yo
 
 # Note linking (beta)
 
-Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert. Chronos will link to the **first link** provided in an item.
+Link to other notes in your vault by adding a wiki link to either the item name or description.
+
+Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert. Chronos will link to the **first link** provided in an item.
 
 Works for Event, Point and Period type items. You can add a link to the item name (link path visible), or the description (link path hidden). Items with a link will appear underlined.
 
