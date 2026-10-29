@@ -511,7 +511,10 @@ function chronosItemsToMarkdown(
 		if (group) line += ` {${group}} `;
 		if (content) line += ` ${content}`;
 		if (
-			(type === undefined || type === "point" || type === "event") &&
+			(type === undefined ||
+				type === "point" ||
+				type === "event" ||
+				type === "period") &&
 			description
 		)
 			line += ` | ${description}`;

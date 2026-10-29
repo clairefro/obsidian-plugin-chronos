@@ -8,10 +8,16 @@ import { FileUtils } from "./FileUtils";
 interface TimelineItem {
 	id?: unknown;
 	cLink?: string;
+	type?: string;
+	start?: Date | string | number;
+	end?: Date | string | number;
+	group?: unknown;
 }
 
 interface TimelineEvent {
 	item?: unknown;
+	time?: Date | string | number;
+	group?: unknown;
 	event: MouseEvent;
 }
 
@@ -19,6 +25,29 @@ interface TimelineLike {
 	items?: TimelineItem[];
 	timeline?: { setOptions: (opts: Record<string, unknown>) => void };
 	on: (name: string, cb: (event: TimelineEvent) => void) => void;
+}
+
+/** Background items (periods) may not report as event.item, so find one by time/group */
+function findLinkedPeriodAt(
+	items: TimelineItem[] | undefined,
+	event: TimelineEvent,
+): TimelineItem | undefined {
+	if (event.time === undefined || event.time === null) return undefined;
+	const t = new Date(event.time).getTime();
+	if (Number.isNaN(t)) return undefined;
+	return items?.find((i) => {
+		if (i.type !== "background" || !i.cLink || !i.start || !i.end)
+			return false;
+		if (
+			i.group !== undefined &&
+			i.group !== null &&
+			event.group !== i.group
+		)
+			return false;
+		return (
+			new Date(i.start).getTime() <= t && t <= new Date(i.end).getTime()
+		);
+	});
 }
 
 export function wireSharedTimelineInteractions(
@@ -47,9 +76,9 @@ export function wireSharedTimelineInteractions(
 			event.event.preventDefault();
 
 			const itemId = event.item;
-			if (!itemId) return;
-
-			const item = timeline.items?.find((i) => i.id === itemId);
+			const item = itemId
+				? timeline.items?.find((i) => i.id === itemId)
+				: findLinkedPeriodAt(timeline.items, event);
 			if (!item?.cLink) return;
 
 			const isMiddleClick = event.event.button === 1;
@@ -67,8 +96,10 @@ export function wireSharedTimelineInteractions(
 	// Hover preview for linked notes
 	timeline.on("itemover", (event: TimelineEvent) => {
 		const itemId = event.item;
-		if (itemId) {
-			const item = timeline.items?.find((i) => i.id === itemId);
+		{
+			const item = itemId
+				? timeline.items?.find((i) => i.id === itemId)
+				: findLinkedPeriodAt(timeline.items, event);
 			if (item?.cLink) {
 				let targetEl = event.event.target as HTMLElement;
 				// Fallback: if not a valid element, use container

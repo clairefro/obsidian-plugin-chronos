@@ -146,7 +146,7 @@ function normalizeChronosBody(body: string): string {
 			);
 			const itemType = item[1].trimStart()[0];
 			const normalizedContent =
-				itemType === "@" || itemType === "="
+				itemType === "="
 					? colorFixed.replace(/\s*\|[\s\S]*$/, "")
 					: colorFixed;
 			return `${item[1]}[${date}]${normalizedContent}`;
