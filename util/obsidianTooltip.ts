@@ -92,8 +92,20 @@ function hideTooltip() {
 		.forEach((tooltipEl) => tooltipEl.remove());
 }
 
-export function obsidianTooltip(el: Element, text: string): void {
+// "[[path/to/note]]" is dropped and "[[path|Alias]]" shows just "Alias"
+function stripWikiLinks(text: string): string {
+	return text
+		.replace(/\[\[([^\]|]*)(?:\|([^\]]*))?\]\]/g, (_m, _path, alias) =>
+			alias ? alias.trim() : "",
+		)
+		.replace(/[ \t]+\n/g, "\n")
+		.replace(/\n\s*$/, "")
+		.trim();
+}
+
+export function obsidianTooltip(el: Element, rawText: string): void {
 	if (!el.instanceOf(HTMLElement)) return;
+	const text = stripWikiLinks(rawText);
 	trackPointer(el.ownerDocument);
 
 	// Not a hover target the library clears (ex: the refit button)
