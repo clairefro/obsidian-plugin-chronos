@@ -11,21 +11,54 @@ import { displayTooltip, setTooltip } from "obsidian";
 
 const TOOLTIP_OFFSET_Y = 12;
 const pointer = { x: 0, y: 0 };
-let tracking = false;
+const trackedDocs = new WeakSet<Document>();
+let doc: Document = activeDocument;
 let proxyEl: HTMLElement | null = null;
 let tooltipEl: HTMLElement | null = null;
-let shown: { el: Element; text: string } | null = null;
+// kind "item": a real event/point element. kind "panel": the shared timeline
+// panel, which the library uses as the hover target for periods.
+let shown: {
+	el: Element;
+	itemEl: Element | null;
+	text: string;
+	kind: "item" | "panel";
+} | null = null;
 
-function trackPointer() {
-	if (tracking) return;
-	tracking = true;
+const FOREGROUND_ITEM = ".vis-item:not(.vis-background)";
+
+// Points nest their dot inside the item element, so resolve to the outermost item
+function foregroundItemOf(el: Element | null): Element | null {
+	let item = el?.closest(FOREGROUND_ITEM) ?? null;
+	while (item?.parentElement?.closest(FOREGROUND_ITEM)) {
+		item = item.parentElement.closest(FOREGROUND_ITEM);
+	}
+	return item;
+}
+
+function foregroundItemUnderPointer(): Element | null {
+	return foregroundItemOf(doc.elementFromPoint(pointer.x, pointer.y));
+}
+
+// Track per document, since a view may live in a popout window
+function trackPointer(target: Document) {
+	doc = target;
+	if (trackedDocs.has(target)) return;
+	trackedDocs.add(target);
 	// mouseover fires before mousemove, so track both to keep the position fresh
-	["mousemove", "mouseover"].forEach((type) =>
-		window.addEventListener(
+	(["mousemove", "mouseover"] as const).forEach((type) =>
+		target.addEventListener(
 			type,
 			(e: MouseEvent) => {
+				doc = target;
 				pointer.x = e.clientX;
 				pointer.y = e.clientY;
+				// The library's own hide calls don't reliably fire when leaving an item
+				// (they target child elements), so close an item tooltip once the
+				// pointer is no longer over that item
+				if (shown?.kind === "item") {
+					if (foregroundItemUnderPointer() !== shown.itemEl)
+						hideTooltip();
+				}
 				moveTooltip();
 			},
 			{ capture: true, passive: true },
@@ -54,20 +87,29 @@ function hideTooltip() {
 	proxyEl = null;
 	tooltipEl = null;
 	shown = null;
-	activeDocument.body
+	doc.body
 		.findAll(":scope > .tooltip")
 		.forEach((tooltipEl) => tooltipEl.remove());
 }
 
 export function obsidianTooltip(el: Element, text: string): void {
 	if (!el.instanceOf(HTMLElement)) return;
-	trackPointer();
+	trackPointer(el.ownerDocument);
 
 	// Not a hover target the library clears (ex: the refit button)
 	if (!el.closest(".vis-item, .vis-panel")) {
 		setTooltip(el, text);
 		return;
 	}
+
+	// The library passes whichever child element was hovered, so identify items
+	// by their .vis-item ancestor
+	const itemEl = foregroundItemOf(el);
+	const kind = itemEl ? "item" : "panel";
+
+	// A period (panel) tooltip must never replace the tooltip of an event or point
+	// stacked on top of it
+	if (kind === "panel" && foregroundItemUnderPointer()) return;
 
 	if (!el.dataset.chronosTooltipWired) {
 		el.dataset.chronosTooltipWired = "true";
@@ -76,22 +118,39 @@ export function obsidianTooltip(el: Element, text: string): void {
 			removeAttribute(name);
 			// A stale clear (ex: the period panel clearing as the pointer moves onto an
 			// event stacked on top of it) must not close the newer tooltip
-			if (name === "title" && shown?.el === el) hideTooltip();
+			// Item tooltips are closed by the pointer check above (the library's own
+			// clears can fire while the pointer is still over the item)
+			if (
+				name === "title" &&
+				shown?.kind === "panel" &&
+				shown.el === el
+			) {
+				hideTooltip();
+			}
 		};
 	}
 
-	if (shown?.el === el && shown.text === text) return;
+	// The hover target for periods changes between child elements while the text
+	// stays the same, so don't redisplay (but track the latest target for clears)
+	if (
+		shown?.kind === kind &&
+		shown.text === text &&
+		shown.itemEl === itemEl
+	) {
+		shown.el = el;
+		return;
+	}
 	hideTooltip();
-	shown = { el, text };
+	shown = { el, itemEl, text, kind };
 
 	// Items (especially wide periods) and the shared timeline panel are large, so
 	// anchor the tooltip to a tiny element just below the pointer instead
-	proxyEl = activeDocument.body.createDiv({ cls: "chronos-tooltip-anchor" });
+	proxyEl = doc.body.createDiv({ cls: "chronos-tooltip-anchor" });
 	proxyEl.setCssProps({
 		"--chronos-tooltip-x": `${pointer.x}px`,
 		"--chronos-tooltip-y": `${pointer.y + TOOLTIP_OFFSET_Y}px`,
 	});
 	displayTooltip(proxyEl, text, { placement: "bottom" });
-	tooltipEl = activeDocument.body.findAll(":scope > .tooltip").pop() ?? null;
+	tooltipEl = doc.body.findAll(":scope > .tooltip").pop() ?? null;
 	moveTooltip();
 }
