@@ -19,6 +19,7 @@ import {
 } from "../constants";
 import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
+import { obsidianTooltip } from "../util/obsidianTooltip";
 type ChronosTimelineCtor = typeof ChronosLib.ChronosTimeline;
 const chronosLibExports = ChronosLib as unknown as {
 	ChronosTimeline?: ChronosTimelineCtor;
@@ -161,6 +162,7 @@ export class ChronosTimelineBasesView extends BasesView {
 		const timeline = new ChronosTimeline({
 			container: timelineContainerEl,
 			settings: this.pluginSettings || {},
+			callbacks: { setTooltip: obsidianTooltip },
 		});
 
 		timeline.render(this.chronosMarkdown);

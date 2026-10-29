@@ -605,3 +605,13 @@
 .chronos-underlined-link {
 	text-decoration: underline;
 }
+
+/* 1px element at the pointer, used to anchor tooltips for period items */
+.chronos-tooltip-anchor {
+	position: fixed;
+	left: var(--chronos-tooltip-x);
+	top: var(--chronos-tooltip-y);
+	width: 1px;
+	height: 1px;
+	pointer-events: none;
+}

@@ -45,6 +45,7 @@ import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 // !!! DO NOT MODIFY THIS BLOCK!! LET TYPES BE MESSY! !!!
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
+import { obsidianTooltip } from "./util/obsidianTooltip";
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
@@ -534,6 +535,7 @@ export default class ChronosPlugin extends Plugin {
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
+			callbacks: { setTooltip: obsidianTooltip },
 		});
 
 		try {
