@@ -311,7 +311,7 @@ export const itemProps = {
 	type: {
 		displayName: "Item Type",
 		required: "Recommended",
-		notes: "Options: event (default), period, marker, point.",
+		notes: "Options: event, period, marker, point. Defaults to point if no end date, event if an end date is present.",
 	},
 	color: {
 		displayName: "Color",
@@ -505,20 +505,16 @@ function chronosItemsToMarkdown(
 			marker: "=",
 		};
 
-		// default to event if no type present
-		let line = `${type && TYPES[type] ? TYPES[type] : "-"} [${start}`;
+		// default (no valid type): point if no end date, event if end date
+		const resolvedType =
+			type && TYPES[type] ? type : end ? "event" : "point";
+		let line = `${TYPES[resolvedType]} [${start}`;
 		if (end) line += `~${end}`;
 		line += "]";
 		if (color) line += ` #${color} `;
 		if (group) line += ` {${group}} `;
 		if (content) line += ` ${content}`;
-		if (
-			(type === undefined ||
-				type === "point" ||
-				type === "event" ||
-				type === "period") &&
-			description
-		)
+		if (resolvedType !== "marker" && description)
 			line += ` | ${description}`;
 		lines.push(line);
 	}
