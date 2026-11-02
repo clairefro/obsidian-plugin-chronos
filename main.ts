@@ -73,6 +73,8 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	align: "left",
 	clickToUse: false,
 	roundRanges: false,
+	overflowRangeTitles: true,
+	translucentRanges: false,
 	useUtc: true,
 	useAI: true,
 	showChangelogOnUpdate: true,
@@ -83,6 +85,11 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 export default class ChronosPlugin extends Plugin {
 	settings!: ChronosPluginSettings;
 	private observedEditors = new Set<HTMLElement>();
+	private chronosBlocks = new Set<{
+		el: HTMLElement;
+		source: string;
+		timeline?: ChronosLib.ChronosTimeline;
+	}>();
 	cacheUtils!: CacheUtils;
 	private fileUtils!: FileUtils;
 
@@ -314,6 +321,31 @@ export default class ChronosPlugin extends Plugin {
 		};
 	}
 
+	/** Re-render open timelines so setting changes apply immediately. */
+	refreshTimelines() {
+		// Bases first and isolated, so a failure in the markdown refresh can't skip it.
+		try {
+			ChronosTimelineBasesView.refreshAll();
+		} catch (e) {
+			console.error("[Chronos] Failed to refresh Bases views", e);
+		}
+		// Re-render note-embedded timelines in place (works in both Live Preview and Reading view)
+		for (const block of [...this.chronosBlocks]) {
+			if (!block.el.isConnected) {
+				this.chronosBlocks.delete(block);
+				continue;
+			}
+			try {
+				block.timeline?.destroy();
+				block.el.empty();
+				this.chronosBlocks.delete(block);
+				this._renderChronosBlock(block.source, block.el);
+			} catch (e) {
+				console.error("[Chronos] Failed to refresh timeline", e);
+			}
+		}
+	}
+
 	async saveSettings() {
 		const currentData = (await this.loadData()) || {};
 		const dataToSave = { ...currentData, ...this.settings };
@@ -537,6 +569,8 @@ export default class ChronosPlugin extends Plugin {
 			settings: this.settings,
 			callbacks: { setTooltip: obsidianTooltip },
 		});
+
+		this.chronosBlocks.add({ el, source, timeline });
 
 		try {
 			timeline.render(source);
@@ -1172,19 +1206,26 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const noticeToggle = (
 			name: string,
 			desc: string,
-			key: "clickToUse" | "roundRanges" | "useUtc",
+			key:
+				| "clickToUse"
+				| "roundRanges"
+				| "overflowRangeTitles"
+				| "translucentRanges"
+				| "useUtc",
 		): SettingDefinition => ({
 			name,
 			desc,
 			render: (setting) => {
 				setting.addToggle((toggle) =>
-					toggle.setValue(settings[key]).onChange(async (value) => {
-						settings[key] = value;
-						new Notice(
-							"Refresh rendering of timelines for this change to take effect.",
-						);
-						await this.plugin.saveSettings();
-					}),
+					toggle
+						.setValue(
+							(settings[key] ?? DEFAULT_SETTINGS[key]) as boolean,
+						)
+						.onChange(async (value) => {
+							settings[key] = value;
+							await this.plugin.saveSettings();
+							this.plugin.refreshTimelines();
+						}),
 				);
 			},
 		});
@@ -1260,6 +1301,16 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					"Round endcaps on ranges",
 					"Adds rounding to ranged events to make start and end clear.",
 					"roundRanges",
+				),
+				noticeToggle(
+					"Overflow range titles",
+					"Let long range-event titles continue past the edge of the range box.",
+					"overflowRangeTitles",
+				),
+				noticeToggle(
+					"Semi-transparent ranges",
+					"Render range events as borderless, semi-transparent boxes.",
+					"translucentRanges",
 				),
 				noticeToggle(
 					"Use UTC time (recommended)",

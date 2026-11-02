@@ -36,6 +36,19 @@ export class ChronosTimelineBasesView extends BasesView {
 	//  unique ID that appears in the "Add View" menu
 	static VIEW_TYPE = "chronos-timeline-view";
 	type: string = ChronosTimelineBasesView.VIEW_TYPE;
+	private static instances = new Set<ChronosTimelineBasesView>();
+
+	/** Re-render all open Bases timelines, e.g. after plugin settings change. */
+	static refreshAll() {
+		for (const view of ChronosTimelineBasesView.instances) {
+			try {
+				view.refresh();
+			} catch (e) {
+				console.error("[Chronos] Failed to refresh Bases view", e);
+			}
+		}
+	}
+
 	private pluginSettings: ChronosPluginSettings;
 	private fileUtils: FileUtils;
 
@@ -57,6 +70,17 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		const containerEl = parentEl.createDiv("chronos-bases-view-container");
 		this.resultsEl = containerEl.createDiv();
+
+		ChronosTimelineBasesView.instances.add(this);
+	}
+
+	onunload() {
+		ChronosTimelineBasesView.instances.delete(this);
+	}
+
+	private refresh() {
+		this.chronosMarkdown = undefined;
+		this.onDataUpdated();
 	}
 
 	public onDataUpdated(): void {

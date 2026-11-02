@@ -157,6 +157,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 - [Actions](#actions)
     - [Edit](#edit)
     - [Refit](#refit)
+- [Display settings](#display-settings)
 - [Localization](#localization)
 
 # Syntax Overview
@@ -622,7 +623,7 @@ By adding frontmatter properties to your notes or using formulas, you can easily
 start           (Chronos date)
 end?            (Chronos date)
 content?        (Optional alternate title - defaults to note name)
-type?           (event|point|period|marker - defaults to event)
+type?           (event|point|period|marker - defaults to point, or event if there is an end date)
 color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?
 ```
@@ -663,7 +664,7 @@ Figure B
 start           (Chronos date)
 end?            (Chronos date)
 content?        (Optional alternate item title - defaults to note name)
-type?           (Option: event|point|period|marker - defaults to event)
+type?           (Option: event|point|period|marker - defaults to point, or event if there is an end date)
 color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?    (Optional)
 ```
@@ -799,6 +800,14 @@ Click the **Refit** button (crosshairs icon) in the lower-right corner to adjust
 Hover on the timeline and click the width toggle in the upper left to expand the timeline to the width of your editor.
 
 ![chronos-width-expand](./docs/chronos-width-expand.gif)
+
+# Display settings
+
+These options are in the Chronos plugin settings, under **Display**, and apply immediately to open timelines (in notes and in Bases views).
+
+- **Round endcaps on ranges** (default off): adds rounding to ranged events to make start and end clear.
+- **Overflow range titles** (default on): long range-event titles continue past the edge of the range box, with an outline for readability. Turn off to clip titles to the box.
+- **Semi-transparent ranges** (default off): renders range events as borderless, semi-transparent boxes.
 
 # Localization
 

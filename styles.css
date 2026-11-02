@@ -298,6 +298,63 @@
 	opacity: 1;
 }
 
+/* Translucent range events */
+.chronos-timeline-container.chronos-range-translucent
+	.vis-item.vis-range:not(.vis-background):nth-child(n) {
+	border: 1px solid transparent;
+	background-color: color-mix(
+		in srgb,
+		var(--chronos-item-color, var(--interactive-accent)) 75%,
+		transparent
+	);
+	color: var(--text-on-accent);
+}
+
+/* Overflowing range titles */
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-range:not(.vis-background):nth-child(n),
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-range:not(.vis-background)
+	.vis-item-overflow:nth-child(n) {
+	overflow: visible;
+}
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-range:not(.vis-background)
+	.vis-item-content:nth-child(n) {
+	white-space: nowrap;
+	overflow: visible;
+}
+
+/* Hard-edged outline so the overflow text stays readable */
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-range:not(.vis-background) {
+	--chronos-range-outline: var(
+		--chronos-item-color,
+		var(--interactive-accent)
+	);
+}
+.chronos-timeline-container.chronos-range-overflow.chronos-range-translucent
+	.vis-item.vis-range:not(.vis-background) {
+	--chronos-range-outline: color-mix(
+		in srgb,
+		var(--chronos-item-color, var(--interactive-accent)) 75%,
+		transparent
+	);
+}
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-range:not(.vis-background)
+	.vis-item-content:nth-child(n) {
+	text-shadow:
+		-1px 0 0 var(--chronos-range-outline),
+		1px 0 0 var(--chronos-range-outline),
+		0 -1px 0 var(--chronos-range-outline),
+		0 1px 0 var(--chronos-range-outline),
+		-1px -1px 0 var(--chronos-range-outline),
+		1px -1px 0 var(--chronos-range-outline),
+		-1px 1px 0 var(--chronos-range-outline),
+		1px 1px 0 var(--chronos-range-outline);
+}
+
 /* Dynamic width using CSS custom property */
 .chronos-width-expanded:nth-child(n) {
 	width: calc(var(--chronos-editor-width) - 2rem);
