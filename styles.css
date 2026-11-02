@@ -307,11 +307,10 @@
 	width: 4.5rem;
 }
 
-/* Translucent events (ranges and single-date boxes) */
-.chronos-timeline-container.chronos-event-translucent
+/* Translucent items (ranges and single-date boxes; dots, lines and markers are softened by the library) */
+.chronos-timeline-container.chronos-translucent
 	.vis-item.vis-range:not(.vis-background):nth-child(n),
-.chronos-timeline-container.chronos-event-translucent
-	.vis-item.vis-box:nth-child(n) {
+.chronos-timeline-container.chronos-translucent .vis-item.vis-box:nth-child(n) {
 	border: 1px solid transparent;
 	background-color: color-mix(
 		in srgb,
@@ -351,7 +350,7 @@
 	overflow: visible;
 }
 
-/* Hard-edged outline so the overflow text stays readable */
+/* Hard-edged outline so the overflow text stays readable. For translucent boxes the outline is the box color pre-blended over the background (opaque), so it matches the box instead of compounding alpha. */
 .chronos-timeline-container.chronos-range-overflow
 	.vis-item.vis-range:not(.vis-background) {
 	--chronos-range-outline: var(
@@ -359,12 +358,12 @@
 		var(--interactive-accent)
 	);
 }
-.chronos-timeline-container.chronos-range-overflow.chronos-event-translucent
+.chronos-timeline-container.chronos-range-overflow.chronos-translucent
 	.vis-item.vis-range:not(.vis-background) {
 	--chronos-range-outline: color-mix(
 		in srgb,
 		var(--chronos-item-color, var(--interactive-accent)) 75%,
-		transparent
+		var(--chronos-bg-secondary)
 	);
 }
 .chronos-timeline-container.chronos-range-overflow

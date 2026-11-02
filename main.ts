@@ -80,7 +80,7 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	clickToUse: false,
 	roundRanges: false,
 	overflowRangeTitles: true,
-	translucentEvents: false,
+	translucentItems: false,
 	axisPosition: "bottom",
 	gapHorizontal: DEFAULT_GAP,
 	gapVertical: DEFAULT_GAP,
@@ -1220,7 +1220,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				| "clickToUse"
 				| "roundRanges"
 				| "overflowRangeTitles"
-				| "translucentEvents"
+				| "translucentItems"
 				| "useUtc",
 		): SettingDefinition => ({
 			name,
@@ -1318,9 +1318,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					"overflowRangeTitles",
 				),
 				noticeToggle(
-					"Translucent events",
-					"Render events as borderless, semi-transparent boxes.",
-					"translucentEvents",
+					"Translucent items",
+					"Render all timeline items as semi-transparent",
+					"translucentItems",
 				),
 				{
 					name: "Time axis position",

@@ -37,7 +37,7 @@ export interface ChronosPluginSettings {
 	clickToUse: boolean;
 	roundRanges: boolean;
 	overflowRangeTitles?: boolean;
-	translucentEvents?: boolean;
+	translucentItems?: boolean;
 	axisPosition?: "top" | "bottom";
 	gapHorizontal?: number;
 	gapVertical?: number;

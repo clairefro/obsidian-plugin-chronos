@@ -267,7 +267,7 @@ Clip long range titles instead of letting them overflow the range box:
 ```chronos
 > NOOVERFLOWTITLES
 
-- [2020~2021] #blue A range with a very long title that would normally overflow
+- [2020~2021] #blue A range with a very long title that would normally overflow when you zoom out
 ```
 
 Interpret dates as local time instead of UTC:

@@ -111,7 +111,7 @@ function getFlagSnippets(): ChronosSnippet[] {
 		},
 		{ label: "ROUNDED - Round range endcaps", value: "> ROUNDED" },
 		{
-			label: "TRANSLUCENT - Translucent events",
+			label: "TRANSLUCENT - Translucent items",
 			value: "> TRANSLUCENT",
 		},
 		{

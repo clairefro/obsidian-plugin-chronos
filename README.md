@@ -548,7 +548,7 @@ These flags override your plugin settings for a single timeline. Precedence is: 
 | Flag                                      | Effect                                                                |
 | ----------------------------------------- | --------------------------------------------------------------------- |
 | `> ROUNDED` / `> NOROUNDED`               | Round the ends of period ranges on / off                              |
-| `> TRANSLUCENT` / `> NOTRANSLUCENT`       | Borderless, semi-transparent events on / off                          |
+| `> TRANSLUCENT` / `> NOTRANSLUCENT`       | Borderless, semi-transparent items on / off                           |
 | `> OVERFLOWTITLES` / `> NOOVERFLOWTITLES` | Let long range titles run past the range box on / off (on by default) |
 | `> UTC` / `> NOUTC`                       | Interpret dates as UTC / local time                                   |
 | `> ALIGN left\|center\|right`             | Align item text                                                       |
@@ -860,7 +860,7 @@ These options are in the Chronos plugin settings, under **Display**, and apply i
 - **Overflow range titles** (default on): long range-event titles continue past the edge of the range box, with an outline for readability. Turn off to clip titles to the box.
 - **Time axis position** (default bottom): draw the time axis at the top or bottom. An `> AXIS` flag in a timeline overrides it.
 - **Item gap** (default 20 horizontal, 20 vertical): spacing in pixels between items. A `> GAP` flag in a timeline overrides it.
-- **Translucent events** (default off): renders events as borderless, semi-transparent boxes.
+- **Translucent items** (default off): renders all timeline items as semi-transparent.
 
 # Localization
 
