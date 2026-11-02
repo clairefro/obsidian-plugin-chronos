@@ -118,10 +118,10 @@ See available [Colors](#colors)
 **Full Syntax**
 
 ```
-@ [Date~Date] #Color {Group Name} Period Name
+@ [Date~Date] #Color {Group Name} Period Name | Description
 ```
 
-- Color, Group Name, and Period Name are optional
+- Color, Group Name, Period Name, and Description are optional
 
 ### Examples
 
@@ -149,11 +149,15 @@ See available [Colors](#colors)
 
 ## Points
 
-**Syntax**
+**Full Syntax**
 
 ```
-* [Date] Point Name | Description
+* [Date] #color {Group Name} Point Name | Description
 ```
+
+- Color, Group Name, and Description are optional
+
+#### Example
 
 ```chronos
 - [2024-02-26~2024-03-10] Tournament
@@ -161,6 +165,24 @@ See available [Colors](#colors)
 * [2024-02-28] Game 2 | Los Angeles
 * [2024-03-06] Game 3 | Tokyo
 * [2024-03-10] Game 4 | Jakarta
+```
+
+#### With color
+
+Colored points are outlined.
+
+**Syntax**
+
+```
+* [Date] #Color Point Name | Description
+```
+
+```chronos
+- [2024-02-26~2024-03-10] Tournament
+* [2024-02-26] #green Game 1 | Win
+* [2024-02-28] #red Game 2 | Loss
+* [2024-03-06] #c0ffee Game 3 | Win
+* [2024-03-10] #blue Game 4 | Draw
 ```
 
 ## Markers
@@ -179,51 +201,6 @@ See available [Colors](#colors)
 - [1455] Gutenberg Bible Printed
 @ [1501~1600] The Spread of Printing
 - [1517] Martin Luther's 95 Theses
-```
-
-## Ordering
-
-**Order by start date**
-
-```chronos
-> ORDERBY start
-
-- [2026~2028] Event D
-- [2024~2028] Event B
-- [2025~2030] #red Event C
-- [2020~2030] #red  Event A
-```
-
-**Order by start (descending)**
-
-```chronos
-> ORDERBY -start
-
-- [2026~2028] Event D
-- [2024~2028] Event B
-- [2025~2030] #red Event C
-- [2020~2030] #red  Event A
-```
-
-**Order by color and start**
-
-```chronos
-> ORDERBY color|start
-
-- [2026~2028] Event D
-- [2024~2028] Event B
-- [2025~2030] #red Event C
-- [2020~2030] #red  Event A
-```
-
-## Default view dates
-
-Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates for your timeline's initial load
-
-```chronos
-> DEFAULTVIEW  -3000|3000
-
-- [2024] AGI
 ```
 
 ## Advanced example
@@ -267,6 +244,122 @@ Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates fo
 
 ```
 
+## Ordering
+
+**Order by start date**
+
+```chronos
+> ORDERBY start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+
+**Order by start (descending)**
+
+```chronos
+> ORDERBY -start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+
+**Order by color and start**
+
+```chronos
+> ORDERBY color|start
+
+- [2026~2028] Event D
+- [2024~2028] Event B
+- [2025~2030] #red Event C
+- [2020~2030] #red  Event A
+```
+
+## Display options
+
+Flags override your global settings for a single timeline. Each has a `NO` counterpart (e.g. `> NOROUNDED`) to turn the option off.
+
+**ROUNDED - Rounded range ends**
+
+```chronos
+> ROUNDED
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+**TRANSLUCENT - Translucent items**
+
+```chronos
+> TRANSLUCENT
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+- [2023] #blue Single date
+```
+
+**NOOVERFLOWTITLES - Keep long range titles inside the box**
+
+```chronos
+> NOOVERFLOWTITLES
+
+- [2020~2021] A very long range title that would otherwise run past the box
+```
+
+**NOUTC - Local time instead of UTC**
+
+```chronos
+> NOUTC
+
+- [2024-06-01T12:00] Noon, in your local time
+```
+
+**ALIGN - Align item text (left|center|right)**
+
+```chronos
+> ALIGN center
+
+- [2020~2024] Centered text
+```
+
+## Axis position
+
+**AXIS - Put the time axis on top (top|bottom)**
+
+```chronos
+> AXIS top
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+## Gap between items
+
+`> GAP px` sets the gap in pixels between items. Use `> GAP horizontal|vertical` to set them separately, or leave a side empty (e.g. `> GAP |30`) to keep its default.
+
+```chronos
+# changes vertical gap between items to 50px
+> GAP |50
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+- [2023~2025] #blue Event C
+```
+
+## Default view dates
+
+Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates for your timeline's initial load
+
+```chronos
+> DEFAULTVIEW  -3000|3000
+
+- [2024] AGI
+```
+
 ## Colors
 
 - `#red`
@@ -277,3 +370,9 @@ Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates fo
 - `#purple`
 - `#pink`
 - `#cyan`
+
+You can also use valid six-digit color hexcodes. Upper or lowercase is fine.
+example (Lavendar):
+
+- #A379C9
+- #a379c9

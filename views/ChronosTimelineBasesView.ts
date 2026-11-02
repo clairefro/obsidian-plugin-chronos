@@ -20,6 +20,7 @@ import {
 import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
 import { obsidianTooltip } from "../util/obsidianTooltip";
+import { applyGapSetting } from "../util/applyGapSetting";
 type ChronosTimelineCtor = typeof ChronosLib.ChronosTimeline;
 const chronosLibExports = ChronosLib as unknown as {
 	ChronosTimeline?: ChronosTimelineCtor;
@@ -190,6 +191,7 @@ export class ChronosTimelineBasesView extends BasesView {
 		});
 
 		timeline.render(this.chronosMarkdown);
+		applyGapSetting(timeline, this.chronosMarkdown, this.pluginSettings);
 		// DRY: wire up note linking and hover preview
 		wireSharedTimelineInteractions(
 			timeline,

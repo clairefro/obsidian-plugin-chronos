@@ -1,5 +1,6 @@
 import {
 	Plugin,
+	debounce,
 	App,
 	PluginSettingTab,
 	Notice,
@@ -46,6 +47,11 @@ import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
 import { obsidianTooltip } from "./util/obsidianTooltip";
+import {
+	applyGapSetting,
+	DEFAULT_GAP,
+	resolveGap,
+} from "./util/applyGapSetting";
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
@@ -74,7 +80,10 @@ const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	clickToUse: false,
 	roundRanges: false,
 	overflowRangeTitles: true,
-	translucentRanges: false,
+	translucentItems: false,
+	axisPosition: "bottom",
+	gapHorizontal: DEFAULT_GAP,
+	gapVertical: DEFAULT_GAP,
 	useUtc: true,
 	useAI: true,
 	showChangelogOnUpdate: true,
@@ -574,6 +583,7 @@ export default class ChronosPlugin extends Plugin {
 
 		try {
 			timeline.render(source);
+			applyGapSetting(timeline, source, this.settings);
 			// DRY: wire up note linking and hover preview
 			wireSharedTimelineInteractions(
 				timeline,
@@ -1210,7 +1220,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				| "clickToUse"
 				| "roundRanges"
 				| "overflowRangeTitles"
-				| "translucentRanges"
+				| "translucentItems"
 				| "useUtc",
 		): SettingDefinition => ({
 			name,
@@ -1308,10 +1318,65 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					"overflowRangeTitles",
 				),
 				noticeToggle(
-					"Semi-transparent ranges",
-					"Render range events as borderless, semi-transparent boxes.",
-					"translucentRanges",
+					"Translucent items",
+					"Render all timeline items as semi-transparent",
+					"translucentItems",
 				),
+				{
+					name: "Time axis position",
+					desc: "Where the time axis is drawn. A > AXIS flag in a timeline overrides this.",
+					render: (setting) => {
+						setting.addDropdown((dropdown) =>
+							dropdown
+								.addOptions({ bottom: "Bottom", top: "Top" })
+								.setValue(settings.axisPosition ?? "bottom")
+								.onChange(async (value) => {
+									settings.axisPosition =
+										value === "top" ? "top" : "bottom";
+									await this.plugin.saveSettings();
+									this.plugin.refreshTimelines();
+								}),
+						);
+					},
+				},
+				{
+					name: "Item gap",
+					desc: "Spacing in pixels between items: horizontal and vertical. A > GAP flag in a timeline overrides this.",
+					render: (setting) => {
+						const refresh = debounce(
+							() => this.plugin.refreshTimelines(),
+							400,
+							true,
+						);
+						const addGapInput = (
+							label: string,
+							key: "gapHorizontal" | "gapVertical",
+						) => {
+							setting.controlEl.createSpan({
+								text: label,
+								cls: "chronos-gap-label",
+							});
+							setting.addText((text) => {
+								text.inputEl.type = "number";
+								text.inputEl.min = "0";
+								text.inputEl.addClass("chronos-gap-input");
+								text.setPlaceholder(String(DEFAULT_GAP))
+									.setValue(String(resolveGap(settings[key])))
+									.onChange(async (value) => {
+										settings[key] = resolveGap(
+											value === ""
+												? undefined
+												: Number(value),
+										);
+										await this.plugin.saveSettings();
+										refresh();
+									});
+							});
+						};
+						addGapInput("Horizontal", "gapHorizontal");
+						addGapInput("Vertical", "gapVertical");
+					},
+				},
 				noticeToggle(
 					"Use UTC time (recommended)",
 					"If disabled, Chronos uses system time; local time may shift historical events by a day.",

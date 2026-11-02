@@ -100,6 +100,25 @@ function getFlagSnippets(): ChronosSnippet[] {
 			label: "NOSTACK - Prevent items from stacking",
 			value: "> NOSTACK",
 		},
+		{ label: "AXIS - Show time axis on top", value: "> AXIS top" },
+		{
+			label: "GAP - Spacing between items (px)",
+			value: "> GAP 10|30",
+		},
+		{
+			label: "ALIGN - Align item text (left|center|right)",
+			value: "> ALIGN center",
+		},
+		{ label: "ROUNDED - Round range endcaps", value: "> ROUNDED" },
+		{
+			label: "TRANSLUCENT - Translucent items",
+			value: "> TRANSLUCENT",
+		},
+		{
+			label: "NOOVERFLOWTITLES - Clip long range titles",
+			value: "> NOOVERFLOWTITLES",
+		},
+		{ label: "NOUTC - Use local time for dates", value: "> NOUTC" },
 	];
 }
 
