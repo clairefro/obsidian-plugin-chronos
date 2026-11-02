@@ -129,7 +129,7 @@ See available [Colors](#colors)
 
 ```chronos
 @ [-300~250] Yayoi Period
-- [-100] Introduction of rice cultivation
+- [-100] #8B4513 Introduction of rice cultivation
 - [-57] Japan’s first recorded contact with China
 ```
 
@@ -224,6 +224,58 @@ Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates fo
 > DEFAULTVIEW  -3000|3000
 
 - [2024] AGI
+```
+
+## Axis position
+
+Use `> AXIS top|bottom` to choose where the time axis is drawn (default `bottom`).
+
+```chronos
+> AXIS top
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+## Gap between items
+
+Use `> GAP horizontal|vertical` (px) to space items. One number applies to both; leave a side empty to keep its default of 10.
+
+```chronos
+> GAP |50
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+- [2023~2025] #blue Event C
+```
+
+## Display setting flags
+
+These override your plugin settings for a single timeline: `ROUNDED`/`NOROUNDED`, `TRANSLUCENT`/`NOTRANSLUCENT`, `OVERFLOWTITLES`/`NOOVERFLOWTITLES`, `UTC`/`NOUTC` and `ALIGN left|center|right`. If a flag and its `NO` version both appear, the later line wins.
+
+```chronos
+> TRANSLUCENT
+> ROUNDED
+> ALIGN center
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+Clip long range titles instead of letting them overflow the range box:
+
+```chronos
+> NOOVERFLOWTITLES
+
+- [2020~2021] #blue A range with a very long title that would normally overflow
+```
+
+Interpret dates as local time instead of UTC:
+
+```chronos
+> NOUTC
+
+- [2024-03-10] Local-time event
 ```
 
 ## Advanced example

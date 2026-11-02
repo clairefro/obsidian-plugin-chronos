@@ -298,9 +298,20 @@
 	opacity: 1;
 }
 
-/* Translucent range events */
-.chronos-timeline-container.chronos-range-translucent
-	.vis-item.vis-range:not(.vis-background):nth-child(n) {
+/* Plugin settings: item gap inputs */
+.chronos-settings .chronos-gap-label {
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+}
+.chronos-settings .chronos-gap-input {
+	width: 4.5rem;
+}
+
+/* Translucent events (ranges and single-date boxes) */
+.chronos-timeline-container.chronos-event-translucent
+	.vis-item.vis-range:not(.vis-background):nth-child(n),
+.chronos-timeline-container.chronos-event-translucent
+	.vis-item.vis-box:nth-child(n) {
 	border: 1px solid transparent;
 	background-color: color-mix(
 		in srgb,
@@ -325,6 +336,21 @@
 	overflow: visible;
 }
 
+/* Periods (background items) overflow their titles the same way */
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-background:nth-child(n),
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-background
+	.vis-item-overflow:nth-child(n) {
+	overflow: visible;
+}
+.chronos-timeline-container.chronos-range-overflow
+	.vis-item.vis-background
+	.vis-item-content:nth-child(n) {
+	white-space: nowrap;
+	overflow: visible;
+}
+
 /* Hard-edged outline so the overflow text stays readable */
 .chronos-timeline-container.chronos-range-overflow
 	.vis-item.vis-range:not(.vis-background) {
@@ -333,7 +359,7 @@
 		var(--interactive-accent)
 	);
 }
-.chronos-timeline-container.chronos-range-overflow.chronos-range-translucent
+.chronos-timeline-container.chronos-range-overflow.chronos-event-translucent
 	.vis-item.vis-range:not(.vis-background) {
 	--chronos-range-outline: color-mix(
 		in srgb,

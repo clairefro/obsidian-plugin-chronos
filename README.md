@@ -147,6 +147,9 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Flags `>`](#flags-)
         - [ORDERBY flag](#orderby-flag)
         - [DEFAULTVIEW flag](#defaultview-flag)
+        - [GAP flag](#gap-flag)
+        - [AXIS flag](#axis-flag)
+        - [Display setting flags](#display-setting-flags)
             - [Example](#example)
     - [Modifiers](#modifiers)
         - [Colors `#color`](#colors-color)
@@ -513,6 +516,54 @@ Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates fo
 
 ![alt text](./docs/image-18.png)
 
+### GAP flag
+
+Set the gap between items, in pixels. One number applies to both directions. Use `horizontal|vertical` to set them separately, and leave one side empty to keep its default (10 for both).
+
+```chronos
+> GAP 10|30
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+- [2023~2025] #blue Event C
+```
+
+Variants: `> GAP 20`, `> GAP |30` (vertical only), `> GAP 20|` (horizontal only).
+
+### AXIS flag
+
+Choose where the time axis is drawn: `top` or `bottom` (default).
+
+```chronos
+> AXIS top
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+### Display setting flags
+
+These flags override your plugin settings for a single timeline. Precedence is: library defaults < plugin settings < flags in the timeline.
+
+| Flag                                      | Effect                                                                |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `> ROUNDED` / `> NOROUNDED`               | Round the ends of period ranges on / off                              |
+| `> TRANSLUCENT` / `> NOTRANSLUCENT`       | Borderless, semi-transparent events on / off                          |
+| `> OVERFLOWTITLES` / `> NOOVERFLOWTITLES` | Let long range titles run past the range box on / off (on by default) |
+| `> UTC` / `> NOUTC`                       | Interpret dates as UTC / local time                                   |
+| `> ALIGN left\|center\|right`             | Align item text                                                       |
+
+If a flag and its `NO` version both appear, the later line wins.
+
+```chronos
+> TRANSLUCENT
+> NOROUNDED
+> ALIGN center
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
 ## Modifiers
 
 Modifiers **#color** and **{Group}** can be added to **Events** (`-`) and **Periods** (`@`) with the following optional syntax.
@@ -807,7 +858,9 @@ These options are in the Chronos plugin settings, under **Display**, and apply i
 
 - **Round endcaps on ranges** (default off): adds rounding to ranged events to make start and end clear.
 - **Overflow range titles** (default on): long range-event titles continue past the edge of the range box, with an outline for readability. Turn off to clip titles to the box.
-- **Semi-transparent ranges** (default off): renders range events as borderless, semi-transparent boxes.
+- **Time axis position** (default bottom): draw the time axis at the top or bottom. An `> AXIS` flag in a timeline overrides it.
+- **Item gap** (default 20 horizontal, 20 vertical): spacing in pixels between items. A `> GAP` flag in a timeline overrides it.
+- **Translucent events** (default off): renders events as borderless, semi-transparent boxes.
 
 # Localization
 
