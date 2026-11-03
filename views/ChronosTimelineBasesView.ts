@@ -6,9 +6,7 @@ import {
 	BasesView,
 	BasesViewConfig,
 	setIcon,
-	setTooltip,
 	QueryController,
-	Notice,
 	NullValue,
 } from "obsidian";
 
@@ -17,7 +15,7 @@ import { BASES_PROP_NAMES_DEFAULTS } from "../constants";
 import * as ChronosLib from "chronos-timeline-md";
 import { obsidianTooltip } from "../util/obsidianTooltip";
 import { applyGapSetting } from "../util/applyGapSetting";
-import { attachTimelineMenu, buildPlaygroundUrl } from "../util/timelineMenu";
+import { attachTimelineMenu } from "../util/timelineMenu";
 import {
 	DateField,
 	findInvalidDateFields,
@@ -293,10 +291,6 @@ export class ChronosTimelineBasesView extends BasesView {
 			this.pluginSettings,
 			"chronos-timeline", // Use custom source for BasesView
 		);
-
-		// render buttons
-		this.renderCopyButton();
-		this.renderShareButton();
 	}
 
 	private lookupProperty(
@@ -307,39 +301,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		if (propId) {
 			return getValueAsString(entry, propId);
 		}
-	}
-
-	private renderCopyButton() {
-		const copyBtn = this.resultsEl.createEl("button", {
-			cls: "chronos-bases-view-copy-btn",
-		});
-		setTooltip(copyBtn, "Copy timeline markdown");
-		setIcon(copyBtn, "copy");
-		copyBtn.onclick = async () => {
-			try {
-				await navigator.clipboard.writeText(this.chronosMarkdown ?? "");
-				new Notice("Timeline markdown copied!");
-			} catch {
-				new Notice("Failed to copy timeline markdown");
-			}
-		};
-	}
-
-	private renderShareButton() {
-		const shareBtn = this.resultsEl.createEl("button", {
-			cls: "chronos-bases-view-share-btn",
-		});
-		setTooltip(shareBtn, "Copy shareable public link");
-		setIcon(shareBtn, "share-2");
-		shareBtn.onclick = async () => {
-			try {
-				const url = this.buildShareableUrl();
-				await navigator.clipboard.writeText(url);
-				new Notice("Shareable public link copied to clipboard!");
-			} catch {
-				new Notice("Failed to create shareable link");
-			}
-		};
 	}
 
 	// Help text and link, shown only when no timeline is rendered.
@@ -355,13 +316,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		});
 		link.target = "_blank";
 		link.rel = "noopener noreferrer";
-	}
-
-	private buildShareableUrl() {
-		return buildPlaygroundUrl(
-			this.chronosMarkdown ?? "",
-			this.pluginSettings.selectedLocale,
-		);
 	}
 }
 
