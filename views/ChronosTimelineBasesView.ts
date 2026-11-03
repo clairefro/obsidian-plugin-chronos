@@ -192,6 +192,10 @@ export class ChronosTimelineBasesView extends BasesView {
 		});
 		const summary = details.createEl("summary");
 		setIcon(
+			summary.createSpan({ cls: "chronos-bases-warning-chevron" }),
+			"chevron-right",
+		);
+		setIcon(
 			summary.createSpan({ cls: "chronos-bases-warning-icon" }),
 			"alert-triangle",
 		);

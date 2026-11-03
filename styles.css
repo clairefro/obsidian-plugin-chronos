@@ -734,3 +734,19 @@
 .chronos-bases-warning-values {
 	color: var(--text-muted);
 }
+.chronos-bases-warning summary::marker,
+.chronos-bases-warning summary::-webkit-details-marker {
+	display: none;
+}
+.chronos-bases-warning-chevron {
+	display: inline-flex;
+	color: var(--text-muted);
+	transition: transform 0.15s ease;
+}
+.chronos-bases-warning-chevron svg {
+	width: var(--icon-s);
+	height: var(--icon-s);
+}
+.chronos-bases-warning[open] .chronos-bases-warning-chevron {
+	transform: rotate(90deg);
+}
