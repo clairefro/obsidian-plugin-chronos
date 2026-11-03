@@ -146,11 +146,17 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Comments `#`](#comments-)
     - [Flags `>`](#flags-)
         - [ORDERBY flag](#orderby-flag)
+            - [Example](#example)
         - [DEFAULTVIEW flag](#defaultview-flag)
         - [GAP flag](#gap-flag)
         - [AXIS flag](#axis-flag)
         - [Display setting flags](#display-setting-flags)
-            - [Example](#example)
+            - [ROUNDED flag](#rounded-flag)
+            - [TRANSLUCENT flag](#translucent-flag)
+            - [OVERFLOWTITLES flag](#overflowtitles-flag)
+            - [UTC flag](#utc-flag)
+            - [ALIGN flag](#align-flag)
+            - [Combining display flags](#combining-display-flags)
     - [Modifiers](#modifiers)
         - [Colors `#color`](#colors-color)
         - [Groups `{}`](#groups-)
@@ -555,6 +561,77 @@ These flags override your plugin settings for a single timeline. Precedence is: 
 
 If a flag and its `NO` version both appear, the later line wins.
 
+#### ROUNDED flag
+
+Round the ends of ranged items. Use `> NOROUNDED` to turn off rounding when it's enabled in your settings.
+
+```chronos
+> ROUNDED
+
+- [2020~2024] Rounded range
+```
+
+![alt text](./docs/image-24.png)
+
+#### TRANSLUCENT flag
+
+Render items as borderless, semi-transparent boxes. Use `> NOTRANSLUCENT` to render solid items. Recommended if you use Light theme to soften the contrast, but also looks great in Dark theme!
+
+```chronos
+> TRANSLUCENT
+
+@ [2015~2023] Some period
+= [2019] Translucent marker
+- [2020~2024] #red Translucent range
+- [2022] #blue Translucent point
+```
+
+![alt text](./docs/image-25.png)
+
+#### OVERFLOWTITLES flag
+
+Long range titles run past the edge of the range box by default. Use `> NOOVERFLOWTITLES` to clip titles to the box, or `> OVERFLOWTITLES` to turn overflow back on when it's disabled in your settings.
+
+```chronos
+- [2020~2021] A very long range title this is!
+```
+
+![alt text](./docs/image-27.png)
+
+```chronos
+> NOOVERFLOWTITLES
+
+- [2020~2021] A very long range title that would otherwise run past the box
+```
+
+![alt text](image-26.png)
+
+#### UTC flag
+
+Interpret dates as UTC (`> UTC`) or as your system's local time (`> NOUTC`).
+
+```chronos
+> NOUTC
+
+- [2024-06-01T12:00] Noon, in your local time
+```
+
+![alt text](./docs/image-28.png)
+
+#### ALIGN flag
+
+Align item text: `left`, `center` or `right`.
+
+```chronos
+> ALIGN center
+
+- [2020~2024] Centered text
+```
+
+![alt text](./docs/image-29.png)
+
+#### Combining display flags
+
 ```chronos
 > TRANSLUCENT
 > NOROUNDED
@@ -563,6 +640,8 @@ If a flag and its `NO` version both appear, the later line wins.
 - [2020~2022] Event A
 - [2021~2024] #red Event B
 ```
+
+![alt text](./docs/image-22.png)
 
 ## Modifiers
 
@@ -664,7 +743,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ```
 ````
 
-![alt text](./docs/image-21.png)
+![alt text](./docs/image-23.png)
 
 # Obsidian Bases view
 
@@ -861,6 +940,8 @@ These options are in the Chronos plugin settings, under **Display**, and apply i
 - **Time axis position** (default bottom): draw the time axis at the top or bottom. An `> AXIS` flag in a timeline overrides it.
 - **Item gap** (default 20 horizontal, 20 vertical): spacing in pixels between items. A `> GAP` flag in a timeline overrides it.
 - **Translucent items** (default off): renders all timeline items as semi-transparent.
+- **Use UTC time (recommended)** (default on): interprets dates as UTC. If disabled, Chronos uses system time, which may shift historical events by a day. A `> UTC` or `> NOUTC` flag in a timeline overrides it.
+- **Item alignment** (default left): aligns event boxes and item text left, center or right. An `> ALIGN` flag in a timeline overrides it.
 
 # Localization
 
