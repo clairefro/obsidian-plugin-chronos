@@ -364,7 +364,7 @@ Markers can be used to highlight a key milestone in time. **Markers must be a si
 ```
 ````
 
-<img alt="Image" src="./docs/chronos-markers.png4" />
+<img alt="Image" src="./docs/chronos-markers.png" />
 
 ## Comments `#`
 

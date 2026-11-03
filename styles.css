@@ -205,8 +205,8 @@
 	color: var(--text-normal);
 	background-color: transparent;
 	border: none;
-	border-radius: var(--radius-s);
-	padding: 6px 8px;
+	border-radius: var(--clickable-icon-radius);
+	padding: var(--size-2-2) var(--size-2-3);
 	cursor: pointer;
 	font-size: 10px;
 	opacity: 0;
@@ -219,7 +219,7 @@
 }
 
 .chronos-width-toggle:hover:nth-child(n) {
-	background-color: var(--chronos-semi-gray);
+	background-color: var(--background-modifier-hover);
 }
 
 .chronos-snippet-menu-button {
@@ -295,6 +295,48 @@
 }
 
 .chronos-timeline-container:hover .chronos-width-toggle {
+	opacity: 1;
+}
+
+/* Refit button (from library), matched to the other corner buttons */
+.chronos-timeline-container .chronos-timeline-refit-button:nth-child(n) {
+	padding: var(--size-2-2) var(--size-2-3);
+	border-radius: var(--clickable-icon-radius);
+}
+
+.chronos-timeline-container .chronos-timeline-refit-button:hover:nth-child(n) {
+	background-color: var(--background-modifier-hover);
+}
+
+/* Timeline options (...) button */
+.chronos-timeline-menu:nth-child(n) {
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	padding: var(--size-2-2) var(--size-2-3);
+	color: var(--text-normal);
+	background-color: transparent;
+	border: none;
+	border-radius: var(--clickable-icon-radius);
+	box-shadow: none;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+
+.chronos-timeline-menu:hover:nth-child(n) {
+	background-color: var(--background-modifier-hover);
+}
+
+.chronos-timeline-menu svg {
+	width: var(--icon-s);
+	height: var(--icon-s);
+}
+
+.chronos-timeline-container:hover .chronos-timeline-menu {
 	opacity: 1;
 }
 

@@ -13,14 +13,11 @@ import {
 } from "obsidian";
 
 import { ChronosPluginSettings } from "../types";
-import {
-	CHRONOS_PLAYGROUND_BASE_URL,
-	BASES_PROP_NAMES_DEFAULTS,
-} from "../constants";
-import LZString from "lz-string";
+import { BASES_PROP_NAMES_DEFAULTS } from "../constants";
 import * as ChronosLib from "chronos-timeline-md";
 import { obsidianTooltip } from "../util/obsidianTooltip";
 import { applyGapSetting } from "../util/applyGapSetting";
+import { attachTimelineMenu, buildPlaygroundUrl } from "../util/timelineMenu";
 import {
 	DateField,
 	findInvalidDateFields,
@@ -274,6 +271,11 @@ export class ChronosTimelineBasesView extends BasesView {
 		const timelineContainerEl = this.resultsEl.createDiv(
 			"chronos-bases-view-timeline-container",
 		);
+		attachTimelineMenu(
+			timelineContainerEl,
+			() => this.chronosMarkdown ?? "",
+			this.pluginSettings,
+		);
 		const timeline = new ChronosTimeline({
 			container: timelineContainerEl,
 			settings: this.pluginSettings || {},
@@ -356,46 +358,10 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 
 	private buildShareableUrl() {
-		let content = this.chronosMarkdown ?? "";
-		// Remove all wikilinks ([[...]]) from the markdown for the shareable link
-		content = content.replace(/\[\[.*?\]\]/g, "").trim();
-		// For each line, if it ends with | and only whitespace, remove the pipe and whitespace
-		content = content
-			.split("\n")
-			.map((line) => line.replace(/\|\s*$/, ""))
-			.join("\n");
-		const locale = this.pluginSettings.selectedLocale;
-
-		// Start from the current origin+pathname and build query params fresh
-		const url = new URL(CHRONOS_PLAYGROUND_BASE_URL);
-		url.search = "";
-
-		if (content && content.trim()) {
-			try {
-				const raw = content;
-
-				// if compression is available, always attempt to compress it for shorter URLs.
-				if (LZString && LZString.compressToEncodedURIComponent) {
-					const compressed =
-						LZString.compressToEncodedURIComponent(raw);
-					// Use compressed value expected by playground
-					// https://github.com/clairefro/chronos-timeline-md/blob/1b9dded9432d6bb11d0538e8bb023b0843f64299/index.html#L1691
-					url.searchParams.set("content", compressed);
-					url.searchParams.set("c", "1");
-				} else {
-					url.searchParams.set("content", raw);
-				}
-			} catch {
-				// On any error, fall back to raw content
-				url.searchParams.set("content", content);
-			}
-		}
-
-		if (locale && locale !== "en") {
-			url.searchParams.set("locale", locale);
-		}
-
-		return url.toString();
+		return buildPlaygroundUrl(
+			this.chronosMarkdown ?? "",
+			this.pluginSettings.selectedLocale,
+		);
 	}
 }
 

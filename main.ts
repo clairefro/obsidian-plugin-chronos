@@ -59,6 +59,7 @@ const ChronosTimeline: any =
 // chronos-lint-ignore-end
 
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
+import { attachTimelineMenu } from "./util/timelineMenu";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
 
 // Debug: uncomment to inspect what was loaded if needed
@@ -569,6 +570,8 @@ export default class ChronosPlugin extends Plugin {
 			},
 			true,
 		);
+
+		attachTimelineMenu(container, () => source, this.settings);
 
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
