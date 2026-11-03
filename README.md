@@ -813,7 +813,7 @@ description?    (Optional)
 
 Ambiguous dates like `03/04/2026` (day or month first?) are not guessed. Use `YYYY-MM-DD` for those.
 
-Notes with a value that can't be read (for example `start: abc`, or an `end` before the `start`) are skipped so the rest of your timeline still shows. A notice names the properties with problems, and the console lists the affected notes.
+Notes with a value that can't be read (for example `start: abc`, or an `end` before the `start`) are skipped so the rest of your timeline still shows. A collapsed warning above the timeline shows how many notes were skipped. Expand it to see each note (click to open it) and the value that couldn't be read. It updates automatically as you fix your notes.
 
 ## Bases: Changing property sources
 

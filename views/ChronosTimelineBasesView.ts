@@ -61,8 +61,9 @@ export class ChronosTimelineBasesView extends BasesView {
 	// The last generated Chronos markdown text. If undefined, none has been generated yet.
 	private chronosMarkdown?: string;
 
-	// Identifies the last invalid-value notice shown, so we don't repeat it on every data update.
-	private lastInvalidNoticeKey?: string;
+	private warningEl: HTMLDivElement;
+	// Identifies the warning last rendered, so the list (and its open state) isn't rebuilt needlessly.
+	private lastWarningKey?: string;
 
 	private resultsEl: HTMLDivElement;
 
@@ -79,6 +80,7 @@ export class ChronosTimelineBasesView extends BasesView {
 
 		const containerEl = parentEl.createDiv("chronos-bases-view-container");
 		this.resultsEl = containerEl.createDiv();
+		this.warningEl = containerEl.createDiv();
 
 		ChronosTimelineBasesView.instances.add(this);
 	}
@@ -130,6 +132,7 @@ export class ChronosTimelineBasesView extends BasesView {
 			return groupEntries.entries.map((entry) => {
 				const fileName =
 					getValueAsString(entry, "file.name") || "Untitled";
+				const filePath = entry.file.path;
 
 				/** automatically postpend a wikilink to this note so users can click to open */
 				const descriptionRaw = this.lookupProperty(
@@ -154,42 +157,79 @@ export class ChronosTimelineBasesView extends BasesView {
 					type: normalizeType(this.lookupProperty(entry, "type")),
 					description,
 					fileName,
+					filePath,
 				};
 			});
 		});
 
 		const { markdown, invalid } = chronosItemsToMarkdown(items);
-		this.noticeInvalidItems(invalid);
+		this.renderInvalidWarning(invalid);
 		this.renderResults(markdown);
 	}
 
-	/** Tell the user which properties had invalid values, once per distinct set of problems. */
-	private noticeInvalidItems(invalid: InvalidItem[]) {
-		if (invalid.length === 0) {
-			this.lastInvalidNoticeKey = undefined;
-			return;
-		}
-
-		const fields = new Set<DateField>(invalid.flatMap((i) => i.fields));
+	/** Collapsible banner above the timeline listing notes skipped for invalid date values. */
+	private renderInvalidWarning(invalid: InvalidItem[]) {
 		const key = invalid
-			.map((i) => `${i.fileName}:${i.fields.join(",")}`)
+			.map(
+				(i) =>
+					`${i.filePath}:${i.fields.join(",")}:${i.start}:${i.end}`,
+			)
 			.join("|");
-		if (key === this.lastInvalidNoticeKey) return;
-		this.lastInvalidNoticeKey = key;
+		if (key === this.lastWarningKey) return;
+		this.lastWarningKey = key;
 
-		const propNames = [...fields].map(
+		this.warningEl.empty();
+		if (invalid.length === 0) return;
+
+		const MAX_LISTED = 50;
+		const count = invalid.length;
+		const propNames = [...new Set(invalid.flatMap((i) => i.fields))].map(
 			(field) => this.propertyDisplayName(field) ?? field,
 		);
-		const count = invalid.length;
-		console.warn(
-			"[Chronos] Notes skipped in Bases view (invalid date values):",
-			invalid.map((i) => `${i.fileName} (${i.fields.join(", ")})`),
+
+		const details = this.warningEl.createEl("details", {
+			cls: "chronos-bases-warning",
+		});
+		const summary = details.createEl("summary");
+		setIcon(
+			summary.createSpan({ cls: "chronos-bases-warning-icon" }),
+			"alert-triangle",
 		);
-		new Notice(
-			`Chronos Timeline skipped ${count} ${count === 1 ? "note" : "notes"} with invalid values for: ${propNames.join(", ")}. ` +
-				"Use dates like YYYY, YYYY-MM or YYYY-MM-DD.",
-			10000,
-		);
+		summary.createSpan({
+			text: `${count} ${count === 1 ? "note" : "notes"} skipped: invalid ${propNames.join("/")} value`,
+		});
+
+		details.createEl("p", {
+			cls: "chronos-bases-warning-hint",
+			text: "Use dates like YYYY, YYYY-MM or YYYY-MM-DD. Fix these notes and they will appear automatically.",
+		});
+
+		const list = details.createEl("ul");
+		for (const item of invalid.slice(0, MAX_LISTED)) {
+			const li = list.createEl("li");
+			const link = li.createEl("a", {
+				text: item.fileName,
+				cls: "chronos-bases-warning-link",
+			});
+			link.onclick = (e) => {
+				e.preventDefault();
+				void this.app.workspace.openLinkText(item.filePath, "", false);
+			};
+			const values = item.fields
+				.filter((f, idx, arr) => arr.indexOf(f) === idx)
+				.map((f) => {
+					const name = this.propertyDisplayName(f) ?? f;
+					const value = f === "start" ? item.start : item.end;
+					return `${name}: "${value ?? ""}"`;
+				});
+			li.createSpan({
+				cls: "chronos-bases-warning-values",
+				text: ` ${values.join(", ")}`,
+			});
+		}
+		if (count > MAX_LISTED) {
+			list.createEl("li", { text: `…and ${count - MAX_LISTED} more` });
+		}
 	}
 
 	private propertyDisplayName(prop: ItemPropertyName): string | undefined {
@@ -551,7 +591,10 @@ function getValueAsString(
 
 interface InvalidItem {
 	fileName: string;
+	filePath: string;
 	fields: DateField[];
+	start: string;
+	end?: string;
 }
 
 // Convert item objects to Chronos markdown string, collecting items with invalid dates
@@ -565,6 +608,7 @@ function chronosItemsToMarkdown(
 		type?: string;
 		description?: string;
 		fileName?: string;
+		filePath?: string;
 	}[],
 ): { markdown: string; invalid: InvalidItem[] } {
 	let lines = [];
@@ -601,7 +645,10 @@ function chronosItemsToMarkdown(
 		if (invalidFields.length > 0) {
 			invalid.push({
 				fileName: item.fileName ?? "Untitled",
+				filePath: item.filePath ?? "",
 				fields: invalidFields,
+				start: item.start,
+				end: item.end,
 			});
 			continue;
 		}

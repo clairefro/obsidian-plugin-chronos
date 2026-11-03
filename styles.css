@@ -697,3 +697,40 @@
 	height: 1px;
 	pointer-events: none;
 }
+
+/* Bases view: skipped-notes warning */
+.chronos-bases-warning {
+	margin-top: var(--size-4-2);
+	padding: var(--size-4-1) var(--size-4-2);
+	border: 1px solid var(--background-modifier-border);
+	border-left: 3px solid var(--text-warning);
+	border-radius: var(--radius-s);
+	background-color: var(--background-secondary);
+	font-size: var(--font-ui-small);
+}
+.chronos-bases-warning summary {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-1);
+	cursor: pointer;
+	color: var(--text-warning);
+}
+.chronos-bases-warning-icon {
+	display: inline-flex;
+}
+.chronos-bases-warning-icon svg {
+	width: var(--icon-s);
+	height: var(--icon-s);
+}
+.chronos-bases-warning-hint {
+	margin: var(--size-4-1) 0;
+	color: var(--text-muted);
+}
+.chronos-bases-warning ul {
+	max-height: 200px;
+	margin: 0;
+	overflow-y: auto;
+}
+.chronos-bases-warning-values {
+	color: var(--text-muted);
+}
