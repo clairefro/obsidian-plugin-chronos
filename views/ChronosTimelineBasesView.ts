@@ -21,6 +21,7 @@ import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
 import { obsidianTooltip } from "../util/obsidianTooltip";
 import { applyGapSetting } from "../util/applyGapSetting";
+import { DateField, findInvalidDateFields } from "../util/validateItemDates";
 type ChronosTimelineCtor = typeof ChronosLib.ChronosTimeline;
 const chronosLibExports = ChronosLib as unknown as {
 	ChronosTimeline?: ChronosTimelineCtor;
@@ -55,6 +56,9 @@ export class ChronosTimelineBasesView extends BasesView {
 
 	// The last generated Chronos markdown text. If undefined, none has been generated yet.
 	private chronosMarkdown?: string;
+
+	// Identifies the last invalid-value notice shown, so we don't repeat it on every data update.
+	private lastInvalidNoticeKey?: string;
 
 	private resultsEl: HTMLDivElement;
 
@@ -145,11 +149,49 @@ export class ChronosTimelineBasesView extends BasesView {
 					color: normalizeColor(this.lookupProperty(entry, "color")),
 					type: normalizeType(this.lookupProperty(entry, "type")),
 					description,
+					fileName,
 				};
 			});
 		});
 
-		this.renderResults(chronosItemsToMarkdown(items));
+		const { markdown, invalid } = chronosItemsToMarkdown(items);
+		this.noticeInvalidItems(invalid);
+		this.renderResults(markdown);
+	}
+
+	/** Tell the user which properties had invalid values, once per distinct set of problems. */
+	private noticeInvalidItems(invalid: InvalidItem[]) {
+		if (invalid.length === 0) {
+			this.lastInvalidNoticeKey = undefined;
+			return;
+		}
+
+		const fields = new Set<DateField>(invalid.flatMap((i) => i.fields));
+		const key = invalid
+			.map((i) => `${i.fileName}:${i.fields.join(",")}`)
+			.join("|");
+		if (key === this.lastInvalidNoticeKey) return;
+		this.lastInvalidNoticeKey = key;
+
+		const propNames = [...fields].map(
+			(field) => this.propertyDisplayName(field) ?? field,
+		);
+		const count = invalid.length;
+		console.warn(
+			"[Chronos] Notes skipped in Bases view (invalid date values):",
+			invalid.map((i) => `${i.fileName} (${i.fields.join(", ")})`),
+		);
+		new Notice(
+			`Chronos Timeline skipped ${count} ${count === 1 ? "note" : "notes"} with invalid values for: ${propNames.join(", ")}. ` +
+				"Use dates like YYYY, YYYY-MM or YYYY-MM-DD.",
+			10000,
+		);
+	}
+
+	private propertyDisplayName(prop: ItemPropertyName): string | undefined {
+		const propId = this.config.getAsPropertyId(configKey(prop));
+		// property ids look like "note.start" or "formula.myStart"
+		return propId?.split(".").slice(1).join(".") || undefined;
 	}
 
 	private renderResults(newChronosMarkdown: string) {
@@ -503,7 +545,12 @@ function getValueAsString(
 			: val.toString().trim();
 }
 
-// Convert item object to Chronos markdown string
+interface InvalidItem {
+	fileName: string;
+	fields: DateField[];
+}
+
+// Convert item objects to Chronos markdown string, collecting items with invalid dates
 function chronosItemsToMarkdown(
 	items: {
 		start?: string;
@@ -513,9 +560,11 @@ function chronosItemsToMarkdown(
 		color?: string;
 		type?: string;
 		description?: string;
+		fileName?: string;
 	}[],
-): string {
+): { markdown: string; invalid: InvalidItem[] } {
 	let lines = [];
+	const invalid: InvalidItem[] = [];
 	for (const item of items) {
 		const { start, end, group, content, color, type, description } = item;
 
@@ -537,7 +586,19 @@ function chronosItemsToMarkdown(
 		// default (no valid type): event if ranged (end date or ongoing), else point
 		const resolvedType =
 			type && TYPES[type] ? type : end || isOngoing ? "event" : "point";
-		let line = `${TYPES[resolvedType]} [${end && isOngoing ? start.trim().slice(0, -1) : start}`;
+		const startValue = end && isOngoing ? start.trim().slice(0, -1) : start;
+
+		// skip notes with invalid dates instead of breaking the whole timeline
+		const invalidFields = findInvalidDateFields(startValue, end);
+		if (invalidFields.length > 0) {
+			invalid.push({
+				fileName: item.fileName ?? "Untitled",
+				fields: invalidFields,
+			});
+			continue;
+		}
+
+		let line = `${TYPES[resolvedType]} [${startValue}`;
 		if (end) line += `~${end}`;
 		line += "]";
 		if (color) line += ` #${color} `;
@@ -550,7 +611,7 @@ function chronosItemsToMarkdown(
 	if (lines.length > 15) {
 		lines = ["> HEIGHT 500\n", ...lines];
 	}
-	return lines.join("\n");
+	return { markdown: lines.join("\n"), invalid };
 }
 
 function normalizeColor(color: string | undefined): string | undefined {
