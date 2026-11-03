@@ -1,11 +1,15 @@
-import { TFile, TFolder } from "obsidian";
+import { Plugin, TFile, TFolder } from "obsidian";
 import {
 	DETECTION_PATTERN_TEXT,
 	DETECTION_PATTERN_CODEBLOCK,
 } from "../constants";
 
+interface PluginManager {
+	getPluginFolder(id: string): string;
+}
+
 export class CacheUtils {
-	plugin: any; // Chronos Plugin - avoiding importing type due to circular import
+	plugin: Plugin; // avoiding importing the Chronos plugin type due to circular import
 	pluginsDir: string;
 	pluginDir: string;
 	cachePath: string;
@@ -13,11 +17,12 @@ export class CacheUtils {
 	folderChronosCache = new Map<string, number>();
 	cacheInitialized = false;
 
-	constructor(plugin: any) {
+	constructor(plugin: Plugin) {
 		this.plugin = plugin;
-		this.pluginsDir = this.plugin.app.plugins.getPluginFolder(
-			this.plugin.manifest.id,
-		);
+		const plugins = (
+			this.plugin.app as unknown as { plugins: PluginManager }
+		).plugins;
+		this.pluginsDir = plugins.getPluginFolder(this.plugin.manifest.id);
 		this.pluginDir = `${this.pluginsDir}/${this.plugin.manifest.id}`;
 		this.cachePath = `${this.pluginDir}/cache.json`;
 	}
@@ -31,16 +36,21 @@ export class CacheUtils {
 			this.fileChronosCache = new Map(parsed.fileChronosCache || []);
 			this.folderChronosCache = new Map(parsed.folderChronosCache || []);
 			this.cacheInitialized = true;
-		} catch (error) {
+		} catch {
 			await this.initializeFolderCache();
 		}
 	}
 
 	async saveCache(): Promise<void> {
 		try {
-			await this.plugin.app.vault.adapter.mkdir(this.pluginDir, {
-				recursive: true,
-			});
+			// Obsidian's typings only declare one argument; keep the original recursive call
+			const adapter = this.plugin.app.vault.adapter as unknown as {
+				mkdir(
+					path: string,
+					options?: { recursive: boolean },
+				): Promise<void>;
+			};
+			await adapter.mkdir(this.pluginDir, { recursive: true });
 
 			const dataToSave = {
 				fileChronosCache: Array.from(
@@ -62,8 +72,7 @@ export class CacheUtils {
 	async deleteCache(): Promise<void> {
 		try {
 			await this.plugin.app.vault.adapter.remove(this.cachePath);
-			console.log("[Chronos] Cache file deleted");
-		} catch (error) {
+		} catch {
 			// Silently fail if file doesn't exist
 		}
 	}
@@ -71,18 +80,14 @@ export class CacheUtils {
 	async initializeFolderCache(): Promise<void> {
 		if (this.cacheInitialized) return;
 
-		console.log("[Chronos] Initializing cache...");
-
 		// Cache individual file counts
 		const allFiles = this.plugin.app.vault
 			.getMarkdownFiles()
 			.filter((file: TFile) => this.shouldIndexFile(file));
 
-		let totalItems = 0;
 		for (const file of allFiles) {
 			const count = await this.countChronosInFile(file);
 			this.fileChronosCache.set(file.path, count);
-			totalItems += count;
 		}
 
 		// Cache folder counts (recursive)
@@ -91,13 +96,6 @@ export class CacheUtils {
 			const count = await this.folderContainsChronos(folder);
 			this.folderChronosCache.set(folder.path, count);
 		}
-
-		const foldersWithItems = Array.from(
-			this.folderChronosCache.values(),
-		).filter((count) => count > 0).length;
-		console.log(
-			`[Chronos] Cached ${totalItems} chronos items in ${foldersWithItems} folders`,
-		);
 
 		this.cacheInitialized = true;
 		await this.saveCache(); // Save cache after initialization
@@ -133,7 +131,7 @@ export class CacheUtils {
 			}
 		} catch (error) {
 			console.error(
-				`[ERROR] Failed to read file ${file.path}: ${error.message}`,
+				`[ERROR] Failed to read file ${file.path}: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
 		return count;
@@ -142,8 +140,8 @@ export class CacheUtils {
 	async folderContainsChronos(folder: TFolder): Promise<number> {
 		let totalCount = 0;
 		const children = folder.children.filter(
-			(file) => file instanceof TFile,
-		) as TFile[];
+			(file): file is TFile => file instanceof TFile,
+		);
 
 		for (const file of children) {
 			try {
@@ -151,14 +149,14 @@ export class CacheUtils {
 				totalCount += count;
 			} catch (error) {
 				console.error(
-					`[ERROR] Failed to count items in file ${file.path}: ${error.message}`,
+					`[ERROR] Failed to count items in file ${file.path}: ${error instanceof Error ? error.message : String(error)}`,
 				);
 			}
 		}
 
 		const childFolders = folder.children.filter(
-			(child) => child instanceof TFolder,
-		) as TFolder[];
+			(child): child is TFolder => child instanceof TFolder,
+		);
 
 		for (const childFolder of childFolders) {
 			const childCount = await this.folderContainsChronos(childFolder);
@@ -171,7 +169,7 @@ export class CacheUtils {
 	invalidateFolderCache(folder: TFolder | null): void {
 		if (!folder) return;
 		// Use delta-based update instead of full rescan
-		this.updateFolderCacheWithDelta(folder);
+		void this.updateFolderCacheWithDelta(folder);
 	}
 
 	async updateFolderCacheWithDelta(folder: TFolder | null): Promise<void> {
@@ -180,8 +178,9 @@ export class CacheUtils {
 		// Calculate total delta for all files in this folder
 		let totalDelta = 0;
 		const files = folder.children.filter(
-			(child) => child instanceof TFile && child.extension === "md",
-		) as TFile[];
+			(child): child is TFile =>
+				child instanceof TFile && child.extension === "md",
+		);
 
 		for (const file of files) {
 			const oldCount = this.fileChronosCache.get(file.path) || 0;
@@ -212,8 +211,9 @@ export class CacheUtils {
 	async updateFolderCache(folder: TFolder): Promise<void> {
 		// Update file cache for all files in the folder
 		const files = folder.children.filter(
-			(child) => child instanceof TFile && child.extension === "md",
-		) as TFile[];
+			(child): child is TFile =>
+				child instanceof TFile && child.extension === "md",
+		);
 
 		for (const file of files) {
 			const count = await this.countChronosInFile(file);
@@ -222,8 +222,8 @@ export class CacheUtils {
 
 		// Update folder cache recursively
 		const childFolders = folder.children.filter(
-			(child) => child instanceof TFolder,
-		) as TFolder[];
+			(child): child is TFolder => child instanceof TFolder,
+		);
 
 		let totalCount = 0;
 		for (const childFolder of childFolders) {

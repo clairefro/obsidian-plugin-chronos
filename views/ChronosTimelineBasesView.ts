@@ -19,10 +19,17 @@ import {
 } from "../constants";
 import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
-const ChronosTimeline: any =
-	(ChronosLib as any).ChronosTimeline ??
-	(ChronosLib as any).default ??
-	(ChronosLib as any);
+import { obsidianTooltip } from "../util/obsidianTooltip";
+import { applyGapSetting } from "../util/applyGapSetting";
+type ChronosTimelineCtor = typeof ChronosLib.ChronosTimeline;
+const chronosLibExports = ChronosLib as unknown as {
+	ChronosTimeline?: ChronosTimelineCtor;
+	default?: ChronosTimelineCtor;
+};
+const ChronosTimeline: ChronosTimelineCtor =
+	chronosLibExports.ChronosTimeline ??
+	chronosLibExports.default ??
+	(ChronosLib as unknown as ChronosTimelineCtor);
 import { FileUtils } from "../util/FileUtils";
 import { wireSharedTimelineInteractions } from "../util/wireSharedTimelineInteractions";
 
@@ -30,10 +37,26 @@ export class ChronosTimelineBasesView extends BasesView {
 	//  unique ID that appears in the "Add View" menu
 	static VIEW_TYPE = "chronos-timeline-view";
 	type: string = ChronosTimelineBasesView.VIEW_TYPE;
-	private containerEl: HTMLElement;
+	private static instances = new Set<ChronosTimelineBasesView>();
+
+	/** Re-render all open Bases timelines, e.g. after plugin settings change. */
+	static refreshAll() {
+		for (const view of ChronosTimelineBasesView.instances) {
+			try {
+				view.refresh();
+			} catch (e) {
+				console.error("[Chronos] Failed to refresh Bases view", e);
+			}
+		}
+	}
+
 	private pluginSettings: ChronosPluginSettings;
-	private chronosMarkdown: string = "";
 	private fileUtils: FileUtils;
+
+	// The last generated Chronos markdown text. If undefined, none has been generated yet.
+	private chronosMarkdown?: string;
+
+	private resultsEl: HTMLDivElement;
 
 	constructor(
 		controller: QueryController,
@@ -41,10 +64,24 @@ export class ChronosTimelineBasesView extends BasesView {
 		pluginSettings: ChronosPluginSettings,
 	) {
 		super(controller);
-		this.containerEl = parentEl.createDiv("chronos-bases-view-container");
 		this.pluginSettings = pluginSettings;
+
 		// FileUtils instance for note linking
 		this.fileUtils = new FileUtils({ app: this.app });
+
+		const containerEl = parentEl.createDiv("chronos-bases-view-container");
+		this.resultsEl = containerEl.createDiv();
+
+		ChronosTimelineBasesView.instances.add(this);
+	}
+
+	onunload() {
+		ChronosTimelineBasesView.instances.delete(this);
+	}
+
+	private refresh() {
+		this.chronosMarkdown = undefined;
+		this.onDataUpdated();
 	}
 
 	public onDataUpdated(): void {
@@ -68,26 +105,6 @@ export class ChronosTimelineBasesView extends BasesView {
 		// so it shouldn't have significant impact on performance despite being
 		// called each time data is updated.
 		initializeViewOptions(this.pluginSettings, this.config);
-
-		// refresh state
-		this.chronosMarkdown = "";
-		this.containerEl.empty();
-
-		// conditionally add styling for sidebar presentation
-		const isSidebar = this.containerEl.closest(
-			".mod-right-split, .mod-left-split",
-		);
-		if (isSidebar) {
-			this.containerEl.addClass("chronos-sidebar");
-		} else {
-			this.containerEl.removeClass("chronos-sidebar");
-		}
-
-		// show helpful message if results are empty
-		if (!this.data || !this.data.data || this.data.data.length === 0) {
-			this.renderInstructionsOnEmptyResults();
-			return;
-		}
 
 		const items = this.data.groupedData.flatMap((groupEntries) => {
 			// NOTE:
@@ -132,21 +149,49 @@ export class ChronosTimelineBasesView extends BasesView {
 			});
 		});
 
-		this.chronosMarkdown = chronosItemsToMarkdown(items);
-		if (!this.chronosMarkdown.length) {
-			this.renderInstructionsOnEmptyResults();
+		this.renderResults(chronosItemsToMarkdown(items));
+	}
+
+	private renderResults(newChronosMarkdown: string) {
+		// If there aren't any updates that affected the markdown, we don't need to change anything.
+		if (newChronosMarkdown === this.chronosMarkdown) {
+			return;
+		}
+		this.chronosMarkdown = newChronosMarkdown;
+
+		// Otherwise, we need to rebuild the view.
+		this.resultsEl.empty();
+
+		// If the results are empty now, display a helpful message communicating that.
+		if (newChronosMarkdown === "") {
+			this.resultsEl.createDiv({
+				cls: "chronos-empty-message",
+				text: "No results found!",
+			});
+
+			this.resultsEl.createEl("p", {
+				text:
+					"To enable timeline views, you must have at least one note with a " +
+					"valid value (YYYY, YYYY-MM, YYYY-MM-DD...) for Start Date in Item Property Sources.",
+			});
+
+			this.renderInstructions();
+
 			return;
 		}
 
-		const timelineContainerEl = this.containerEl.createDiv(
+		// Otherwise, render the Chronos Timeline.
+		const timelineContainerEl = this.resultsEl.createDiv(
 			"chronos-bases-view-timeline-container",
 		);
 		const timeline = new ChronosTimeline({
 			container: timelineContainerEl,
 			settings: this.pluginSettings || {},
+			callbacks: { setTooltip: obsidianTooltip },
 		});
 
 		timeline.render(this.chronosMarkdown);
+		applyGapSetting(timeline, this.chronosMarkdown, this.pluginSettings);
 		// DRY: wire up note linking and hover preview
 		wireSharedTimelineInteractions(
 			timeline,
@@ -173,23 +218,23 @@ export class ChronosTimelineBasesView extends BasesView {
 	}
 
 	private renderCopyButton() {
-		const copyBtn = this.containerEl.createEl("button", {
+		const copyBtn = this.resultsEl.createEl("button", {
 			cls: "chronos-bases-view-copy-btn",
 		});
 		setTooltip(copyBtn, "Copy timeline markdown");
 		setIcon(copyBtn, "copy");
 		copyBtn.onclick = async () => {
 			try {
-				await navigator.clipboard.writeText(this.chronosMarkdown);
+				await navigator.clipboard.writeText(this.chronosMarkdown ?? "");
 				new Notice("Timeline markdown copied!");
-			} catch (e) {
+			} catch {
 				new Notice("Failed to copy timeline markdown");
 			}
 		};
 	}
 
 	private renderShareButton() {
-		const shareBtn = this.containerEl.createEl("button", {
+		const shareBtn = this.resultsEl.createEl("button", {
 			cls: "chronos-bases-view-share-btn",
 		});
 		setTooltip(shareBtn, "Copy shareable public link");
@@ -199,112 +244,29 @@ export class ChronosTimelineBasesView extends BasesView {
 				const url = this.buildShareableUrl();
 				await navigator.clipboard.writeText(url);
 				new Notice("Shareable public link copied to clipboard!");
-			} catch (e) {
+			} catch {
 				new Notice("Failed to create shareable link");
 			}
 		};
 	}
 
-	private renderInstructionsOnEmptyResults() {
-		this.containerEl.empty();
-		this.containerEl.createDiv({
-			cls: "chronos-empty-message",
-			text: "No results found!",
-		});
-
-		const instructionsDiv = this.containerEl.createDiv({
+	// Help text and link, shown only when no timeline is rendered.
+	private renderInstructions() {
+		const instructionsDiv = this.resultsEl.createDiv({
 			cls: "chronos-instructions",
 		});
 
-		instructionsDiv.createEl("p", {
-			text:
-				"To enable timeline views, you must have at least one note with a " +
-				"valid value for Start Date.",
-		});
-
-		// Split the sentence to insert <code>---</code> in the right place safely.
-		instructionsDiv.createEl("p").append(
-			"To select the source for these values, edit the View settings. ",
-			"To add frontmatter properties to your notes, you can type ",
-			(() => {
-				const code = document.createElement("code");
-				code.textContent = "---";
-				return code;
-			})(),
-			' on an empty line at the top of a note, or click "Add file property" ',
-			"in the note's triple dot menu. You may also use Base formulas.",
-		);
-
-		instructionsDiv.createEl("p", { text: "Available event properties:" });
-
-		const table = instructionsDiv.createEl("table");
-		table.style.width = "100%";
-		table.style.borderCollapse = "collapse";
-
-		const headerRow = table.createEl("thead").createEl("tr");
-		for (const header of [
-			"Property",
-			"Current Source",
-			"Required?",
-			"Notes",
-		]) {
-			const th = headerRow.createEl("th", { text: header });
-			th.style.textAlign = "left";
-			th.style.padding = "0.25em";
-		}
-
-		const tbody = table.createEl("tbody");
-		for (const propName of itemPropertyNames) {
-			const tr = tbody.createEl("tr");
-			// Display Name
-			{
-				const td = tr.createEl("td", {
-					text: eventProps[propName].displayName,
-				});
-				td.style.padding = "0.25em";
-			}
-			// Currently Selected Property
-			{
-				const td = tr.createEl("td");
-				td.style.padding = "0.25em";
-
-				const propId = this.config.getAsPropertyId(configKey(propName));
-				if (propId) {
-					td.textContent = this.config.getDisplayName(propId);
-				} else {
-					const i = td.createEl("i", { text: "(None Selected)" });
-					i.style.color = "var(--text-muted)";
-					i.style.fontSize = "smaller";
-				}
-			}
-			// Required status
-			{
-				const td = tr.createEl("td", {
-					text: eventProps[propName].required,
-				});
-				td.style.padding = "0.25em";
-			}
-			// Notes
-			{
-				const td = tr.createEl("td", {
-					text: eventProps[propName].notes,
-				});
-				td.style.padding = "0.25em";
-			}
-		}
-
 		const link = instructionsDiv.createEl("a", {
+			cls: "chronos-instructions-link",
 			text: "Learn more about Chronos Timeline Bases view",
 			href: "https://github.com/clairefro/obsidian-plugin-chronos?tab=readme-ov-file#obsidian-bases-view",
 		});
 		link.target = "_blank";
 		link.rel = "noopener noreferrer";
-		link.style.display = "block";
-		link.style.marginTop = "0.5em";
 	}
 
 	private buildShareableUrl() {
-		let content = this.chronosMarkdown;
+		let content = this.chronosMarkdown ?? "";
 		// Remove all wikilinks ([[...]]) from the markdown for the shareable link
 		content = content.replace(/\[\[.*?\]\]/g, "").trim();
 		// For each line, if it ends with | and only whitespace, remove the pipe and whitespace
@@ -333,7 +295,7 @@ export class ChronosTimelineBasesView extends BasesView {
 				} else {
 					url.searchParams.set("content", raw);
 				}
-			} catch (e) {
+			} catch {
 				// On any error, fall back to raw content
 				url.searchParams.set("content", content);
 			}
@@ -361,7 +323,7 @@ export const itemPropertyNames = [
 
 export type ItemPropertyName = (typeof itemPropertyNames)[number];
 
-export const eventProps = {
+export const itemProps = {
 	start: {
 		displayName: "Start Date",
 		required: "Required",
@@ -373,9 +335,9 @@ export const eventProps = {
 		notes: "YYYY-MM-DD format.",
 	},
 	type: {
-		displayName: "Event Type",
+		displayName: "Item Type",
 		required: "Recommended",
-		notes: "Options: event (default), period, marker, point.",
+		notes: "Options: event, period, marker, point. Defaults to point, or event if there is an end date or start ends with ~ (ongoing).",
 	},
 	color: {
 		displayName: "Color",
@@ -447,9 +409,9 @@ function initializeViewOptions(
 		// If we found none of the default properties, this is probably a new View.
 		// Let's initialize it.
 		if (Object.values(selectedProps).every((val) => val === undefined)) {
-			console.info(
-				"[Chronos] New View detected. Configuring with default property sources.",
-			);
+			// console.info(
+			// 	"[Chronos] New View detected. Configuring with default property sources.",
+			// );
 			const propNames = getDefaultPropNames(
 				pluginSettings.basesPropNames,
 			);
@@ -459,10 +421,10 @@ function initializeViewOptions(
 		}
 		// Otherwise, this is probably a legacy View. Let's port the old settings over.
 		else {
-			console.info("[Chronos] Legacy View detected. Porting settings.");
-			for (const prop of itemPropertyNames) {
-				viewConfig.set(configKey(prop), selectedProps[prop]);
-			}
+			// console.info("[Chronos] Legacy View detected. Porting settings.");
+			// for (const prop of itemPropertyNames) {
+			// 	viewConfig.set(configKey(prop), selectedProps[prop]);
+			// }
 		}
 
 		// Set the schema to a defined value so that we don't keep doing this.
@@ -487,8 +449,8 @@ export function generateViewOptions(
 				return {
 					key: configKey(prop),
 					type: "property",
-					displayName: eventProps[prop].displayName,
-					placeholder: eventProps[prop].required.toLowerCase(),
+					displayName: itemProps[prop].displayName,
+					placeholder: itemProps[prop].required.toLowerCase(),
 				};
 			}),
 		},
@@ -569,17 +531,19 @@ function chronosItemsToMarkdown(
 			marker: "=",
 		};
 
-		// default to event if no type present
-		let line = `${type && TYPES[type] ? TYPES[type] : "-"} [${start}`;
+		// a trailing tilde on start (ex: "2020~") means ongoing to present
+		const isOngoing = start.trim().endsWith("~");
+
+		// default (no valid type): event if ranged (end date or ongoing), else point
+		const resolvedType =
+			type && TYPES[type] ? type : end || isOngoing ? "event" : "point";
+		let line = `${TYPES[resolvedType]} [${end && isOngoing ? start.trim().slice(0, -1) : start}`;
 		if (end) line += `~${end}`;
 		line += "]";
 		if (color) line += ` #${color} `;
 		if (group) line += ` {${group}} `;
 		if (content) line += ` ${content}`;
-		if (
-			(type === undefined || type === "point" || type === "event") &&
-			description
-		)
+		if (resolvedType !== "marker" && description)
 			line += ` | ${description}`;
 		lines.push(line);
 	}

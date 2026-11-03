@@ -6,13 +6,13 @@ Powered by [chronos-timeline-md](https://github.com/clairefro/chronos-timeline-m
 
 Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 
-<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/46adc9ad-338e-4215-811e-d39b230a5b7a" />
+<img alt="Image" src="./docs/chronos-bases-group-by.gif" />
 
-<img width="710" height="334" alt="Image" src="https://github.com/user-attachments/assets/26cb7bba-34f3-4f89-a189-ab69a8181f6f" />
+<img alt="Image" src="./docs/chronos-olympic-games.png" />
 
 ![demo](./docs/ex-main-demo.gif)
 
-<a href="https://www.buymeacoffee.com/clairefro"><img src="https://github.com/user-attachments/assets/70fdf577-2e0c-41ed-a061-923947e848bb" width="250px" /></a>
+<a href="https://www.buymeacoffee.com/clairefro"><img src="./docs/image-10.png" /></a>
 
 ## Features
 
@@ -39,7 +39,7 @@ Create timelines in your notes by opening a `chronos` codeblock and adding items
 ```
 ````
 
-<img width="707" height="243" alt="Image" src="https://github.com/user-attachments/assets/da49b763-2c48-4aec-8f68-3f49a5df8783" />
+<img src="./docs/chronos-revolutions.png/>
 
 You can insert blank, basic, or advanced templates using the Command Pallete (`ctrl/cmd` + `p`, "Chronos")
 
@@ -57,7 +57,7 @@ While editing inside a Chronos code block, use **Insert snippet** to add a point
 
 You can click the button or press `Mod+Shift+Enter` (`Ctrl+Shift+Enter` on Windows/Linux, `Cmd+Shift+Enter` on macOS). This shortcut works only inside a Chronos code block; `Tab` keeps Obsidian's normal indentation behavior.
 
-<img width="693" height="587" alt="Image" src="https://github.com/user-attachments/assets/33974d95-7f14-4f1b-81cb-a53bcb9dcda9" />
+<img alt="Image" src="./docs/chronos-insert-snippet.png" />
 
 ### Generate timeline with AI
 
@@ -146,8 +146,17 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
     - [Comments `#`](#comments-)
     - [Flags `>`](#flags-)
         - [ORDERBY flag](#orderby-flag)
-        - [DEFAULTVIEW flag](#defaultview-flag)
             - [Example](#example)
+        - [DEFAULTVIEW flag](#defaultview-flag)
+        - [GAP flag](#gap-flag)
+        - [AXIS flag](#axis-flag)
+        - [Display setting flags](#display-setting-flags)
+            - [ROUNDED flag](#rounded-flag)
+            - [TRANSLUCENT flag](#translucent-flag)
+            - [OVERFLOWTITLES flag](#overflowtitles-flag)
+            - [UTC flag](#utc-flag)
+            - [ALIGN flag](#align-flag)
+            - [Combining display flags](#combining-display-flags)
     - [Modifiers](#modifiers)
         - [Colors `#color`](#colors-color)
         - [Groups `{}`](#groups-)
@@ -157,6 +166,7 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
 - [Actions](#actions)
     - [Edit](#edit)
     - [Refit](#refit)
+- [Display settings](#display-settings)
 - [Localization](#localization)
 
 # Syntax Overview
@@ -254,7 +264,7 @@ Only `[Date]` is required. If no `Event Name` is provided, the event title will 
 ```
 ````
 
-![single date event example](./docs/ex-event-single.png)
+![alt text](./docs/image-11.png)
 
 ### Events with start and end dates
 
@@ -274,7 +284,7 @@ A date range is represented with a tilde (`~`) between the start and end dates.
 ```
 ````
 
-![event with range example](./docs/ex-event-range.png)
+![alt text](./docs/image-12.png)
 
 ### Events with descriptions
 
@@ -288,7 +298,7 @@ You can add additional information to an event by adding a pipe `|` after the Ev
 ```
 ````
 
-![event with range example](./docs/ex-event-range-desc.png)
+![alt text](./docs/image-13.png)
 
 ## Periods `@`
 
@@ -312,7 +322,7 @@ Periods are spans of time displayed with a semi-transparent background. **Period
 ```
 ````
 
-<img width="712" height="224" alt="Image" src="https://github.com/user-attachments/assets/1b2e46b1-8874-499e-9e0d-e17c87503e24" />
+<img alt="Image" src="./docs/chronos-periods.png" />
 
 ## Points `*`
 
@@ -332,7 +342,7 @@ Points are ideal for marking a point in time. You can optionally add a `Descript
 ```
 ````
 
-<img width="702" height="215" alt="Image" src="https://github.com/user-attachments/assets/eaa8d378-6bfb-4bdb-aeb5-459851a4bb29" />
+<img alt="Image" src="./docs/chronos-points.png" />
 
 ## Markers `=`
 
@@ -354,7 +364,7 @@ Markers can be used to highlight a key milestone in time. **Markers must be a si
 ```
 ````
 
-<img width="705" height="219" alt="Image" src="https://github.com/user-attachments/assets/7c9426ae-0c20-4a74-9d28-bc156bb39fe4" />
+<img alt="Image" src="./docs/chronos-markers.png4" />
 
 ## Comments `#`
 
@@ -375,7 +385,7 @@ Chronos will ignore any line that starts with `#`. You can use this to write com
 ```
 ````
 
-<img width="706" height="239" alt="Image" src="https://github.com/user-attachments/assets/1ff15afc-a6fb-4649-9e80-3e59ace168cd" />
+<img alt="Image" src="./docs/chronos-comments.png" />
 
 ## Flags `>`
 
@@ -405,22 +415,22 @@ Hide the vertical bar that marks today's time
 
 ````markdown
 ```chronos
-- [2025-02-02~2025-03-28] foo
+- [2026-10-02~2026-11-28] foo
 ```
 ````
 
-![notday without flag example](./docs/ex-notoday-without-flag.png)
+![alt text](./docs/image-14.png)
 
 (with flag)
 
 ````markdown
 ```chronos
 > NOTODAY
-- [2025-02-02~2025-03-28] foo
+- [2026-10-02~2026-11-28] foo
 ```
 ````
 
-![notday with flag example](./docs/ex-notoday-with-flag.png)
+![alt text](./docs/image-15.png)
 
 ### HEIGHT flag
 
@@ -483,7 +493,7 @@ The `ORDERBY` flag can be used to specify an ordering
 ```
 ````
 
-![order by start date](./docs/ex-order-by-start.png)
+![alt text](./docs/image-16.png)
 
 **Order by color and start**
 
@@ -498,7 +508,7 @@ The `ORDERBY` flag can be used to specify an ordering
 ```
 ````
 
-![order by color and start date](./docs/ex-order-by-color-start.png)
+![alt text](./docs/image-17.png)
 
 ### DEFAULTVIEW flag
 
@@ -510,7 +520,128 @@ Use the `> DEFAULTVIEW start|end` flag to specify default start and end dates fo
 - [2024] AGI
 ```
 
-![default view example](./docs/ex-default-view.png)
+![alt text](./docs/image-18.png)
+
+### GAP flag
+
+Set the gap between items, in pixels. One number applies to both directions. Use `horizontal|vertical` to set them separately, and leave one side empty to keep its default (10 for both).
+
+```chronos
+> GAP 10|30
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+- [2023~2025] #blue Event C
+```
+
+Variants: `> GAP 20`, `> GAP |30` (vertical only), `> GAP 20|` (horizontal only).
+
+### AXIS flag
+
+Choose where the time axis is drawn: `top` or `bottom` (default).
+
+```chronos
+> AXIS top
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+### Display setting flags
+
+These flags override your plugin settings for a single timeline. Precedence is: library defaults < plugin settings < flags in the timeline.
+
+| Flag                                      | Effect                                                                |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `> ROUNDED` / `> NOROUNDED`               | Round the ends of period ranges on / off                              |
+| `> TRANSLUCENT` / `> NOTRANSLUCENT`       | Borderless, semi-transparent items on / off                           |
+| `> OVERFLOWTITLES` / `> NOOVERFLOWTITLES` | Let long range titles run past the range box on / off (on by default) |
+| `> UTC` / `> NOUTC`                       | Interpret dates as UTC / local time                                   |
+| `> ALIGN left\|center\|right`             | Align item text                                                       |
+
+If a flag and its `NO` version both appear, the later line wins.
+
+#### ROUNDED flag
+
+Round the ends of ranged items. Use `> NOROUNDED` to turn off rounding when it's enabled in your settings.
+
+```chronos
+> ROUNDED
+
+- [2020~2024] Rounded range
+```
+
+![alt text](./docs/image-24.png)
+
+#### TRANSLUCENT flag
+
+Render items as borderless, semi-transparent boxes. Use `> NOTRANSLUCENT` to render solid items. Recommended if you use Light theme to soften the contrast, but also looks great in Dark theme!
+
+```chronos
+> TRANSLUCENT
+
+@ [2015~2023] Some period
+= [2019] Translucent marker
+- [2020~2024] #red Translucent range
+- [2022] #blue Translucent point
+```
+
+![alt text](./docs/image-25.png)
+
+#### OVERFLOWTITLES flag
+
+Long range titles run past the edge of the range box by default. Use `> NOOVERFLOWTITLES` to clip titles to the box, or `> OVERFLOWTITLES` to turn overflow back on when it's disabled in your settings.
+
+```chronos
+- [2020~2021] A very long range title this is!
+```
+
+![alt text](./docs/image-27.png)
+
+```chronos
+> NOOVERFLOWTITLES
+
+- [2020~2021] A very long range title that would otherwise run past the box
+```
+
+![alt text](image-26.png)
+
+#### UTC flag
+
+Interpret dates as UTC (`> UTC`) or as your system's local time (`> NOUTC`).
+
+```chronos
+> NOUTC
+
+- [2024-06-01T12:00] Noon, in your local time
+```
+
+![alt text](./docs/image-28.png)
+
+#### ALIGN flag
+
+Align item text: `left`, `center` or `right`.
+
+```chronos
+> ALIGN center
+
+- [2020~2024] Centered text
+```
+
+![alt text](./docs/image-29.png)
+
+#### Combining display flags
+
+```chronos
+> TRANSLUCENT
+> NOROUNDED
+> ALIGN center
+
+- [2020~2022] Event A
+- [2021~2024] #red Event B
+```
+
+![alt text](./docs/image-22.png)
 
 ## Modifiers
 
@@ -541,7 +672,7 @@ To give items a specific color, you can include an available color after the dat
 ```
 ````
 
-![color example](./docs/ex-color.png)
+![alt text](./docs/image-19.png)
 
 ### Groups `{}`
 
@@ -565,7 +696,7 @@ The order of items does not matter, but the example below lumps items together b
 ```
 ````
 
-![groups example](./docs/ex-groups.png)
+![alt text](./docs/image-20.png)
 
 ## Advanced example
 
@@ -575,7 +706,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ```chronos
 - [1945-07-17] {Europe} Potsdam Conference | where post-WWII Europe is divided
 - [1947-03-12] {USA} Truman Doctrine | committing the U.S. to containing communism
-- [1948-06-24~1949-05-12] {Europe} Berlin Blockade | and Airlift in response to Soviet actions in Berlin
+* [1948-06-24] {Europe} Berlin Blockade | and Airlift in response to Soviet actions in Berlin
 - [1949-04-04] {Europe} Formation of NATO
 
 # Early Cold War
@@ -612,7 +743,7 @@ This example combines **Events**, **Periods**, **Markers**, **Comments**, **Desc
 ```
 ````
 
-![advanced example](./docs/ex-advanced.png)
+![alt text](./docs/image-23.png)
 
 # Obsidian Bases view
 
@@ -622,7 +753,7 @@ By adding frontmatter properties to your notes or using formulas, you can easily
 start           (Chronos date)
 end?            (Chronos date)
 content?        (Optional alternate title - defaults to note name)
-type?           (event|point|period|marker - defaults to event)
+type?           (event|point|period|marker - defaults to point, or event if there is an end date or start ends with ~ for ongoing)
 color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?
 ```
@@ -633,11 +764,11 @@ description?
 
 1. From a base, click "Add View" from the Views dropdown
 
- <img width="326" height="250" alt="image" src="https://github.com/user-attachments/assets/6832d24d-b549-4b03-a49c-12128b8331cc" />
+<img height="250px" src ="./docs/chronos-base-add.png" />
 
 2. Select "Chronos Timeline" view and give a custom name
 
- <img width="269" height="341" alt="image" src="https://github.com/user-attachments/assets/3d172ef4-ea17-4bea-b8d8-438e18fd3e89" />
+<img height="250px" src ="./docs/image.png" />
 
 3. (Optional) Select filters for notes (ex: all notes in a given folder, all notes with tag `#history`, etc...)
 
@@ -653,26 +784,26 @@ At the very top of a note you'd like to see in the Chronos Timeline Bases view, 
 
 Figure A
 
-<img width="969" height="360" alt="image" src="https://github.com/user-attachments/assets/9d66d299-b4c7-4c8d-8749-985e7de732dd" />
+![alt text](./docs/image-1.png)
 
 Figure B
 
-<img width="954" height="449" alt="image" src="https://github.com/user-attachments/assets/19e6b689-96aa-4c2d-895e-32c8b6ea1499" />
+![alt text](./docs/image-2.png)
 
 ```
 start           (Chronos date)
 end?            (Chronos date)
 content?        (Optional alternate item title - defaults to note name)
-type?           (Option: event|point|period|marker - defaults to event)
+type?           (Option: event|point|period|marker - defaults to point, or event if there is an end date or start ends with ~ for ongoing)
 color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?    (Optional)
 ```
 
-## Bases: Changing property values
+## Bases: Changing property sources
 
-You can change the default values for properties using the Item Property Sources configuration.
+You can change the default sources for item properties using the Item Property Sources configuration.
 
-<img width="751" height="663" alt="Image" src="https://github.com/user-attachments/assets/37e3eed5-c56b-45b4-acbd-eb3b87bb321c" />
+<img alt="Image" src="./docs/chronos-propert-source.png" />
 
 You can configure the default property names for new Bases views in the plugin Settings.
 
@@ -680,9 +811,9 @@ You can configure the default property names for new Bases views in the plugin S
 
 You can use Obsidian's formulas feature in Bases to implement custom logic for your properties.
 
-This can be useful for creating custom logic for coloring or event types, for example.
+This can be useful for creating custom logic for coloring or item types, for example.
 
-<img width="255" height="311" alt="Image" src="https://github.com/user-attachments/assets/7fa6c92c-244b-45b6-bbb9-7543d1215cf3" />
+<img alt="Image" width="250px" src="./docs/chronos-bases-formula.png" />
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
 
@@ -695,7 +826,7 @@ Groups in the Chronos Timeline view can be created in one of two ways:
 
 With the "Group by" query selector, you can control the order in which the groups appear, but note that Chronos will force the "no group" row to the bottom of the view regardless of group sorting options.
 
-The `group` property (or formula) will be used if no "Group by" query selector is chosen, but note that it must be selected in the property list in order to work.
+The `group` property will be used if no "Group by" query selector is chosen.
 
 ### Using the "Group by" method
 
@@ -703,17 +834,17 @@ You can use Formulas for more flexible grouping. For a trivial example, let's sa
 
 1. (Optional) Add a filter to target specific items. In this example, we target a folder.
 
-<img width="588" height="277" alt="image" src="https://github.com/user-attachments/assets/36655829-2446-43e6-b1c3-df45568a67e9" />
+![alt text](./docs/image-3.png)
 
 2. Select a property to group by in the "Sort" menu, such as `author` in this example
 
-<img width="744" height="452" alt="Image" src="https://github.com/user-attachments/assets/46adc9ad-338e-4215-811e-d39b230a5b7a" />
+<img width="744" height="452" alt="Image" src="./docs/chronos-bases-group-by.gif" />
 
 ### Using manual "group" property on notes
 
 You can also add a property named `group` (or custom name in settings) to notes directly, and select that property in your Chornos Timelines view for Bases.
 
-<img width="1241" height="403" alt="image" src="https://github.com/user-attachments/assets/24b03a17-7775-4eb7-9fe8-0a4d6e296b0a" />
+![alt text](./docs/image-4.png)
 
 ### Using formulas for grouping
 
@@ -723,19 +854,9 @@ Formulas also allow for more complex logic to determine groups. For example, if 
 if(file.folder.contains("Japan"), "Japan", if(file.folder.contains("China"), "China", ""))
 ```
 
-<img width="318" height="281" alt="image" src="https://github.com/user-attachments/assets/2491e75a-853d-4bc1-bf83-0a19ecd0dc09" />
+![alt text](./docs/image-5.png)
 
 See Obsidian's [Formula documentation](https://help.obsidian.md/formulas) for more.
-
-## Bases: How Chronos Timeline Bases view resolves properties
-
-There are two rules to know:
-
-1. The Chronos Timeline Bases view will **only display properties that are selected**.
-
-2. If two properties of the same name are selected (ex: `group` in a note frontmatter, and `group` as a custom formula) the **Formula value will override the note frontmatter**.
-
-This ensures that you can override any existing frontmatter in your notes if you wish (ex: you're already using `start` property for some other purpose, or want to format `start` differently for Chronos)
 
 ## Bases: Interacting with the Chronos Timeline view
 
@@ -747,9 +868,11 @@ You can also **Copy** the generated markdown (to paste in `chronos` blocks in yo
 
 # Note linking (beta)
 
-Link to other notes in your vault by adding a wiki link to either the item name or description. Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert. Chronos will link to the **first link** provided in an item.
+Link to other notes in your vault by adding a wiki link to either the item name or description.
 
-Works for Event and Point type items. You can add a link to the item name (link path visible), or the description (link path hidden). Items with a link will appear underlined.
+Type `[[` then a few characters in your note title for Obsidan to auto-suggest a path to insert. Chronos will link to the **first link** provided in an item.
+
+Works for Event, Point and Period type items. You can add a link to the item name (link path visible), or the description (link path hidden). Items with a link will appear underlined.
 
 **Left-click**: open link in **current** tab
 **Middle-click or Shift + click**: open link in **new** tab
@@ -763,11 +886,12 @@ Examples:
 - [2021~2022] No link
 - [2023~2024] With link [[path/to/note]]
 - [2022~2024] Link in description | [[path/to/note]]
+@ [2020~2021] Period with link | [[path/to/note]]
 * [2022] Link in description | [[path/to/note]]
 ```
 ````
 
-<img width="701" height="230" alt="Image" src="https://github.com/user-attachments/assets/fc0e51ac-1f14-4e6c-9b48-23fad847ef89" />
+![alt text](./docs/image-6.png)
 
 You can link directly to a section heading in a note by adding `#section name` to the path
 
@@ -791,21 +915,33 @@ While hovering a timeline item with a link, press Control or Command to show a p
 
 To enter **Edit** mode an update your `chronos` Markdown, hover over the timeline and click the code icon that appears in the upper-right corner.
 
-<img width="711" height="329" alt="Image" src="https://github.com/user-attachments/assets/6fe99b31-fa80-4636-9841-5f4d0f784111" />
+![alt text](./docs/image-7.png)
 
-<img width="707" height="278" alt="Image" src="https://github.com/user-attachments/assets/96042124-dd68-4870-a18d-dede74847005" />
+![alt text](./docs/image-8.png)
 
 ## Refit
 
 Click the **Refit** button (crosshairs icon) in the lower-right corner to adjust all items to fit within the view window.
 
-<img width="709" height="250" alt="Image" src="https://github.com/user-attachments/assets/c8cfdbeb-61a3-4409-9063-db99791fc09e" />
+![alt text](./docs/image-9.png)
 
 ## Toggle width
 
 Hover on the timeline and click the width toggle in the upper left to expand the timeline to the width of your editor.
 
-![chronos-width-expand](https://github.com/user-attachments/assets/d7390230-8205-48c4-835f-4b69b40dba4d)
+![chronos-width-expand](./docs/chronos-width-expand.gif)
+
+# Display settings
+
+These options are in the Chronos plugin settings, under **Display**, and apply immediately to open timelines (in notes and in Bases views).
+
+- **Round endcaps on ranges** (default off): adds rounding to ranged events to make start and end clear.
+- **Overflow range titles** (default on): long range-event titles continue past the edge of the range box, with an outline for readability. Turn off to clip titles to the box.
+- **Time axis position** (default bottom): draw the time axis at the top or bottom. An `> AXIS` flag in a timeline overrides it.
+- **Item gap** (default 20 horizontal, 20 vertical): spacing in pixels between items. A `> GAP` flag in a timeline overrides it.
+- **Translucent items** (default off): renders all timeline items as semi-transparent.
+- **Use UTC time (recommended)** (default on): interprets dates as UTC. If disabled, Chronos uses system time, which may shift historical events by a day. A `> UTC` or `> NOUTC` flag in a timeline overrides it.
+- **Item alignment** (default left): aligns event boxes and item text left, center or right. An `> ALIGN` flag in a timeline overrides it.
 
 # Localization
 

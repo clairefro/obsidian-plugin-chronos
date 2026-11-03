@@ -1,7 +1,7 @@
 import {
 	Plugin,
+	debounce,
 	App,
-	Setting,
 	PluginSettingTab,
 	Notice,
 	Editor,
@@ -14,7 +14,7 @@ import {
 	requestUrl,
 } from "obsidian";
 
-import { Align, BasePropNames, ChronosPluginSettings } from "./types";
+import { ChronosPluginSettings } from "./types";
 
 import { decideAiEndpoint, resolveAiRequest } from "./lib/ai/endpoint";
 import { TextModal } from "./components/TextModal";
@@ -35,30 +35,56 @@ import {
 
 import {
 	ChronosTimelineBasesView,
-	eventProps,
+	itemProps,
 	itemPropertyNames,
 	generateViewOptions,
 	getDefaultPropNames,
 } from "./views/ChronosTimelineBasesView";
+
 import type { AIProviderConfig } from "./lib/ai/providers/providerFactory";
 
+// chronos-lint-ignore-start
+// !!! DO NOT MODIFY THIS BLOCK!! LET TYPES BE MESSY! !!!
 // HACKY IMPORT TO ACCOMODATE SYMLINKS IN LOCAL DEV
 import * as ChronosLib from "chronos-timeline-md";
+import { obsidianTooltip } from "./util/obsidianTooltip";
+import {
+	applyGapSetting,
+	DEFAULT_GAP,
+	resolveGap,
+} from "./util/applyGapSetting";
 const ChronosTimeline: any =
 	(ChronosLib as any).ChronosTimeline ??
 	(ChronosLib as any).default ??
 	(ChronosLib as any);
+// chronos-lint-ignore-end
+
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
 
+interface ObservedEditorEl extends HTMLElement {
+	_chronosResizeObserver?: ResizeObserver;
+}
+
+interface GitHubRelease {
+	tag_name: string;
+	body?: string | null;
+	published_at: string;
+}
+
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
 	selectedLocale: DEFAULT_LOCALE,
 	align: "left",
 	clickToUse: false,
 	roundRanges: false,
+	overflowRangeTitles: true,
+	translucentItems: false,
+	axisPosition: "bottom",
+	gapHorizontal: DEFAULT_GAP,
+	gapVertical: DEFAULT_GAP,
 	useUtc: true,
 	useAI: true,
 	showChangelogOnUpdate: true,
@@ -71,6 +97,11 @@ const AI_APPROVED_ORIGINS_KEY = "chronos-ai-approved-origins";
 export default class ChronosPlugin extends Plugin {
 	settings!: ChronosPluginSettings;
 	private observedEditors = new Set<HTMLElement>();
+	private chronosBlocks = new Set<{
+		el: HTMLElement;
+		source: string;
+		timeline?: ChronosLib.ChronosTimeline;
+	}>();
 	cacheUtils!: CacheUtils;
 	private fileUtils!: FileUtils;
 
@@ -119,14 +150,18 @@ export default class ChronosPlugin extends Plugin {
 		});
 
 		// Remove old insecure aiKeys property (LEGACY)
-		if ((this.settings as any).aiKeys) {
-			delete (this.settings as any).aiKeys;
+		const legacySettings = this.settings as unknown as Record<
+			string,
+			unknown
+		>;
+		if (legacySettings.aiKeys) {
+			delete legacySettings.aiKeys;
 			await this.saveSettings();
 		}
 
 		// Remove legacy key property (LEGACY LEGACY)
-		if ((this.settings as any).key) {
-			delete (this.settings as any).key;
+		if (legacySettings.key) {
+			delete legacySettings.key;
 			await this.saveSettings();
 		}
 
@@ -145,12 +180,12 @@ export default class ChronosPlugin extends Plugin {
 
 		// Initialize folder cache in background to track which folders contain chronos blocks (only if caching is enabled)
 		if (this.settings.enableCaching) {
-			this.cacheUtils.initializeFolderCache();
+			void this.cacheUtils.initializeFolderCache();
 		}
 
 		this.registerEvent(
 			this.app.vault.on("rename", async (file, oldPath) => {
-				await this.fileUtils.updateWikiLinks(oldPath, file.path);
+				await this.fileUtils.handleRename(file, oldPath);
 			}),
 		);
 
@@ -254,7 +289,7 @@ export default class ChronosPlugin extends Plugin {
 			id: "generate-timeline-folder",
 			name: "Generate timeline from folder",
 			editorCallback: (editor, _view) => {
-				this._generateTimelineFromFolder(editor);
+				void this._generateTimelineFromFolder(editor);
 			},
 		});
 
@@ -265,7 +300,7 @@ export default class ChronosPlugin extends Plugin {
 				if (checking) {
 					return this.settings.useAI;
 				} else {
-					this._generateTimelineWithAi(editor);
+					void this._generateTimelineWithAi(editor);
 				}
 			},
 		});
@@ -279,11 +314,12 @@ export default class ChronosPlugin extends Plugin {
 	onunload() {
 		// Clean up resize observers
 		this.observedEditors.forEach((editorEl) => {
-			const observer = (editorEl as any)._chronosResizeObserver;
+			const observer = (editorEl as ObservedEditorEl)
+				._chronosResizeObserver;
 
 			if (observer) {
 				observer.disconnect();
-				delete (editorEl as any)._chronosResizeObserver;
+				delete (editorEl as ObservedEditorEl)._chronosResizeObserver;
 			}
 		});
 		this.observedEditors.clear();
@@ -295,6 +331,31 @@ export default class ChronosPlugin extends Plugin {
 			...DEFAULT_SETTINGS,
 			...(await this.loadData()),
 		};
+	}
+
+	/** Re-render open timelines so setting changes apply immediately. */
+	refreshTimelines() {
+		// Bases first and isolated, so a failure in the markdown refresh can't skip it.
+		try {
+			ChronosTimelineBasesView.refreshAll();
+		} catch (e) {
+			console.error("[Chronos] Failed to refresh Bases views", e);
+		}
+		// Re-render note-embedded timelines in place (works in both Live Preview and Reading view)
+		for (const block of [...this.chronosBlocks]) {
+			if (!block.el.isConnected) {
+				this.chronosBlocks.delete(block);
+				continue;
+			}
+			try {
+				block.timeline?.destroy();
+				block.el.empty();
+				this.chronosBlocks.delete(block);
+				this._renderChronosBlock(block.source, block.el);
+			} catch (e) {
+				console.error("[Chronos] Failed to refresh timeline", e);
+			}
+		}
 	}
 
 	async saveSettings() {
@@ -349,7 +410,10 @@ export default class ChronosPlugin extends Plugin {
 
 			if (!editorEl && attempt <= 5) {
 				// Wait and try again - DOM might not be ready
-				setTimeout(() => attemptSetup(attempt + 1), attempt * 100);
+				window.setTimeout(
+					() => attemptSetup(attempt + 1),
+					attempt * 100,
+				);
 				return;
 			}
 
@@ -401,7 +465,8 @@ export default class ChronosPlugin extends Plugin {
 			this.observedEditors.add(editorEl);
 
 			// Store the observer so we can remove it later
-			(editorEl as any)._chronosResizeObserver = resizeObserver;
+			(editorEl as ObservedEditorEl)._chronosResizeObserver =
+				resizeObserver;
 		};
 
 		// Start the attempt process
@@ -418,7 +483,7 @@ export default class ChronosPlugin extends Plugin {
 			attr: { title: "Toggle timeline width" },
 		});
 
-		const icon = button.createEl("span", { text: "⟷" });
+		const icon = button.createSpan({ text: "⟷" });
 
 		return { button, icon };
 	}
@@ -465,8 +530,8 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	/* Trigger timeline refit after width changes */
-	private _refitTimeline(timeline: any): void {
-		setTimeout(() => {
+	private _refitTimeline(timeline: ChronosLib.ChronosTimeline): void {
+		window.setTimeout(() => {
 			if (timeline?.timeline) {
 				timeline.timeline.redraw();
 				timeline.timeline.fit();
@@ -475,7 +540,7 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private _renderChronosBlock(source: string, el: HTMLElement) {
-		const container = el.createEl("div", {
+		const container = el.createDiv({
 			cls: "chronos-timeline-container",
 		});
 
@@ -514,10 +579,14 @@ export default class ChronosPlugin extends Plugin {
 		const timeline = new ChronosTimeline({
 			container,
 			settings: this.settings,
+			callbacks: { setTooltip: obsidianTooltip },
 		});
+
+		this.chronosBlocks.add({ el, source, timeline });
 
 		try {
 			timeline.render(source);
+			applyGapSetting(timeline, source, this.settings);
 			// DRY: wire up note linking and hover preview
 			wireSharedTimelineInteractions(
 				timeline,
@@ -558,10 +627,10 @@ export default class ChronosPlugin extends Plugin {
 		try {
 			const chronos = await this._textToChronos(selection);
 			chronos && this._insertTextAfterSelection(editor, chronos);
-		} catch (e: any) {
+		} catch (e) {
 			console.error(e);
 
-			loadingModal.setText(e.message);
+			loadingModal.setText(e instanceof Error ? e.message : String(e));
 			return;
 		}
 		loadingModal.close();
@@ -581,7 +650,7 @@ export default class ChronosPlugin extends Plugin {
 			provider,
 			apiKey: this._getApiKey(provider) || undefined,
 			model:
-				(this.settings.aiModels as any)?.[provider] ||
+				this.settings.aiModels?.[provider] ||
 				PROVIDER_DEFAULT_MODELS[provider],
 			baseUrl: this.settings.aiBaseUrls?.[provider],
 			approvedOrigins: this.getApprovedAiOrigins(),
@@ -625,7 +694,9 @@ export default class ChronosPlugin extends Plugin {
 	}
 
 	private _getApiKey(provider: string = "openai"): string | null {
-		const secretName = (this.settings as any)[`${provider}SecretName`];
+		const secretName = (this.settings as unknown as SecretNames)[
+			`${provider}SecretName`
+		];
 		if (!secretName) return null;
 		return this.app.secretStorage.getSecret(secretName);
 	}
@@ -676,73 +747,69 @@ export default class ChronosPlugin extends Plugin {
 
 					const tasks: Promise<string[]>[] = allFiles
 						.filter((file: TFile) => file.extension === "md")
-						.map((file: TFile) => {
-							return this.app.vault
-								.cachedRead(file as TFile)
-								.then((text) => {
-									const rex_match: string[] = [];
-									let current_match;
+						.map(async (file: TFile): Promise<string[]> => {
+							try {
+								const text =
+									await this.app.vault.cachedRead(file);
+								const rex_match: string[] = [];
+								let current_match;
 
-									// Extract inline chronos blocks (check for indicators)
-									const inlineMatches = [];
-									while (
-										(current_match =
-											DETECTION_PATTERN_TEXT.exec(
-												text,
-											)) !== null
-									) {
-										const content =
-											current_match[1] as string;
-										const trimmed = content.trim();
-										const hasIndicator = /^[-@*~]/.test(
-											trimmed,
-										);
-										inlineMatches.push(
-											hasIndicator
-												? trimmed
-												: `- ${trimmed}`,
-										);
-									}
-
-									// Extract full chronos code blocks (check for indicators)
-									while (
-										(current_match =
-											DETECTION_PATTERN_CODEBLOCK.exec(
-												text,
-											)) !== null
-									) {
-										// Extract all non-blank, non-comment lines from the code block
-										const blockContent = current_match[1];
-										const lines = blockContent.split("\n");
-										lines.forEach((line) => {
-											const trimmed = line.trim();
-											// Include any line that isn't blank, doesn't start with #, and doesn't start with > (flags)
-											if (
-												trimmed &&
-												!trimmed.startsWith("#") &&
-												!trimmed.startsWith(">")
-											) {
-												// Check if line already has an indicator (-, @, *, etc)
-												const hasIndicator =
-													/^[-@*~]/.test(trimmed);
-												rex_match.push(
-													hasIndicator
-														? trimmed
-														: `- ${trimmed}`,
-												);
-											}
-										});
-									}
-
-									// Combine all matches (already have prefixes applied)
-									return [...inlineMatches, ...rex_match];
-								})
-								.catch((_error) => {
-									new Notice(
-										`Error while processing ${file.name}`,
+								// Extract inline chronos blocks (check for indicators)
+								const inlineMatches = [];
+								while (
+									(current_match =
+										DETECTION_PATTERN_TEXT.exec(text)) !==
+									null
+								) {
+									const content = current_match[1];
+									const trimmed = content.trim();
+									const hasIndicator = /^[-@*~]/.test(
+										trimmed,
 									);
-									return [];
-								});
+									inlineMatches.push(
+										hasIndicator ? trimmed : `- ${trimmed}`,
+									);
+								}
+
+								// Extract full chronos code blocks (check for indicators)
+								while (
+									(current_match =
+										DETECTION_PATTERN_CODEBLOCK.exec(
+											text,
+										)) !== null
+								) {
+									// Extract all non-blank, non-comment lines from the code block
+									const blockContent = current_match[1];
+									const lines = blockContent.split("\n");
+									lines.forEach((line) => {
+										const trimmed = line.trim();
+										// Include any line that isn't blank, doesn't start with #, and doesn't start with > (flags)
+										if (
+											trimmed &&
+											!trimmed.startsWith("#") &&
+											!trimmed.startsWith(">")
+										) {
+											// Check if line already has an indicator (-, @, *, etc)
+											const hasIndicator = /^[-@*~]/.test(
+												trimmed,
+											);
+											rex_match.push(
+												hasIndicator
+													? trimmed
+													: `- ${trimmed}`,
+											);
+										}
+									});
+								}
+
+								// Combine all matches (already have prefixes applied)
+								return [...inlineMatches, ...rex_match];
+							} catch {
+								new Notice(
+									`Error while processing ${file.name}`,
+								);
+								return [];
+							}
 						});
 
 					await Promise.allSettled(tasks).then((results) => {
@@ -780,7 +847,7 @@ export default class ChronosPlugin extends Plugin {
 				() => this.settings.enableCaching ?? false,
 			).open();
 		} catch (error) {
-			new Notice("Error scanning for chronos items");
+			new Notice("Error scanning for Chronos items");
 			console.error(
 				"[Chronos] Error in _generateTimelineFromFolder:",
 				error,
@@ -864,7 +931,7 @@ export default class ChronosPlugin extends Plugin {
 		// Update the view with the new entries
 		const view = leaf.view as ChangelogView;
 		if (view) {
-			(view as any).entries = entries;
+			(view as unknown as { entries: typeof entries }).entries = entries;
 			await view.onOpen();
 		}
 	}
@@ -935,7 +1002,7 @@ export default class ChronosPlugin extends Plugin {
 		}
 	}
 
-	private async _fetchGitHubReleases(): Promise<any[]> {
+	private async _fetchGitHubReleases(): Promise<GitHubRelease[]> {
 		const url =
 			"https://api.github.com/repos/clairefro/obsidian-plugin-chronos/releases";
 
@@ -947,8 +1014,7 @@ export default class ChronosPlugin extends Plugin {
 				},
 			});
 
-			const releases = response.json;
-			return releases;
+			return response.json as GitHubRelease[];
 		} catch (error) {
 			console.error("[Chronos] Failed to fetch GitHub releases:", error);
 			throw error;
@@ -977,6 +1043,8 @@ export default class ChronosPlugin extends Plugin {
 		return parts.length >= 3 && parts[2] > 0;
 	}
 }
+
+type SecretNames = Record<string, string | undefined>;
 
 class ChronosPluginSettingTab extends PluginSettingTab {
 	plugin: ChronosPlugin;
@@ -1062,7 +1130,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 									if (modelInput) {
 										modelInput.value = defaultModel;
 									}
-									button.buttonEl.style.display = "none";
+									button.buttonEl.hide();
 								}),
 						)
 						.setClass("chronos-model-default-button");
@@ -1112,9 +1180,9 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 								`${selectedModel} (saved; not reported)`,
 							);
 						}
-						models.forEach((model) =>
-							dropdown?.addOption(model, model),
-						);
+						for (const model of models) {
+							dropdown.addOption(model, model);
+						}
 						dropdown.setValue(selectedModel || "");
 						if (!models.length) {
 							setting.setDesc(
@@ -1198,10 +1266,15 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			visible: providerIs(provider),
 			render: (setting) => {
 				new SecretComponent(this.app, setting.controlEl)
-					.setValue((settings as any)[`${provider}SecretName`] || "")
+					.setValue(
+						(settings as unknown as SecretNames)[
+							`${provider}SecretName`
+						] || "",
+					)
 					.onChange(async (value) => {
-						(settings as any)[`${provider}SecretName`] =
-							value || "";
+						(settings as unknown as SecretNames)[
+							`${provider}SecretName`
+						] = value || "";
 						await this.plugin.saveSettings();
 					});
 			},
@@ -1209,19 +1282,26 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const noticeToggle = (
 			name: string,
 			desc: string,
-			key: "clickToUse" | "roundRanges" | "useUtc",
+			key:
+				| "clickToUse"
+				| "roundRanges"
+				| "overflowRangeTitles"
+				| "translucentItems"
+				| "useUtc",
 		): SettingDefinition => ({
 			name,
 			desc,
 			render: (setting) => {
 				setting.addToggle((toggle) =>
-					toggle.setValue(settings[key]).onChange(async (value) => {
-						settings[key] = value;
-						new Notice(
-							"Refresh rendering of timelines for this change to take effect.",
-						);
-						await this.plugin.saveSettings();
-					}),
+					toggle
+						.setValue(
+							(settings[key] ?? DEFAULT_SETTINGS[key]) as boolean,
+						)
+						.onChange(async (value) => {
+							settings[key] = value;
+							await this.plugin.saveSettings();
+							this.plugin.refreshTimelines();
+						}),
 				);
 			},
 		});
@@ -1240,7 +1320,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 
 		const basesProperties = itemPropertyNames.map(
 			(property): SettingDefinition => ({
-				name: eventProps[property].displayName,
+				name: itemProps[property].displayName,
 				render: (setting) => {
 					setting.addText((text) =>
 						text
@@ -1298,6 +1378,71 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 					"Adds rounding to ranged events to make start and end clear.",
 					"roundRanges",
 				),
+				noticeToggle(
+					"Overflow range titles",
+					"Let long range-event titles continue past the edge of the range box.",
+					"overflowRangeTitles",
+				),
+				noticeToggle(
+					"Translucent items",
+					"Render all timeline items as semi-transparent",
+					"translucentItems",
+				),
+				{
+					name: "Time axis position",
+					desc: "Where the time axis is drawn. A > AXIS flag in a timeline overrides this.",
+					render: (setting) => {
+						setting.addDropdown((dropdown) =>
+							dropdown
+								.addOptions({ bottom: "Bottom", top: "Top" })
+								.setValue(settings.axisPosition ?? "bottom")
+								.onChange(async (value) => {
+									settings.axisPosition =
+										value === "top" ? "top" : "bottom";
+									await this.plugin.saveSettings();
+									this.plugin.refreshTimelines();
+								}),
+						);
+					},
+				},
+				{
+					name: "Item gap",
+					desc: "Spacing in pixels between items: horizontal and vertical. A > GAP flag in a timeline overrides this.",
+					render: (setting) => {
+						const refresh = debounce(
+							() => this.plugin.refreshTimelines(),
+							400,
+							true,
+						);
+						const addGapInput = (
+							label: string,
+							key: "gapHorizontal" | "gapVertical",
+						) => {
+							setting.controlEl.createSpan({
+								text: label,
+								cls: "chronos-gap-label",
+							});
+							setting.addText((text) => {
+								text.inputEl.type = "number";
+								text.inputEl.min = "0";
+								text.inputEl.addClass("chronos-gap-input");
+								text.setPlaceholder(String(DEFAULT_GAP))
+									.setValue(String(resolveGap(settings[key])))
+									.onChange(async (value) => {
+										settings[key] = resolveGap(
+											value === ""
+												? undefined
+												: Number(value),
+										);
+										await this.plugin.saveSettings();
+										refresh();
+									});
+							});
+						};
+						addGapInput("Horizontal", "gapHorizontal");
+						addGapInput("Vertical", "gapVertical");
+					},
+				},
 				noticeToggle(
 					"Use UTC time (recommended)",
 					"If disabled, Chronos uses system time; local time may shift historical events by a day.",
@@ -1491,7 +1636,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const rawBaseUrl =
 			this.plugin.settings.aiBaseUrls?.[provider] ||
 			PROVIDER_DEFAULT_BASE_URLS[provider];
-		const secretName = (this.plugin.settings as any)[
+		const secretName = (this.plugin.settings as unknown as SecretNames)[
 			`${provider}SecretName`
 		];
 		const apiKey = secretName
@@ -1515,543 +1660,12 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		return Array.from(
 			new Set(
 				models
-					.map((model: any) => model?.id)
+					.map((model: { id?: unknown } | null) => model?.id)
 					.filter(
 						(modelId: unknown): modelId is string =>
 							typeof modelId === "string" && modelId.length > 0,
 					),
 			),
 		);
-	}
-
-	display(): void {
-		const { containerEl } = this;
-
-		containerEl.empty();
-		containerEl.addClass("chronos-settings");
-
-		const supportedLocales: string[] = [];
-		const supportedLocalesNativeDisplayNames: Intl.DisplayNames[] = [];
-
-		// get locales SUPPORTED by the user's environment, based off list of possible locales
-		knownLocales.forEach((locale) => {
-			if (Intl.DateTimeFormat.supportedLocalesOf(locale).length) {
-				supportedLocales.push(locale);
-			}
-		});
-
-		// get native display names of each locale
-		supportedLocales.forEach((locale) => {
-			const nativeDisplayNames = new Intl.DisplayNames([locale], {
-				type: "language",
-			});
-			supportedLocalesNativeDisplayNames.push(
-				nativeDisplayNames.of(locale) as unknown as Intl.DisplayNames,
-			);
-		});
-
-		const announceLink = containerEl.createEl("a", {
-			text: "Create and share Chronos Timelines outside of Obsidian ↗",
-		});
-		announceLink.setAttribute(
-			"href",
-			"https://clairefro.github.io/chronos-timeline-md/",
-		);
-		announceLink.setAttribute("target", "_blank");
-		announceLink.setAttribute("rel", "noopener noreferrer");
-		announceLink.className = "chronos-announcement-link";
-
-		containerEl.createEl("br");
-		containerEl.createEl("br");
-
-		containerEl.createEl("h2", {
-			text: "Display settings",
-			cls: "chronos-setting-header",
-		});
-
-		new Setting(containerEl)
-			.setName("Select locale")
-			.setDesc("Choose a locale for displaying dates")
-			.addDropdown((dropdown) => {
-				supportedLocales.forEach((locale, i) => {
-					const localeDisplayName =
-						supportedLocalesNativeDisplayNames[i];
-					const label = `${localeDisplayName} (${locale})`;
-					dropdown.addOption(locale, label);
-				});
-
-				const savedLocale =
-					this.plugin.settings.selectedLocale || DEFAULT_LOCALE;
-
-				dropdown.setValue(savedLocale);
-
-				dropdown.onChange((value) => {
-					this.plugin.settings.selectedLocale = value;
-					this.plugin.saveData(this.plugin.settings);
-				});
-			});
-
-		new Setting(containerEl)
-			.setName("Require click to use")
-			.setDesc(
-				"Require clicking on a timeline to activate features like zoom and scroll",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.clickToUse)
-					.onChange(async (value) => {
-						new Notice(
-							"Refresh rendering of timlines for change to take effect",
-						);
-						this.plugin.settings.clickToUse = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Round endcaps on ranges")
-			.setDesc(
-				"Adds rounding to ranged events to make start and end clear",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.roundRanges)
-					.onChange(async (value) => {
-						new Notice(
-							"Refresh rendering of timlines for change to take effect",
-						);
-						this.plugin.settings.roundRanges = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Use UTC time (recommended)")
-			.setDesc(
-				"If disabled, Chronos will use your system time to display the events and current time. Using local time is only recommended if you are using Chronos for tasks at the intra-day level, and may have unintended side effects like showing historical events one day off during certain times of day.",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.useUtc)
-					.onChange(async (value) => {
-						new Notice(
-							"Refresh rendering of timlines for change to take effect",
-						);
-						this.plugin.settings.useUtc = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName("Item alignment")
-			.setDesc(
-				"Alignement of event boxes and item text (re-rerender timeline to see change)",
-			)
-			.addDropdown((dropdown) =>
-				dropdown
-					.addOption("left", "Left")
-					.addOption("center", "Center")
-					.addOption("right", "Right")
-					.setValue(this.plugin.settings.align)
-					.onChange(async (value: any) => {
-						this.plugin.settings.align = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		containerEl.createEl("h2", {
-			text: "Bases view",
-			cls: "chronos-setting-header",
-		});
-
-		containerEl.createEl("p", {
-			text:
-				"Customize the default property names used for new Chronos Timeline " +
-				"Bases Views. If empty, a default property name will be used.",
-			cls: "chronos-setting-p",
-		});
-		containerEl.createEl("p", {
-			text:
-				"Changes to these settings apply only to Views created after the " +
-				"settings are changed. Existing Views are not changed.",
-			cls: "chronos-setting-p",
-		});
-
-		itemPropertyNames.forEach((prop) => {
-			new Setting(containerEl)
-				.setName(eventProps[prop].displayName)
-				// .setDesc(`Customize the name for '${prop}' property`)
-				.addText((text) => {
-					const value =
-						this.plugin.settings.basesPropNames[prop] ??
-						BASES_PROP_NAMES_DEFAULTS[prop];
-					text.setValue(value)
-						.setPlaceholder(BASES_PROP_NAMES_DEFAULTS[prop])
-						.onChange(async (inputValue) => {
-							const trimmed = inputValue.trim();
-							if (trimmed === "") {
-								this.plugin.settings.basesPropNames[prop] =
-									BASES_PROP_NAMES_DEFAULTS[prop];
-							} else {
-								this.plugin.settings.basesPropNames[prop] =
-									trimmed;
-							}
-							await this.plugin.saveSettings();
-						});
-				});
-		});
-
-		containerEl.createEl("h2", {
-			text: "Performance",
-			cls: "chronos-setting-header",
-		});
-
-		new Setting(containerEl)
-			.setName("Enhance features with caching")
-			.setDesc(
-				"(Not recommended for massive vaults) Improves 'Generate timeline from folder' feature by showing only folders with chronos items and their counts. Off by default.",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.enableCaching ?? false)
-					.onChange(async (value) => {
-						this.plugin.settings.enableCaching = value;
-						await this.plugin.saveSettings();
-
-						if (value) {
-							// Initialize cache when enabling - force fresh scan
-							new Notice("Initializing cache...");
-							this.plugin.cacheUtils.fileChronosCache.clear();
-							this.plugin.cacheUtils.folderChronosCache.clear();
-							this.plugin.cacheUtils.cacheInitialized = false;
-							await this.plugin.cacheUtils.initializeFolderCache();
-							new Notice("Cache initialized successfully");
-						} else {
-							// Clear cache when disabling
-							console.debug("[Chronos] Clearing cache...");
-							this.plugin.cacheUtils.fileChronosCache.clear();
-							this.plugin.cacheUtils.folderChronosCache.clear();
-							this.plugin.cacheUtils.cacheInitialized = false;
-							await this.plugin.cacheUtils.deleteCache();
-							new Notice("Caching disabled");
-						}
-					}),
-			);
-
-		containerEl.createEl("h2", {
-			text: "Updates & Notifications",
-			cls: "chronos-setting-header",
-		});
-
-		new Setting(containerEl)
-			.setName("Show changelog on update")
-			.setDesc(
-				'Display "What\'s New" modal when the plugin is updated to a new version',
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(
-						this.plugin.settings.showChangelogOnUpdate ?? true,
-					)
-					.onChange(async (value) => {
-						this.plugin.settings.showChangelogOnUpdate = value;
-						await this.plugin.saveSettings();
-					}),
-			);
-
-		// Add link to GitHub releases
-		const releasesLinkDiv = containerEl.createDiv({
-			cls: "chronos-releases-link",
-		});
-
-		const releasesLink = releasesLinkDiv.createEl("a", {
-			text: "View full release history",
-			href: "https://github.com/clairefro/obsidian-plugin-chronos/releases",
-		});
-		releasesLink.setAttr("target", "_blank");
-		releasesLink.setAttr("rel", "noopener noreferrer");
-
-		containerEl.createEl("h2", {
-			text: "AI settings",
-			cls: "chronos-setting-header",
-		});
-
-		new Setting(containerEl)
-			.setName("Use AI Features")
-			.setDesc(
-				"Toggles commands and settings for AI timeline generation.",
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.useAI)
-					.onChange(async (value) => {
-						this.plugin.settings.useAI = value;
-						await this.plugin.saveSettings();
-						// Call display to re-evaluate display conditionals for AI settings
-						this.display();
-					}),
-			);
-
-		// AI provider settings only shown when AI features are enabled
-		if (this.plugin.settings.useAI) {
-			new Setting(containerEl)
-				.setName("AI Provider")
-				.setDesc(
-					"Choose which AI provider to use for timeline generation",
-				)
-				.addDropdown((dropdown) => {
-					dropdown.addOption("openai", "OpenAI");
-					dropdown.addOption("gemini", "Gemini (Google)");
-					dropdown.addOption("anthropic", "Claude (Anthropic)");
-					dropdown.addOption("openrouter", "OpenRouter");
-					dropdown.addOption("ollama", "Ollama (local)");
-					dropdown.addOption("lmstudio", "LM Studio (local)");
-					const saved =
-						(this.plugin.settings as any).aiProvider || "openai";
-					dropdown.setValue(saved);
-					dropdown.onChange(async (value) => {
-						(this.plugin.settings as any).aiProvider = value;
-						await this.plugin.saveSettings();
-						this.display();
-					});
-				});
-
-			const currentProvider =
-				(this.plugin.settings as any).aiProvider || "openai";
-
-			const isLocalModelProvider = ["ollama", "lmstudio"].includes(
-				currentProvider,
-			);
-			const configuredModel =
-				(this.plugin.settings as any).aiModels?.[currentProvider] ||
-				(PROVIDER_DEFAULT_MODELS as any)[currentProvider] ||
-				"";
-
-			const defaultModel =
-				(PROVIDER_DEFAULT_MODELS as any)[currentProvider] || "";
-
-			const modelSetting = new Setting(containerEl)
-				.setName("Model")
-				.setDesc("Model used for the selected provider")
-				.setClass("ai-setting");
-
-			if (isLocalModelProvider) {
-				let refreshModels: () => Promise<void> = async () => {};
-				modelSetting
-					.setDesc(
-						"Select a model available from the configured local server",
-					)
-					.addDropdown((dropdown) => {
-						const loadModels = async () => {
-							dropdown.selectEl.replaceChildren();
-							dropdown.addOption("", "Loading models...");
-							try {
-								const models =
-									await this._fetchLocalModels(
-										currentProvider,
-									);
-								dropdown.selectEl.replaceChildren();
-								const selectedModel =
-									(this.plugin.settings.aiModels as any)?.[
-										currentProvider
-									] || configuredModel;
-								dropdown.addOption(
-									"",
-									models.length
-										? "Select a model"
-										: "No models found",
-								);
-								if (
-									selectedModel &&
-									!models.includes(selectedModel)
-								) {
-									dropdown.addOption(
-										selectedModel,
-										`${selectedModel} (saved; not reported)`,
-									);
-								}
-								models.forEach((model) =>
-									dropdown.addOption(model, model),
-								);
-								dropdown.setValue(selectedModel || "");
-								if (models.length === 0) {
-									modelSetting.setDesc(
-										"No models found. Check the server and refresh.",
-									);
-								}
-							} catch {
-								dropdown.selectEl.replaceChildren();
-								dropdown.addOption("", "Unable to load models");
-								const selectedModel =
-									(this.plugin.settings.aiModels as any)?.[
-										currentProvider
-									] || configuredModel;
-								if (selectedModel) {
-									dropdown.addOption(
-										selectedModel,
-										`${selectedModel} (saved)`,
-									);
-								}
-								dropdown.setValue(selectedModel || "");
-								modelSetting.setDesc(
-									"Could not reach the local server. Check the base URL, then refresh.",
-								);
-							}
-						};
-
-						refreshModels = loadModels;
-						dropdown.onChange(async (value) => {
-							if (!value) return;
-							(this.plugin.settings as any).aiModels = {
-								...(this.plugin.settings as any).aiModels,
-								[currentProvider]: value,
-							};
-							await this.plugin.saveSettings();
-						});
-						void loadModels();
-					})
-					.addButton((button) =>
-						button
-							.setButtonText("Refresh models")
-							.onClick(() => void refreshModels()),
-					);
-			} else {
-				if (configuredModel !== defaultModel) {
-					modelSetting.addButton((btn) => {
-						btn.setButtonText(`Use ${defaultModel} (recommended)`)
-							.setTooltip(
-								`Replace with recommended model: ${defaultModel}`,
-							)
-							.setCta()
-							.onClick(async () => {
-								(this.plugin.settings as any).aiModels = {
-									...(this.plugin.settings as any).aiModels,
-									[currentProvider]: defaultModel,
-								};
-								await this.plugin.saveSettings();
-								const textField =
-									modelSetting.settingEl.querySelector(
-										"input",
-									);
-								if (textField) {
-									textField.value = defaultModel;
-								}
-								btn.buttonEl.style.display = "none";
-							});
-					});
-				}
-
-				modelSetting.addText((text) => {
-					text.setValue(configuredModel).onChange(async (value) => {
-						const trimmed = value.trim();
-						(this.plugin.settings as any).aiModels = {
-							...(this.plugin.settings as any).aiModels,
-							[currentProvider]: trimmed,
-						};
-						await this.plugin.saveSettings();
-						const button =
-							modelSetting.settingEl.querySelector("button");
-						if (button) {
-							button.style.display =
-								trimmed === defaultModel ? "none" : "";
-						}
-					});
-				});
-			}
-
-			if (
-				["openrouter", "ollama", "lmstudio"].includes(currentProvider)
-			) {
-				new Setting(containerEl)
-					.setName("API Base URL")
-					.setDesc("OpenAI-compatible API endpoint")
-					.addText((text) =>
-						text
-							.setPlaceholder(
-								PROVIDER_DEFAULT_BASE_URLS[currentProvider],
-							)
-							.setValue(
-								(this.plugin.settings.aiBaseUrls as any)?.[
-									currentProvider
-								] ||
-									PROVIDER_DEFAULT_BASE_URLS[currentProvider],
-							)
-							.onChange(async (value) => {
-								const urls =
-									this.plugin.settings.aiBaseUrls || {};
-								this.plugin.settings.aiBaseUrls = {
-									...urls,
-									[currentProvider]: value.trim(),
-								};
-								await this.plugin.saveSettings();
-							}),
-					);
-				this._renderKeyApproval(
-					new Setting(containerEl).setName("API key host"),
-					currentProvider,
-				);
-			}
-
-			new Setting(containerEl)
-				.setName("API Key")
-				.setDesc(
-					"Select a SecretStorage key. Optional for local providers.",
-				)
-				.addComponent((el) =>
-					new SecretComponent(this.app, el)
-						.setValue(
-							(this.plugin.settings as any)[
-								`${currentProvider}SecretName`
-							] || "",
-						)
-						.onChange(async (value) => {
-							(this.plugin.settings as any)[
-								`${currentProvider}SecretName`
-							] = value;
-							await this.plugin.saveSettings();
-						}),
-				);
-		}
-
-		containerEl.createEl("h2", {
-			text: "Cheatsheet",
-			cls: "chronos-setting-header",
-		});
-
-		const textarea = containerEl.createEl("textarea", {
-			cls: "chronos-settings-md-container",
-			text: ChronosTimeline.cheatsheet,
-		});
-
-		textarea.readOnly = true;
-
-		containerEl.createEl("br");
-
-		const copyButton = containerEl.createEl("button", {
-			text: "Copy cheatsheet",
-		});
-		copyButton.classList.add("mod-cta");
-		copyButton.addEventListener("click", async () => {
-			try {
-				await navigator.clipboard.writeText(ChronosTimeline.cheatsheet);
-				new Notice(
-					"Cheatsheet copied to clipboard!\nPaste it in a new Obsidian note to learn Chronos syntax",
-				);
-			} catch (err) {
-				console.error("[Chronos] Failed to copy cheatsheet:", err);
-				new Notice("Failed to copy cheatsheet");
-			}
-		});
-
-		containerEl.createEl("br");
-		containerEl.createEl("br");
-
-		const link = document.createElement("a");
-		link.textContent = "Learn more";
-		link.href = "https://github.com/clairefro/obsidian-plugin-chronos";
-		link.target = "_blank";
-		link.style.textDecoration = "underline";
-
-		containerEl.appendChild(link);
 	}
 }

@@ -1,0 +1,34 @@
+#!/bin/sh
+# Auto-format staged files with Prettier (never blocks the commit).
+# Files that also have unstaged changes are skipped so partial staging isn't clobbered.
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+unstaged=$(git diff --name-only)
+
+to_format=""
+skipped=""
+for f in $staged; do
+	if printf '%s\n' "$unstaged" | grep -Fxq "$f"; then
+		skipped="$skipped $f"
+	else
+		to_format="$to_format $f"
+	fi
+done
+
+if [ -n "$to_format" ]; then
+	# shellcheck disable=SC2086
+	npx prettier --write --ignore-unknown $to_format >/dev/null 2>&1
+	# shellcheck disable=SC2086
+	git add $to_format
+fi
+
+if [ -n "$skipped" ]; then
+	echo ""
+	echo "⚠️  Chronos: skipped auto-format for files with unstaged changes:$skipped"
+	echo "   Run 'npm run format:fix' to format them."
+	echo ""
+fi
+
+exit 0

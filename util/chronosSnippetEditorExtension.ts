@@ -100,6 +100,25 @@ function getFlagSnippets(): ChronosSnippet[] {
 			label: "NOSTACK - Prevent items from stacking",
 			value: "> NOSTACK",
 		},
+		{ label: "AXIS - Show time axis on top", value: "> AXIS top" },
+		{
+			label: "GAP - Spacing between items (px)",
+			value: "> GAP 10|30",
+		},
+		{
+			label: "ALIGN - Align item text (left|center|right)",
+			value: "> ALIGN center",
+		},
+		{ label: "ROUNDED - Round range endcaps", value: "> ROUNDED" },
+		{
+			label: "TRANSLUCENT - Translucent items",
+			value: "> TRANSLUCENT",
+		},
+		{
+			label: "NOOVERFLOWTITLES - Clip long range titles",
+			value: "> NOOVERFLOWTITLES",
+		},
+		{ label: "NOUTC - Use local time for dates", value: "> NOUTC" },
 	];
 }
 
@@ -279,10 +298,11 @@ class ChronosSnippetButton extends WidgetType {
 	}
 
 	toDOM(view: EditorView): HTMLElement {
-		const button = document.createElement("button");
-		button.type = "button";
-		button.className = "chronos-snippet-menu-button";
-		button.textContent = "Insert snippet";
+		const button = createEl("button", {
+			type: "button",
+			cls: "chronos-snippet-menu-button",
+			text: "Insert snippet",
+		});
 		button.setAttribute("aria-label", "Insert a Chronos snippet");
 		button.setAttribute("aria-haspopup", "menu");
 		button.setAttribute(
@@ -343,8 +363,12 @@ export function createChronosSnippetEditorExtension(app: App) {
 				}
 
 				for (const visibleRange of view.visibleRanges) {
-					const firstLine = view.state.doc.lineAt(visibleRange.from).number;
-					const lastLine = view.state.doc.lineAt(visibleRange.to).number;
+					const firstLine = view.state.doc.lineAt(
+						visibleRange.from,
+					).number;
+					const lastLine = view.state.doc.lineAt(
+						visibleRange.to,
+					).number;
 					let insideChronos = isInsideChronosFence(view, firstLine);
 
 					for (

@@ -1,6 +1,28 @@
-import { requestUrl } from "obsidian";
+import { requestUrl, RequestUrlResponse } from "obsidian";
 import { AIProviderInterface } from "./providerFactory";
 import { systemPrompt } from "../systemPrompt";
+
+interface GeminiPart {
+	text?: string;
+	display?: string;
+}
+
+interface GeminiOutput {
+	content?: unknown;
+	text?: string;
+	outputText?: string;
+}
+
+interface GeminiResponse {
+	candidates?: {
+		content?: { parts?: GeminiPart[] } | GeminiPart[] | string;
+		outputText?: string;
+	}[];
+	output?: GeminiOutput[];
+	outputs?: GeminiOutput[];
+	results?: GeminiOutput[];
+	text?: string;
+}
 
 export class GeminiProvider implements AIProviderInterface {
 	private apiKey: string;
@@ -46,29 +68,27 @@ export class GeminiProvider implements AIProviderInterface {
 			} as Record<string, string>,
 		};
 
-		const resp: any = await requestUrl(options);
-		const json = resp?.json || {};
+		const resp: RequestUrlResponse = await requestUrl(options);
+		const json = (resp?.json || {}) as GeminiResponse;
 
-		const extractText = (obj: any): string => {
+		const extractText = (obj: GeminiResponse): string => {
 			if (!obj) return "";
 			// candidates -> content/parts
 			if (Array.isArray(obj.candidates) && obj.candidates.length) {
 				const c = obj.candidates[0];
 				// Gemini returns `content: { parts: [{ text }] }`
 				if (c && typeof c.content === "object") {
-					// content.parts -> [{ text }]
-					if (
-						Array.isArray(c.content.parts) &&
-						c.content.parts.length
-					) {
-						return c.content.parts
-							.map((p: any) => p.text || p.display || "")
-							.join("");
-					}
 					// sometimes content is an array of parts directly
 					if (Array.isArray(c.content)) {
 						return c.content
-							.map((p: any) => p.text || p.display || "")
+							.map((p) => p.text || p.display || "")
+							.join("");
+					}
+					// content.parts -> [{ text }]
+					const parts = c.content.parts;
+					if (Array.isArray(parts) && parts.length) {
+						return parts
+							.map((p) => p.text || p.display || "")
 							.join("");
 					}
 				}
@@ -81,7 +101,9 @@ export class GeminiProvider implements AIProviderInterface {
 			if (Array.isArray(out) && out.length) {
 				const first = out[0];
 				if (Array.isArray(first.content)) {
-					return first.content.map((p: any) => p.text || "").join("");
+					return (first.content as GeminiPart[])
+						.map((p) => p.text || "")
+						.join("");
 				}
 				if (typeof first.text === "string") return first.text;
 				if (typeof first.outputText === "string")
@@ -103,7 +125,7 @@ export class GeminiProvider implements AIProviderInterface {
 		});
 
 		// last-resort recursive search for text fields in the response
-		const findTextRecursively = (obj: any, depth = 0): string => {
+		const findTextRecursively = (obj: unknown, depth = 0): string => {
 			if (!obj || depth > 6) return "";
 			if (typeof obj === "string") return obj;
 			if (Array.isArray(obj)) {
@@ -112,18 +134,19 @@ export class GeminiProvider implements AIProviderInterface {
 					.join(" ");
 			}
 			if (typeof obj === "object") {
+				const rec = obj as Record<string, unknown>;
 				// Prefer 'text' and 'content' keys
-				if (typeof obj.text === "string" && obj.text.trim().length)
-					return obj.text;
+				if (typeof rec.text === "string" && rec.text.trim().length)
+					return rec.text;
 				if (
-					typeof obj.outputText === "string" &&
-					obj.outputText.trim().length
+					typeof rec.outputText === "string" &&
+					rec.outputText.trim().length
 				)
-					return obj.outputText;
-				if (Array.isArray(obj.content))
-					return findTextRecursively(obj.content, depth + 1);
-				for (const k of Object.keys(obj)) {
-					const val = obj[k];
+					return rec.outputText;
+				if (Array.isArray(rec.content))
+					return findTextRecursively(rec.content, depth + 1);
+				for (const k of Object.keys(rec)) {
+					const val = rec[k];
 					const found = findTextRecursively(val, depth + 1);
 					if (found && found.trim().length) return found;
 				}

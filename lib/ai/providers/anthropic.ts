@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { requestUrl, RequestUrlResponse } from "obsidian";
 import { PROVIDER_DEFAULT_MODELS } from "../../../constants";
 import { systemPrompt } from "../systemPrompt";
 import { AIProviderInterface } from "./providerFactory";
@@ -7,6 +7,18 @@ const RETIRED_HAIKU_MODELS = [
 	"claude-3-5-haiku-latest",
 	"claude-3-5-haiku-20241022",
 ];
+
+interface AnthropicJson {
+	content?: { type?: string; text?: string }[];
+	error?: { message?: string; type?: string };
+	request_id?: string;
+}
+
+interface RequestErrorLike {
+	json?: { error?: { message?: string } };
+	responseText?: string;
+	message?: string;
+}
 
 export default class AnthropicProvider implements AIProviderInterface {
 	private apiKey: string;
@@ -23,7 +35,7 @@ export default class AnthropicProvider implements AIProviderInterface {
 	async toChronos(content: string): Promise<string> {
 		if (!this.apiKey) throw new Error("No Anthropic API key provided");
 
-		let response: any;
+		let response: RequestUrlResponse;
 		try {
 			response = await requestUrl({
 				url: "https://api.anthropic.com/v1/messages",
@@ -41,28 +53,31 @@ export default class AnthropicProvider implements AIProviderInterface {
 					messages: [{ role: "user", content }],
 				}),
 			});
-		} catch (error: any) {
+		} catch (e: unknown) {
+			const error = e as RequestErrorLike;
 			const message =
 				error?.json?.error?.message ||
 				error?.responseText ||
 				error?.message ||
-				String(error);
+				String(e);
 			throw new Error(`Anthropic request failed: ${message}`);
 		}
 
+		const json = response.json as AnthropicJson | undefined;
+
 		if (response.status >= 400) {
-			const apiError = response.json?.error;
+			const apiError = json?.error;
 			const message =
 				apiError?.message || response.text || "Unknown API error";
-			const requestId = response.json?.request_id;
+			const requestId = json?.request_id;
 			throw new Error(
 				`Anthropic request failed (${response.status}${apiError?.type ? ` ${apiError.type}` : ""}): ${message}${requestId ? ` (request ID: ${requestId})` : ""}`,
 			);
 		}
 
-		const text = response?.json?.content
-			?.filter((part: any) => part?.type === "text")
-			.map((part: any) => part.text)
+		const text = json?.content
+			?.filter((part) => part?.type === "text")
+			.map((part) => part.text)
 			.join("")
 			.trim();
 		if (text) return text;

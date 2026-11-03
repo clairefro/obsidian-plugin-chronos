@@ -36,6 +36,11 @@ export interface ChronosPluginSettings {
 	align: Align;
 	clickToUse: boolean;
 	roundRanges: boolean;
+	overflowRangeTitles?: boolean;
+	translucentItems?: boolean;
+	axisPosition?: "top" | "bottom";
+	gapHorizontal?: number;
+	gapVertical?: number;
 	useUtc: boolean;
 	useAI: boolean;
 	lastSeenVersion?: string;

@@ -1,4 +1,4 @@
-import { requestUrl } from "obsidian";
+import { requestUrl, RequestUrlResponse } from "obsidian";
 import {
 	PROVIDER_DEFAULT_BASE_URLS,
 	PROVIDER_DEFAULT_MODELS,
@@ -7,14 +7,32 @@ import { resolveAiRequest } from "../endpoint";
 import { systemPrompt } from "../systemPrompt";
 import { AIProviderConfig, AIProviderInterface } from "./providerFactory";
 
-function extractResponseText(value: any): string {
+interface OpenAICompatibleJson {
+	choices?: {
+		message?: { content?: unknown };
+		text?: unknown;
+		finish_reason?: string;
+	}[];
+	output?: { type?: string; content?: unknown }[];
+	output_text?: unknown;
+	incomplete_details?: { reason?: string };
+	finish_reason?: string;
+	status?: string;
+}
+
+function isTextPart(part: unknown): part is { type: string; text?: string } {
+	const type = (part as { type?: string } | null)?.type;
+	return type === "text" || type === "output_text";
+}
+
+function extractResponseText(value: unknown): string {
 	if (typeof value === "string") return value.trim();
 	if (!Array.isArray(value)) return "";
 	return value
-		.map((part: any) =>
+		.map((part: unknown) =>
 			typeof part === "string"
 				? part
-				: part?.type === "text" || part?.type === "output_text"
+				: isTextPart(part)
 					? part.text || ""
 					: "",
 		)
@@ -74,7 +92,7 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 			headers["X-Title"] = "Chronos";
 		}
 
-		let response: any;
+		let response: RequestUrlResponse;
 		try {
 			response = await requestUrl({
 				url: requestUrlValue,
@@ -100,18 +118,18 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 							},
 				),
 			});
-		} catch (error: any) {
-			const message =
-				error?.responseText || error?.message || String(error);
+		} catch (e: unknown) {
+			const error = e as { responseText?: string; message?: string };
+			const message = error?.responseText || error?.message || String(e);
 			throw new Error(`${provider} request failed: ${message}`);
 		}
 
-		const json = response?.json;
+		const json = response?.json as OpenAICompatibleJson | undefined;
 		const choice = json?.choices?.[0];
 		const lmStudioMessageContent = Array.isArray(json?.output)
 			? json.output
-					.filter((item: any) => item?.type === "message")
-					.map((item: any) => extractResponseText(item.content))
+					.filter((item) => item?.type === "message")
+					.map((item) => extractResponseText(item.content))
 					.join("")
 			: [];
 		const result = useLMStudioChatApi
