@@ -21,7 +21,11 @@ import LZString from "lz-string";
 import * as ChronosLib from "chronos-timeline-md";
 import { obsidianTooltip } from "../util/obsidianTooltip";
 import { applyGapSetting } from "../util/applyGapSetting";
-import { DateField, findInvalidDateFields } from "../util/validateItemDates";
+import {
+	DateField,
+	findInvalidDateFields,
+	normalizeDateValue,
+} from "../util/validateItemDates";
 type ChronosTimelineCtor = typeof ChronosLib.ChronosTimeline;
 const chronosLibExports = ChronosLib as unknown as {
 	ChronosTimeline?: ChronosTimelineCtor;
@@ -566,10 +570,14 @@ function chronosItemsToMarkdown(
 	let lines = [];
 	const invalid: InvalidItem[] = [];
 	for (const item of items) {
-		const { start, end, group, content, color, type, description } = item;
+		const { group, content, color, type, description } = item;
 
 		// skip items without start
-		if (!start) continue;
+		if (!item.start) continue;
+
+		// convert common formats (YYYY/MM/DD, "Oct 14, 2026", ...) to Chronos dates
+		const start = normalizeDateValue(item.start);
+		const end = item.end ? normalizeDateValue(item.end) : undefined;
 
 		// Format: <type> [start~end] content | "description"
 

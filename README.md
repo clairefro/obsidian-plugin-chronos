@@ -799,6 +799,22 @@ color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcod
 description?    (Optional)
 ```
 
+## Bases: Date formats and invalid values
+
+`start` and `end` accept Chronos dates (`YYYY`, `YYYY-MM`, `YYYY-MM-DD`, optionally with `THH:mm[:ss]`). The Bases view also converts these common formats automatically:
+
+| Written in note                        | Read as                                      |
+| -------------------------------------- | -------------------------------------------- |
+| `2026/10/14`, `2026.10.14`, `2026-1-4` | `2026-10-14`, `2026-10-14`, `2026-01-04`     |
+| `2026-10-14 12:00`                     | `2026-10-14T12:00`                           |
+| `2026-10-14T12:00:00.000Z`             | `2026-10-14T12:00:00` (time zone is ignored) |
+| `Oct 14, 2026`, `14 October 2026`      | `2026-10-14`                                 |
+| `14/10/2026`, `10/14/2026`             | `2026-10-14`                                 |
+
+Ambiguous dates like `03/04/2026` (day or month first?) are not guessed. Use `YYYY-MM-DD` for those.
+
+Notes with a value that can't be read (for example `start: abc`, or an `end` before the `start`) are skipped so the rest of your timeline still shows. A notice names the properties with problems, and the console lists the affected notes.
+
 ## Bases: Changing property sources
 
 You can change the default sources for item properties using the Item Property Sources configuration.
