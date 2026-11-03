@@ -753,7 +753,7 @@ By adding frontmatter properties to your notes or using formulas, you can easily
 start           (Chronos date)
 end?            (Chronos date)
 content?        (Optional alternate title - defaults to note name)
-type?           (event|point|period|marker - defaults to point, or event if there is an end date)
+type?           (event|point|period|marker - defaults to point, or event if there is an end date or start ends with ~ for ongoing)
 color?          (red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?
 ```
@@ -794,7 +794,7 @@ Figure B
 start           (Chronos date)
 end?            (Chronos date)
 content?        (Optional alternate item title - defaults to note name)
-type?           (Option: event|point|period|marker - defaults to point, or event if there is an end date)
+type?           (Option: event|point|period|marker - defaults to point, or event if there is an end date or start ends with ~ for ongoing)
 color?          (Optional: red|orange|yellow|green|blue|purple|pink|cyan|<hexcode>)
 description?    (Optional)
 ```

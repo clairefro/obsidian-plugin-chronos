@@ -337,7 +337,7 @@ export const itemProps = {
 	type: {
 		displayName: "Item Type",
 		required: "Recommended",
-		notes: "Options: event, period, marker, point. Defaults to point if no end date, event if an end date is present.",
+		notes: "Options: event, period, marker, point. Defaults to point, or event if there is an end date or start ends with ~ (ongoing).",
 	},
 	color: {
 		displayName: "Color",
@@ -531,10 +531,13 @@ function chronosItemsToMarkdown(
 			marker: "=",
 		};
 
-		// default (no valid type): point if no end date, event if end date
+		// a trailing tilde on start (ex: "2020~") means ongoing to present
+		const isOngoing = start.trim().endsWith("~");
+
+		// default (no valid type): event if ranged (end date or ongoing), else point
 		const resolvedType =
-			type && TYPES[type] ? type : end ? "event" : "point";
-		let line = `${TYPES[resolvedType]} [${start}`;
+			type && TYPES[type] ? type : end || isOngoing ? "event" : "point";
+		let line = `${TYPES[resolvedType]} [${end && isOngoing ? start.trim().slice(0, -1) : start}`;
 		if (end) line += `~${end}`;
 		line += "]";
 		if (color) line += ` #${color} `;
