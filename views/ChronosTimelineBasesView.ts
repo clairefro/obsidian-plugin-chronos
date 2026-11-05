@@ -8,6 +8,7 @@ import {
 	setIcon,
 	QueryController,
 	NullValue,
+	ListValue,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "../types";
@@ -130,7 +131,7 @@ export class ChronosTimelineBasesView extends BasesView {
 				const filePath = entry.file.path;
 
 				/** automatically postpend a wikilink to this note so users can click to open */
-				const descriptionRaw = this.lookupProperty(
+				const descriptionRaw = this.lookupFlatText(
 					entry,
 					"description",
 				);
@@ -147,7 +148,7 @@ export class ChronosTimelineBasesView extends BasesView {
 					start: this.lookupProperty(entry, "start"),
 					end: this.lookupProperty(entry, "end"),
 					group,
-					content: this.lookupProperty(entry, "content") || fileName,
+					content: this.lookupFlatText(entry, "content") || fileName,
 					color: normalizeColor(this.lookupProperty(entry, "color")),
 					type: normalizeType(this.lookupProperty(entry, "type")),
 					description,
@@ -301,6 +302,32 @@ export class ChronosTimelineBasesView extends BasesView {
 		if (propId) {
 			return getValueAsString(entry, propId);
 		}
+	}
+
+	// Text properties may be YAML lists: join items into one line so the
+	// Chronos item stays on a single line.
+	private lookupFlatText(
+		entry: BasesEntry,
+		prop: "description" | "content",
+	): string | undefined {
+		const propId = this.config.getAsPropertyId(configKey(prop));
+		if (!propId) return undefined;
+		const val = entry.getValue(propId);
+		if (val == null || val instanceof NullValue) return undefined;
+		let text: string;
+		if (val instanceof ListValue) {
+			const parts: string[] = [];
+			for (let i = 0; i < val.length(); i++) {
+				const item = val.get(i);
+				if (item instanceof NullValue) continue;
+				const str = item.toString().trim();
+				if (str) parts.push(str);
+			}
+			text = parts.join(", ");
+		} else {
+			text = val.toString();
+		}
+		return text.replace(/\s*\r?\n\s*/g, " ").trim() || undefined;
 	}
 
 	// Help text and link, shown only when no timeline is rendered.
@@ -506,11 +533,9 @@ function getValueAsString(
 	propId: BasesPropertyId,
 ): string | undefined {
 	const val = entry.getValue(propId);
-	return val == null
+	return val == null || val instanceof NullValue
 		? undefined
-		: val.equals(NullValue.value)
-			? undefined
-			: val.toString().trim();
+		: val.toString().trim();
 }
 
 interface InvalidItem {
