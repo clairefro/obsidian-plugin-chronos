@@ -737,6 +737,15 @@ There are two rules to know:
 
 This ensures that you can override any existing frontmatter in your notes if you wish (ex: you're already using `start` property for some other purpose, or want to format `start` differently for Chronos)
 
+## Bases: Setting the initial view
+
+In the view settings, under **Initial View**, set **Default view start** and **Default view end** to choose the range shown when the view loads. Both must be set. The values are saved in the `.base` file, so they persist for each view.
+
+- Dates: `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` (ex: `2026-01-01`)
+- Relative to today, in days: `today`, `today-7`, `today+30`
+
+For example, `today-7` and `today+7` always opens centered on the current date. Invalid values, or a start after the end, are ignored and the timeline fits all items.
+
 ## Bases: Interacting with the Chronos Timeline view
 
 The Chronos Timeline Bases view automatically links to the related note.

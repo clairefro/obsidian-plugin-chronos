@@ -132,7 +132,10 @@ export class ChronosTimelineBasesView extends BasesView {
 			});
 		});
 
-		this.chronosMarkdown = chronosItemsToMarkdown(items);
+		this.chronosMarkdown = chronosItemsToMarkdown(items, {
+			start: resolveViewDate(this.config.get(DEFAULT_VIEW_START_KEY)),
+			end: resolveViewDate(this.config.get(DEFAULT_VIEW_END_KEY)),
+		});
 		if (!this.chronosMarkdown.length) {
 			this.renderInstructionsOnEmptyResults();
 			return;
@@ -406,6 +409,10 @@ function configKey(prop: ItemPropertyName): string {
 	return `chronos.${prop}`;
 }
 
+// Config keys for the initial visible range of the timeline.
+const DEFAULT_VIEW_START_KEY = "chronos.defaultViewStart";
+const DEFAULT_VIEW_END_KEY = "chronos.defaultViewEnd";
+
 // This function makes sure that the view options are set up with the correct
 // default values without preventing the user from clearing the field. It also
 // ports legacy view configuration (via global settings + visible properties)
@@ -492,6 +499,24 @@ export function generateViewOptions(
 				};
 			}),
 		},
+		{
+			displayName: "Initial View",
+			type: "group",
+			items: [
+				{
+					key: DEFAULT_VIEW_START_KEY,
+					type: "text",
+					displayName: "Default view start",
+					placeholder: "2026-01-01 or today-7",
+				},
+				{
+					key: DEFAULT_VIEW_END_KEY,
+					type: "text",
+					displayName: "Default view end",
+					placeholder: "2026-02-01 or today+7",
+				},
+			],
+		},
 	];
 }
 
@@ -541,6 +566,25 @@ function getValueAsString(
 			: val.toString().trim();
 }
 
+// Resolve a user-entered view boundary to a date string Chronos understands.
+// Accepts YYYY[-MM[-DD]] or "today" with an optional day offset (today-7,
+// today+30). Returns undefined for empty or invalid input.
+export function resolveViewDate(raw: unknown): string | undefined {
+	if (typeof raw !== "string") return undefined;
+	const val = raw.trim();
+	if (/^-?\d{1,4}(-\d{2}(-\d{2})?)?$/.test(val)) return val;
+
+	const rel = /^today\s*(?:([+-])\s*(\d+))?$/i.exec(val);
+	if (!rel) return undefined;
+	const d = new Date();
+	if (rel[1]) {
+		const days = parseInt(rel[2], 10) * (rel[1] === "-" ? -1 : 1);
+		d.setDate(d.getDate() + days);
+	}
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 // Convert item object to Chronos markdown string
 function chronosItemsToMarkdown(
 	items: {
@@ -552,6 +596,7 @@ function chronosItemsToMarkdown(
 		type?: string;
 		description?: string;
 	}[],
+	defaultView?: { start?: string; end?: string },
 ): string {
 	let lines = [];
 	for (const item of items) {
@@ -585,6 +630,18 @@ function chronosItemsToMarkdown(
 	}
 	if (lines.length > 15) {
 		lines = ["> HEIGHT 500\n", ...lines];
+	}
+	// only apply when both ends resolve and form a valid range
+	if (
+		lines.length &&
+		defaultView?.start &&
+		defaultView?.end &&
+		defaultView.start <= defaultView.end
+	) {
+		lines = [
+			`> DEFAULTVIEW ${defaultView.start}|${defaultView.end}\n`,
+			...lines,
+		];
 	}
 	return lines.join("\n");
 }
