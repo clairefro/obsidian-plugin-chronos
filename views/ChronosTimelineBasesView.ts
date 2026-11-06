@@ -415,8 +415,14 @@ function initializeViewOptions(
 ) {
 	// Check the config schema.
 	const SCHEMA_KEY = "chronos.config-schema";
+	const CURRENT_SCHEMA = 2;
 	const configSchema = viewConfig.get(SCHEMA_KEY);
-	if (configSchema === undefined) {
+	// Schema 1 shipped with a bug where legacy views were stamped without their
+	// property sources being ported. Re-run for those views if nothing is configured.
+	const needsRepair =
+		configSchema === 1 &&
+		itemPropertyNames.every((prop) => !viewConfig.get(configKey(prop)));
+	if (configSchema === undefined || needsRepair) {
 		// If the schema is "undefined," this is either a new view, or an
 		// existing view created in an older version of the plugin (<=4.1.2).
 		// We can scan for the legacy prop names to see if any of them are
@@ -445,7 +451,14 @@ function initializeViewOptions(
 
 		// If we found none of the default properties, this is probably a new View.
 		// Let's initialize it.
-		if (Object.values(selectedProps).every((val) => val === undefined)) {
+		const foundNone = Object.values(selectedProps).every(
+			(val) => val === undefined,
+		);
+		// A repair only ever applies a real legacy match; it never writes defaults
+		// over a view the user may have deliberately left blank.
+		if (foundNone && needsRepair) {
+			// nothing to port
+		} else if (foundNone) {
 			// console.info(
 			// 	"[Chronos] New View detected. Configuring with default property sources.",
 			// );
@@ -458,14 +471,15 @@ function initializeViewOptions(
 		}
 		// Otherwise, this is probably a legacy View. Let's port the old settings over.
 		else {
-			// console.info("[Chronos] Legacy View detected. Porting settings.");
-			// for (const prop of itemPropertyNames) {
-			// 	viewConfig.set(configKey(prop), selectedProps[prop]);
-			// }
+			for (const prop of itemPropertyNames) {
+				if (selectedProps[prop] !== undefined) {
+					viewConfig.set(configKey(prop), selectedProps[prop]);
+				}
+			}
 		}
 
 		// Set the schema to a defined value so that we don't keep doing this.
-		viewConfig.set(SCHEMA_KEY, 1);
+		viewConfig.set(SCHEMA_KEY, CURRENT_SCHEMA);
 	}
 }
 
