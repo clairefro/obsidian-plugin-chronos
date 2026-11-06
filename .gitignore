@@ -20,3 +20,4 @@ data.json
 .DS_Store
 
 cache.json
+test/.build
