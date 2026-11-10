@@ -61,18 +61,13 @@ const ChronosTimeline: any =
 import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInteractions";
 import { attachTimelineMenu } from "./util/timelineMenu";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
+import { getUnseenChangelogs, type GitHubRelease } from "./util/changelog";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
 
 interface ObservedEditorEl extends HTMLElement {
 	_chronosResizeObserver?: ResizeObserver;
-}
-
-interface GitHubRelease {
-	tag_name: string;
-	body?: string | null;
-	published_at: string;
 }
 
 const DEFAULT_SETTINGS: ChronosPluginSettings = {
@@ -905,56 +900,11 @@ export default class ChronosPlugin extends Plugin {
 	): Promise<{ version: string; date: string; content: string }[]> {
 		try {
 			const releases = await this._fetchGitHubReleases();
-
-			const unseenEntries: {
-				version: string;
-				date: string;
-				content: string;
-			}[] = [];
-
-			for (const release of releases) {
-				// Extract version from tag (e.g., "v3.0.0" or "3.0.0")
-				const version = release.tag_name.replace(/^v/, "");
-
-				// Include if version is greater than lastSeenVersion and <= currentVersion
-				const comparisonToLast = this._compareVersions(
-					version,
-					lastSeenVersion,
-				);
-				const comparisonToCurrent = this._compareVersions(
-					version,
-					currentVersion,
-				);
-
-				if (comparisonToLast > 0 && comparisonToCurrent <= 0) {
-					// Check if this is a patch release (x.x.non-zero)
-					const isPatchRelease = this._isPatchRelease(version);
-					const hasIncludeComment = release.body
-						?.trim()
-						.toLowerCase()
-						.replace(/\s+/g, "")
-						.startsWith("<!--include-->");
-
-					// Skip patch releases unless they have the <!-- include --> comment
-					if (isPatchRelease && !hasIncludeComment) {
-						continue;
-					}
-
-					unseenEntries.push({
-						version,
-						date: release.published_at,
-						content: release.body || "No release notes available.",
-					});
-				}
-			}
-
-			// Sort by published date descending (newest first)
-			unseenEntries.sort((a, b) => {
-				return new Date(b.date).getTime() - new Date(a.date).getTime();
-			});
-
-			// Limit to 4 most recent releases
-			return unseenEntries.slice(0, 4);
+			return getUnseenChangelogs(
+				releases,
+				lastSeenVersion,
+				currentVersion,
+			);
 		} catch (error) {
 			console.error(
 				"[Chronos] Error fetching changelogs from GitHub:",
@@ -982,28 +932,6 @@ export default class ChronosPlugin extends Plugin {
 			console.error("[Chronos] Failed to fetch GitHub releases:", error);
 			throw error;
 		}
-	}
-
-	private _compareVersions(v1: string, v2: string): number {
-		const parts1 = v1.split(".").map(Number);
-		const parts2 = v2.split(".").map(Number);
-
-		for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
-			const part1 = parts1[i] || 0;
-			const part2 = parts2[i] || 0;
-
-			if (part1 > part2) return 1;
-			if (part1 < part2) return -1;
-		}
-
-		return 0;
-	}
-
-	private _isPatchRelease(version: string): boolean {
-		// Parse version as x.x.x
-		const parts = version.split(".").map(Number);
-		// It's a patch release if the third number (patch) is non-zero
-		return parts.length >= 3 && parts[2] > 0;
 	}
 }
 

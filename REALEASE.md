@@ -15,6 +15,10 @@
 4. Finalize
     - Check GitHub Actions tab for success.
     - Edit the new GitHub Release to add notes.
+    - The in-app What's New view shows unseen major and minor releases. Patch
+      releases are ignored unless their notes start with `<!-- include -->`.
+      Put the actual release notes after the marker. Missed eligible releases
+      can appear when updating to a patch.
 
 ## Troubleshooting
 
