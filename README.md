@@ -21,6 +21,7 @@ Try it in the [Live Playground](https://clairefro.github.io/chronos-timeline-md)
 - Note linking
 - Inline snippets
 - Text-to-timeline with AI (multi-provider)
+- Edit timelines with AI
 - Generate combined timeline from all Chronos items in folder
 - Grouping
 - Colors
@@ -78,16 +79,19 @@ Input can be long text in your notes with time information, or vague like:
 ### Edit an inline timeline
 
 Open the options menu in the lower-left corner of an inline timeline and select
-**Edit markdown** to edit the code block. When AI features are enabled, **Edit
-markdown with AI** sends the timeline markdown and your requested changes to
-your configured provider. Expand **Current markdown** to inspect the existing
-timeline, then expand **Proposed changes** to review the highlighted diff and
-inspect the rendered timeline preview. Enter
-additional instructions and select **Refine with AI** to revise the proposal
-before applying it. Press Enter to generate or refine, and Shift+Enter to add
-a newline to your request.
-If the note changes while the request is in progress, generate the changes
-again. These actions are not available in Bases timelines.
+**Edit markdown** to edit the code block. This action is not available in Bases timelines.
+
+### Edit timeline with AI
+
+With **Use AI features** enabled and a provider configured in Chronos settings,
+open the options menu in the lower-left corner of an inline timeline and select
+**Edit markdown with AI**. Describe the changes you want and select **Generate
+changes**. The timeline markdown and your request are sent to the configured
+provider.
+
+![edit timeline with AI example](./docs/p3.gif)
+
+AI editing is not available in Bases timelines.
 
 ### Generate timeline from folder
 
@@ -142,6 +146,8 @@ After installing the Chronos Timeline plugin, paste the contents of [this cheats
         - [Insert advanced template](#insert-advanced-template)
         - [Insert snippet widget](#insert-snippet-widget)
         - [Generate timeline with AI](#generate-timeline-with-ai)
+        - [Edit an inline timeline](#edit-an-inline-timeline)
+        - [Edit timeline with AI](#edit-timeline-with-ai)
         - [Generate timeline from folder](#generate-timeline-from-folder)
         - [Cheatsheet](#cheatsheet)
     - [Contents](#contents)
