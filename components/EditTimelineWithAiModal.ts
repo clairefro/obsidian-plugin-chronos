@@ -50,14 +50,6 @@ export class EditTimelineWithAiModal extends Modal {
 		this.titleEl.addClass("chronos-ai-edit-title");
 		this.contentEl.addClass("chronos-ai-edit-content");
 		const requestLabelId = `chronos-ai-edit-request-label-${++nextRequestLabelId}`;
-		const input = this.contentEl.createEl("textarea", {
-			cls: "chronos-ai-edit-textarea chronos-ai-edit-request",
-			attr: {
-				placeholder: "Describe the changes you want",
-				"aria-labelledby": requestLabelId,
-				rows: "4",
-			},
-		});
 		const originalDetails = this.contentEl.createEl("details", {
 			cls: "chronos-ai-edit-details",
 		});
@@ -66,7 +58,6 @@ export class EditTimelineWithAiModal extends Modal {
 			cls: "chronos-ai-edit-original",
 			attr: { "aria-label": "Current timeline markdown", tabindex: "0" },
 		});
-		const status = this.contentEl.createEl("p");
 		const review = this.contentEl.createDiv({
 			cls: "chronos-ai-edit-review",
 		});
@@ -79,8 +70,19 @@ export class EditTimelineWithAiModal extends Modal {
 			cls: "chronos-ai-edit-diff",
 			attr: { "aria-label": "Proposed markdown changes", role: "region" },
 		});
-		review.createEl("h3", { text: "Timeline preview" });
+		const previewHeading = review.createEl("h3", {
+			text: "Timeline preview",
+		});
 		const preview = review.createDiv({ cls: "chronos-ai-preview" });
+		const input = this.contentEl.createEl("textarea", {
+			cls: "chronos-ai-edit-textarea chronos-ai-edit-request",
+			attr: {
+				placeholder: "Describe the changes you want",
+				"aria-labelledby": requestLabelId,
+				rows: "4",
+			},
+		});
+		const status = this.contentEl.createEl("p");
 		let snapshot: TimelineEditSnapshot | undefined;
 		let result: string | undefined;
 		let requestVersion = 0;
@@ -135,7 +137,10 @@ export class EditTimelineWithAiModal extends Modal {
 					const version = requestVersion;
 					providerLabel.setText(getProviderLabel());
 					button.setDisabled(true);
+					button.setButtonText("Generating...");
+					button.buttonEl.addClass("chronos-ai-edit-generating");
 					applyButton.setDisabled(true);
+					status.setText("");
 					try {
 						const current = this.capture();
 						if (
@@ -155,7 +160,8 @@ export class EditTimelineWithAiModal extends Modal {
 								current.markdown,
 							);
 						}
-						status.setText("Generating changes...");
+						previewHeading.hidden = true;
+						preview.hidden = true;
 						const generated = await this.generate(
 							result ?? snapshot.markdown,
 							request,
@@ -169,6 +175,8 @@ export class EditTimelineWithAiModal extends Modal {
 						}
 						const wasHidden = review.hidden;
 						review.hidden = false;
+						previewHeading.hidden = false;
+						preview.hidden = false;
 						const candidate = preview.createDiv({
 							cls: "chronos-timeline-container chronos-ai-preview-timeline",
 						});
@@ -210,6 +218,16 @@ export class EditTimelineWithAiModal extends Modal {
 						);
 					} finally {
 						if (!this.closed) {
+							previewHeading.hidden = false;
+							preview.hidden = false;
+							button.buttonEl.removeClass(
+								"chronos-ai-edit-generating",
+							);
+							button.setButtonText(
+								result === undefined
+									? "Generate changes"
+									: "Refine with AI",
+							);
 							button.setDisabled(false);
 							applyButton.setDisabled(result === undefined);
 						}

@@ -9,7 +9,8 @@ export type ProviderName =
 	| "anthropic"
 	| "openrouter"
 	| "ollama"
-	| "lmstudio";
+	| "lmstudio"
+	| "custom";
 
 export interface AIProviderConfig {
 	provider: ProviderName;
@@ -55,6 +56,7 @@ export function getProvider(
 		case "openrouter":
 		case "ollama":
 		case "lmstudio":
+		case "custom":
 			return new OpenAICompatibleProvider({
 				...config,
 				provider: name,

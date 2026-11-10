@@ -1014,6 +1014,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			openrouter: "OpenRouter",
 			ollama: "Ollama",
 			lmstudio: "LM Studio",
+			custom: "Other OpenAI compatible",
 		};
 		const providerName = (provider: string) =>
 			providerNames[provider] || provider;
@@ -1045,7 +1046,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				const configuredModel =
 					settings.aiModels?.[provider] || defaultModel;
 				let modelInput: HTMLInputElement | undefined;
-				if (configuredModel !== defaultModel) {
+				if (defaultModel && configuredModel !== defaultModel) {
 					setting
 						.addButton((button) =>
 							button
@@ -1068,9 +1069,13 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				}
 				setting.addText((text) => {
 					modelInput = text.inputEl;
-					text.setValue(configuredModel).onChange(async (value) => {
-						await saveModel(provider, value.trim());
-					});
+					text.setPlaceholder(
+						provider === "custom" ? "e.g. model-name" : "",
+					)
+						.setValue(configuredModel)
+						.onChange(async (value) => {
+							await saveModel(provider, value.trim());
+						});
 				});
 			},
 		});
@@ -1158,18 +1163,22 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			},
 		});
 		const baseUrlDefinition = (
-			provider: "openrouter" | "ollama" | "lmstudio",
+			provider: "openrouter" | "ollama" | "lmstudio" | "custom",
 		): SettingDefinition => ({
 			name: `${providerName(provider)} API base URL`,
-			desc: "OpenAI-compatible API endpoint",
+			desc: "OpenAI-compatible API base URL (before /chat/completions)",
 			visible: providerIs(provider),
 			render: (setting) => {
 				setting.addText((text) =>
 					text
-						.setPlaceholder(PROVIDER_DEFAULT_BASE_URLS[provider])
+						.setPlaceholder(
+							PROVIDER_DEFAULT_BASE_URLS[provider] ||
+								"https://example.com/v1",
+						)
 						.setValue(
 							settings.aiBaseUrls?.[provider] ||
-								PROVIDER_DEFAULT_BASE_URLS[provider],
+								PROVIDER_DEFAULT_BASE_URLS[provider] ||
+								"",
 						)
 						.onChange(async (value) => {
 							settings.aiBaseUrls = {
@@ -1184,8 +1193,10 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 		const secretDefinition = (provider: string): SettingDefinition => ({
 			name: `${providerName(provider)} API key`,
 			desc:
-				provider === "ollama" || provider === "lmstudio"
-					? "Select a SecretStorage key (optional for local providers)."
+				provider === "ollama" ||
+				provider === "lmstudio" ||
+				provider === "custom"
+					? "Select a SecretStorage key if your server requires one."
 					: "Select a SecretStorage key for this provider.",
 			visible: providerIs(provider),
 			render: (setting) => {
@@ -1458,12 +1469,12 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 			group("AI", [
 				{
 					name: "Use AI features",
-					desc: "Toggle AI timeline generation commands and settings.",
+					desc: "Toggle AI timeline generation, editing, and settings.",
 					control: { type: "toggle", key: "useAI" },
 				},
 				{
 					name: "AI provider",
-					desc: "Choose the provider for timeline generation.",
+					desc: "Choose the provider for timeline generation and editing.",
 					visible: aiEnabled,
 					control: {
 						type: "dropdown",
@@ -1476,6 +1487,7 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 							openrouter: "OpenRouter",
 							ollama: "Ollama (local)",
 							lmstudio: "LM Studio (local)",
+							custom: "Other OpenAI compatible",
 						},
 					},
 				},
@@ -1485,15 +1497,18 @@ class ChronosPluginSettingTab extends PluginSettingTab {
 				modelDefinition("openrouter"),
 				localModelDefinition("ollama"),
 				localModelDefinition("lmstudio"),
+				modelDefinition("custom"),
 				baseUrlDefinition("openrouter"),
 				baseUrlDefinition("ollama"),
 				baseUrlDefinition("lmstudio"),
+				baseUrlDefinition("custom"),
 				secretDefinition("openai"),
 				secretDefinition("gemini"),
 				secretDefinition("anthropic"),
 				secretDefinition("openrouter"),
 				secretDefinition("ollama"),
 				secretDefinition("lmstudio"),
+				secretDefinition("custom"),
 			]),
 			group("Cheatsheet", [
 				{

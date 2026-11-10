@@ -66,6 +66,8 @@ Highlight text in your notes and run the "Generate" command.
 
 Choose a provider in Chronos settings. Cloud providers use a key selected from Obsidian SecretStorage. OpenRouter, Ollama, and LM Studio use OpenAI-compatible endpoints; the local model list is loaded from the server's `/models` endpoint. Set the base URL first, then use **Refresh models** if you change the server or model list. Ollama and LM Studio do not require an API key.
 
+For another OpenAI-compatible service, select **Other OpenAI compatible** and enter its model name and API base URL (for example, `https://example.com/v1`, without `/chat/completions`). Select an API key from Obsidian SecretStorage if the service requires one. The service must support the OpenAI-compatible chat completions API. The configured service receives the text or timeline and instructions you submit.
+
 Input can be long text in your notes with time information, or vague like:
 
 - "Detailed history of the Cold War"
@@ -83,6 +85,11 @@ open the options menu in the lower-left corner of an inline timeline and select
 **Edit markdown with AI**. Describe the changes you want and select **Generate
 changes**. The timeline markdown and your request are sent to the configured
 provider.
+
+Review the proposed changes and timeline preview before applying them. To
+revise the proposal, enter further instructions and select **Refine with AI**.
+The preview is hidden while the new proposal is generated and returns to the
+previous proposal if the refinement fails.
 
 ![edit timeline with AI example](./docs/p3.gif)
 

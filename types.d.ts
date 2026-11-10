@@ -31,6 +31,7 @@ export interface ChronosPluginSettings {
 	openrouterSecretName?: string;
 	ollamaSecretName?: string;
 	lmstudioSecretName?: string;
+	customSecretName?: string;
 	aiBaseUrls?: Record<string, string>;
 	aiModels?: Record<string, string>;
 	align: Align;

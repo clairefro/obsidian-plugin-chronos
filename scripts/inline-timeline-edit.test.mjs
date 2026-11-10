@@ -47,6 +47,9 @@ class TestElement {
 	addClass(name) {
 		this.classes.add(name);
 	}
+	removeClass(name) {
+		this.classes.delete(name);
+	}
 	createEl(tag, options = {}) {
 		const child = new TestElement();
 		child.tag = tag;
@@ -389,12 +392,18 @@ test("AI proposals can be refined and are compared to the original", async () =>
 	modal.onOpen();
 	assert(modal.titleEl.classes.has("chronos-ai-edit-title"));
 	assert(modal.contentEl.classes.has("chronos-ai-edit-content"));
-	const input = modal.contentEl.children[0];
+	const input = modal.contentEl.children[2];
 	assert.equal(input.attrs["aria-label"], undefined);
 	const label = modal.contentEl.children.at(-1);
 	assert.equal(input.attrs["aria-labelledby"], label.attrs.id);
 	assert.equal(label.text, "Requested changes");
-	const review = modal.contentEl.children[3];
+	const review = modal.contentEl.children[1];
+	assert.equal(
+		modal.contentEl.children[0].children[0].text,
+		"Current markdown",
+	);
+	assert.equal(review.hidden, true);
+	assert.equal(input.tag, "textarea");
 	const proposedDetails = review.children[0];
 	const diff = proposedDetails.children[1];
 	const [generate, apply] = state.controls.buttons;
@@ -455,7 +464,7 @@ test("AI dialog rejects stale requests while generating", async () => {
 		modal.contentEl.children[4].text,
 		"Provider: ollama · Model: not set",
 	);
-	const input = modal.contentEl.children[0];
+	const input = modal.contentEl.children[2];
 	const [generate, apply, cancel] = state.controls.buttons;
 	input.value = "first";
 	const pending = generate.click();
@@ -464,7 +473,7 @@ test("AI dialog rejects stale requests while generating", async () => {
 	resolve("result");
 	await pending;
 	assert.equal(apply.disabled, true);
-	assert.match(modal.contentEl.children[2].text, /request changed/i);
+	assert.match(modal.contentEl.children[3].text, /request changed/i);
 	cancel.click();
 });
 
@@ -485,8 +494,11 @@ test("Enter generates and refines, while Shift+Enter and IME remain untouched", 
 		() => ({ provider: "ollama" }),
 	);
 	modal.onOpen();
-	const input = modal.contentEl.children[0];
+	const input = modal.contentEl.children[2];
 	const [generate] = state.controls.buttons;
+	const review = modal.contentEl.children[1];
+	const previewHeading = review.children[1];
+	const preview = review.children[2];
 	const keydown = (options = {}) => {
 		const event = {
 			key: "Enter",
@@ -510,16 +522,35 @@ test("Enter generates and refines, while Shift+Enter and IME remain untouched", 
 	assert.equal(first.prevented, true);
 	assert.equal(first.stopped, true);
 	assert.deepEqual(requests, [["original", "first"]]);
+	assert.equal(generate.disabled, true);
+	assert.equal(generate.text, "Generating...");
+	assert(generate.buttonEl.classes.has("chronos-ai-edit-generating"));
+	assert.equal(modal.contentEl.children[3].text, "");
 	assert.equal(keydown().prevented, true);
 	assert.equal(requests.length, 1);
 	resolve("first proposal");
 	await generate.pending;
+	assert.equal(generate.text, "Refine with AI");
+	assert.equal(
+		generate.buttonEl.classes.has("chronos-ai-edit-generating"),
+		false,
+	);
+	assert.equal(preview.hidden, false);
+	assert.equal(preview.children.length, 1);
 	input.value = "next\nline";
 	input.listeners.input();
 	keydown();
 	assert.deepEqual(requests[1], ["first proposal", "next\nline"]);
+	assert.equal(previewHeading.hidden, true);
+	assert.equal(preview.hidden, true);
+	assert.equal(preview.children.length, 1);
+	assert.equal(generate.text, "Generating...");
 	resolve("second proposal");
 	await generate.pending;
+	assert.equal(previewHeading.hidden, false);
+	assert.equal(preview.hidden, false);
+	assert.equal(preview.children.length, 1);
+	assert.equal(generate.text, "Refine with AI");
 	assert.equal(keydown({ repeat: true }).prevented, true);
 	assert.equal(requests.length, 2);
 });
@@ -540,7 +571,7 @@ test("failed refinement retains the prior proposal and preview", async () => {
 		() => ({ provider: "ollama" }),
 	);
 	modal.onOpen();
-	const input = modal.contentEl.children[0];
+	const input = modal.contentEl.children[2];
 	const [generate, apply] = state.controls.buttons;
 	input.value = "first";
 	await generate.click();
@@ -553,8 +584,14 @@ test("failed refinement retains the prior proposal and preview", async () => {
 		console.error = originalError;
 	}
 	assert.equal(destroyed, 0);
+	assert.equal(modal.contentEl.children[1].children[2].hidden, false);
+	assert.equal(generate.text, "Refine with AI");
+	assert.equal(
+		generate.buttonEl.classes.has("chronos-ai-edit-generating"),
+		false,
+	);
 	assert.equal(apply.disabled, false);
-	assert.match(modal.contentEl.children[2].text, /provider error/);
+	assert.match(modal.contentEl.children[3].text, /provider error/);
 	apply.click();
 	assert.deepEqual(applied, ["new"]);
 	assert.equal(destroyed, 1);
@@ -576,7 +613,7 @@ test("changed note prevents refinement", async () => {
 		() => ({ provider: "ollama" }),
 	);
 	modal.onOpen();
-	const input = modal.contentEl.children[0];
+	const input = modal.contentEl.children[2];
 	const [generate] = state.controls.buttons;
 	input.value = "first";
 	await generate.click();
@@ -590,7 +627,7 @@ test("changed note prevents refinement", async () => {
 		console.error = originalError;
 	}
 	assert.equal(calls, 1);
-	assert.match(modal.contentEl.children[2].text, /note changed/i);
+	assert.match(modal.contentEl.children[3].text, /note changed/i);
 });
 
 test("preview failure retains the previous proposal", async () => {
@@ -609,7 +646,7 @@ test("preview failure retains the previous proposal", async () => {
 		() => ({ provider: "ollama" }),
 	);
 	modal.onOpen();
-	const input = modal.contentEl.children[0];
+	const input = modal.contentEl.children[2];
 	const [generate, apply] = state.controls.buttons;
 	input.value = "first";
 	await generate.click();
@@ -622,8 +659,8 @@ test("preview failure retains the previous proposal", async () => {
 		console.error = oldError;
 	}
 	assert.equal(destroyed, 0);
-	assert.equal(modal.contentEl.children[3].children[2].children.length, 1);
-	assert.match(modal.contentEl.children[2].text, /preview failed/);
+	assert.equal(modal.contentEl.children[1].children[2].children.length, 1);
+	assert.match(modal.contentEl.children[3].text, /preview failed/);
 	apply.click();
 	assert.deepEqual(applied, ["first"]);
 	assert.equal(destroyed, 1);
@@ -643,7 +680,7 @@ test("closing the AI dialog ignores an in-flight response", async () => {
 		() => ({ provider: "ollama" }),
 	);
 	modal.onOpen();
-	modal.contentEl.children[0].value = "change";
+	modal.contentEl.children[2].value = "change";
 	const [generate, apply, cancel] = state.controls.buttons;
 	const pending = generate.click();
 	cancel.click();
@@ -754,6 +791,7 @@ test("all AI providers receive the edit prompt and original timeline", async () 
 		"openrouter",
 		"ollama",
 		"lmstudio",
+		"custom",
 	]) {
 		const responseText = "```chronos\n> HEIGHT 300\n- [2020] Edited\n```";
 		if (provider === "openai")
@@ -788,6 +826,49 @@ test("all AI providers receive the edit prompt and original timeline", async () 
 		assert(serialized.includes("Rename it"));
 		assert(serialized.includes("Original"));
 	}
+});
+
+test("custom OpenAI-compatible provider validates configuration and sends requests", async () => {
+	state.response = {
+		choices: [{ message: { content: "```chronos\n- [2020] X\n```" } }],
+	};
+	state.requests = [];
+	const ai = new GenAi({
+		provider: "custom",
+		apiKey: "test-key",
+		model: " custom-model ",
+		baseUrl: " https://example.com/v1/// ",
+	});
+	await ai.toChronos("Make a timeline");
+	const request = state.requests[0];
+	assert.equal(request.url, "https://example.com/v1/chat/completions");
+	assert.equal(request.headers.Authorization, "Bearer test-key");
+	assert.equal(JSON.parse(request.body).model, "custom-model");
+	assert.match(
+		JSON.parse(request.body).messages[0].content,
+		/Create a concise timeline/,
+	);
+	const withoutKey = new GenAi({
+		provider: "custom",
+		model: "test",
+		baseUrl: "http://localhost:1234/v1",
+	});
+	await withoutKey.toChronos("Make a timeline");
+	assert.equal(state.requests[1].headers.Authorization, undefined);
+
+	for (const [config, expected] of [
+		[{ baseUrl: "https://example.com/v1" }, /Set a model name/],
+		[
+			{ model: "  ", baseUrl: "https://example.com/v1" },
+			/Set a model name/,
+		],
+		[{ model: "test" }, /Set a base URL/],
+		[{ model: "test", baseUrl: "   " }, /Set a base URL/],
+	]) {
+		const invalid = new GenAi({ provider: "custom", ...config });
+		await assert.rejects(() => invalid.toChronos("test"), expected);
+	}
+	assert.equal(state.requests.length, 2);
 });
 
 test("legacy OpenAI and LM Studio native APIs receive the edit prompt", async () => {

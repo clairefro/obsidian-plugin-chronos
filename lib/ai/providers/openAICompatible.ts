@@ -53,8 +53,11 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 			throw new Error("No OpenRouter API key provided");
 		}
 
-		const model =
-			this.config.model || PROVIDER_DEFAULT_MODELS[provider] || "";
+		const model = (
+			this.config.model ||
+			PROVIDER_DEFAULT_MODELS[provider] ||
+			""
+		).trim();
 		if (!model) {
 			throw new Error(
 				`Set a model name for ${provider} in plugin settings`,
@@ -62,8 +65,12 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 		}
 
 		const baseUrl = (
-			this.config.baseUrl || PROVIDER_DEFAULT_BASE_URLS[provider]
-		).replace(/\/+$/, "");
+			this.config.baseUrl ||
+			PROVIDER_DEFAULT_BASE_URLS[provider] ||
+			""
+		)
+			.trim()
+			.replace(/\/+$/, "");
 		if (!baseUrl) {
 			throw new Error(
 				`Set a base URL for ${provider} in plugin settings`,

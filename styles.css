@@ -199,6 +199,9 @@
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 	user-select: text;
+	background-color: var(--background-secondary);
+	border-radius: var(--input-radius);
+	padding: var(--size-4-3);
 }
 
 .chronos-ai-edit-provider {
@@ -207,6 +210,39 @@
 	text-align: right;
 	margin-top: var(--size-4-1);
 	overflow-wrap: anywhere;
+}
+
+button.mod-loading.chronos-ai-edit-generating {
+	color: var(--text-color);
+}
+
+button.mod-loading.chronos-ai-edit-generating::after {
+	display: none;
+}
+
+.chronos-ai-edit-generating::before {
+	content: "";
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-inline-end: var(--size-4-2);
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	vertical-align: -0.15em;
+	animation: chronos-ai-edit-spin 0.8s linear infinite;
+}
+
+@keyframes chronos-ai-edit-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chronos-ai-edit-generating::before {
+		animation: none;
+	}
 }
 
 .chronos-ai-edit-diff {
@@ -229,6 +265,7 @@
 .chronos-ai-preview-timeline {
 	min-height: 200px;
 	margin-top: var(--size-4-2);
+	margin-bottom: var(--size-4-4);
 }
 
 .chronos-ai-edit-diff-added {
