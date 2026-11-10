@@ -75,6 +75,19 @@ Input can be long text in your notes with time information, or vague like:
 
 ![genai example 2](./docs/ex-points-2.png)
 
+### Edit an inline timeline
+
+Open the options menu in the lower-left corner of an inline timeline and select
+**Edit markdown** to edit the code block. When AI features are enabled, **Edit
+markdown with AI** sends the timeline markdown and your requested changes to
+your configured provider. Expand **Current markdown** to inspect the existing
+timeline, then expand **Proposed changes** to review the highlighted diff and
+inspect the rendered timeline preview. Enter
+additional instructions and select **Refine with AI** to revise the proposal
+before applying it.
+If the note changes while the request is in progress, generate the changes
+again. These actions are not available in Bases timelines.
+
 ### Generate timeline from folder
 
 Automatically create combined timelines from all Chronos items found in a folder.

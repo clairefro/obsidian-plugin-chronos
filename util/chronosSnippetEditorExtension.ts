@@ -1,4 +1,5 @@
 import { App, Menu } from "obsidian";
+import { getChronosLineHighlights } from "./chronosHighlight";
 import type { Range } from "@codemirror/state";
 import {
 	Decoration,
@@ -165,87 +166,13 @@ function buildLineHighlightDecorations(
 	line: { from: number; text: string },
 	decorations: Range<Decoration>[],
 ): void {
-	const text = line.text;
-	const comment = /^\s*#/.exec(text);
-	if (comment) {
+	for (const highlight of getChronosLineHighlights(line.text)) {
 		addTokenDecoration(
 			decorations,
-			line.from + comment.index,
-			line.from + text.length,
-			"cm-chronos-comment",
+			line.from + highlight.from,
+			line.from + highlight.to,
+			highlight.className,
 		);
-		return;
-	}
-
-	const flag = /^(\s*>\s*)([A-Za-z]+)\b/.exec(text);
-	if (flag) {
-		const commandStart = flag[1].length;
-		addTokenDecoration(
-			decorations,
-			line.from + text.indexOf(">"),
-			line.from + text.indexOf(">") + 1,
-			"cm-chronos-directive",
-		);
-		addTokenDecoration(
-			decorations,
-			line.from + commandStart,
-			line.from + commandStart + flag[2].length,
-			"cm-chronos-flag",
-		);
-		return;
-	}
-
-	const marker = /^\s*([-*@=])(?=\s|$)/.exec(text);
-	if (marker) {
-		const markerStart = marker.index + marker[0].indexOf(marker[1]);
-		addTokenDecoration(
-			decorations,
-			line.from + markerStart,
-			line.from + markerStart + 1,
-			"cm-chronos-item-marker",
-		);
-	}
-
-	const descriptionSeparatorIndex = text.indexOf("|");
-	if (descriptionSeparatorIndex !== -1) {
-		addTokenDecoration(
-			decorations,
-			line.from + descriptionSeparatorIndex + 1,
-			line.from + text.length,
-			"cm-chronos-description",
-		);
-	}
-
-	const tokenPattern = /\[\[[^\]]+\]\]|\[[^\]]+\]|\{[^}]*\}|#[\w-]+|\|/g;
-	let match: RegExpExecArray | null;
-	while ((match = tokenPattern.exec(text)) !== null) {
-		const token = match[0];
-		const className = token.startsWith("[[")
-			? "cm-chronos-link"
-			: token.startsWith("[")
-				? "cm-chronos-date"
-				: token.startsWith("{")
-					? "cm-chronos-group"
-					: token.startsWith("#")
-						? "cm-chronos-color"
-						: "cm-chronos-separator";
-		addTokenDecoration(
-			decorations,
-			line.from + match.index,
-			line.from + match.index + token.length,
-			className,
-		);
-		if (className === "cm-chronos-date") {
-			const rangeSeparatorIndex = token.indexOf("~");
-			if (rangeSeparatorIndex !== -1) {
-				addTokenDecoration(
-					decorations,
-					line.from + match.index + rangeSeparatorIndex,
-					line.from + match.index + rangeSeparatorIndex + 1,
-					"cm-chronos-date-range-separator",
-				);
-			}
-		}
 	}
 }
 

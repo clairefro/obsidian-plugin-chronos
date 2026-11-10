@@ -33,7 +33,7 @@ export class GeminiProvider implements AIProviderInterface {
 		this.model = model || "gemini-2.5-flash";
 	}
 
-	async toChronos(content: string): Promise<string> {
+	async toChronos(content: string, prompt = systemPrompt): Promise<string> {
 		if (!this.apiKey) throw new Error("No Gemini API key provided");
 
 		const model = this.model || "gemini-2.5-flash";
@@ -43,7 +43,7 @@ export class GeminiProvider implements AIProviderInterface {
 			system_instruction: {
 				parts: [
 					{
-						text: systemPrompt,
+						text: prompt,
 					},
 				],
 			},

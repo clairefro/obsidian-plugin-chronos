@@ -1,4 +1,5 @@
 import { AIProviderConfig, getProvider } from "./providers/providerFactory";
+import { editSystemPrompt } from "./systemPrompt";
 
 const monthNumbers: Record<string, string> = {
 	jan: "01",
@@ -191,5 +192,20 @@ export class GenAi {
 	async toChronos(content: string): Promise<string> {
 		const provider = getProvider(this.config);
 		return ensureChronosFence(await provider.toChronos(content));
+	}
+
+	async editChronos(markdown: string, request: string): Promise<string> {
+		const provider = getProvider(this.config);
+		const content = JSON.stringify({ currentMarkdown: markdown, request });
+		const response = await provider.toChronos(content, editSystemPrompt);
+		const match = response
+			.trim()
+			.match(/^```chronos[ \t]*\r?\n([\s\S]*?)\r?\n```[ \t]*$/i);
+		if (!match || /(?:^|\n)[ \t]*```/.test(match[1])) {
+			throw new Error(
+				"AI did not return a single complete Chronos code block. No changes were made.",
+			);
+		}
+		return match[1].replace(/\r\n/g, "\n");
 	}
 }

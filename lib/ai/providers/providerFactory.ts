@@ -19,7 +19,7 @@ export interface AIProviderConfig {
 }
 
 export interface AIProviderInterface {
-	toChronos(content: string): Promise<string>;
+	toChronos(content: string, prompt?: string): Promise<string>;
 }
 
 export function getProvider(config: AIProviderConfig): AIProviderInterface;

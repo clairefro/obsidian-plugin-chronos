@@ -12,11 +12,14 @@ import {
 	SettingDefinition,
 	SettingDefinitionItem,
 	requestUrl,
+	MarkdownPostProcessorContext,
+	MarkdownView,
 } from "obsidian";
 
 import { ChronosPluginSettings } from "./types";
 
 import { TextModal } from "./components/TextModal";
+import { EditTimelineWithAiModal } from "./components/EditTimelineWithAiModal";
 import { FolderListModal } from "./components/FolderListModal";
 import { ChangelogView, CHANGELOG_VIEW_TYPE } from "./views/ChangelogView";
 import { knownLocales } from "./util/knownLocales";
@@ -62,6 +65,11 @@ import { wireSharedTimelineInteractions } from "./util/wireSharedTimelineInterac
 import { attachTimelineMenu } from "./util/timelineMenu";
 import { createChronosSnippetEditorExtension } from "./util/chronosSnippetEditorExtension";
 import { getUnseenChangelogs, type GitHubRelease } from "./util/changelog";
+import {
+	applyTimelineEdit,
+	captureTimelineEdit,
+	openNativeTimelineEditor,
+} from "./util/inlineTimelineEditing";
 
 // Debug: uncomment to inspect what was loaded if needed
 // console.debug('Chronos lib exports:', ChronosLib);
@@ -93,6 +101,7 @@ export default class ChronosPlugin extends Plugin {
 	private chronosBlocks = new Set<{
 		el: HTMLElement;
 		source: string;
+		context: MarkdownPostProcessorContext;
 		timeline?: ChronosLib.ChronosTimeline;
 	}>();
 	cacheUtils!: CacheUtils;
@@ -344,7 +353,7 @@ export default class ChronosPlugin extends Plugin {
 				block.timeline?.destroy();
 				block.el.empty();
 				this.chronosBlocks.delete(block);
-				this._renderChronosBlock(block.source, block.el);
+				this._renderChronosBlock(block.source, block.el, block.context);
 			} catch (e) {
 				console.error("[Chronos] Failed to refresh timeline", e);
 			}
@@ -532,7 +541,11 @@ export default class ChronosPlugin extends Plugin {
 		}, 300);
 	}
 
-	private _renderChronosBlock(source: string, el: HTMLElement) {
+	private _renderChronosBlock(
+		source: string,
+		el: HTMLElement,
+		context: MarkdownPostProcessorContext,
+	) {
 		const container = el.createDiv({
 			cls: "chronos-timeline-container",
 		});
@@ -566,7 +579,53 @@ export default class ChronosPlugin extends Plugin {
 			true,
 		);
 
-		attachTimelineMenu(container, () => source, this.settings);
+		attachTimelineMenu(container, () => source, this.settings, {
+			editMarkdown: () => openNativeTimelineEditor(el),
+			editMarkdownWithAI: () => {
+				new EditTimelineWithAiModal(
+					this.app,
+					() => {
+						const view = this.app.workspace
+							.getLeavesOfType("markdown")
+							.map((leaf) => leaf.view)
+							.find(
+								(candidate): candidate is MarkdownView =>
+									candidate instanceof MarkdownView &&
+									candidate.containerEl.contains(el),
+							);
+						if (!view) {
+							throw new Error(
+								"Open the timeline's source note before editing it with AI.",
+							);
+						}
+						return captureTimelineEdit(view, context, el, source);
+					},
+					async (markdown, request) => {
+						const { GenAi } = await import("./lib/ai/GenAi.js");
+						return new GenAi(
+							this._getAiProviderConfig(),
+						).editChronos(markdown, request);
+					},
+					applyTimelineEdit,
+					(previewContainer, markdown) => {
+						const preview = new ChronosTimeline({
+							container: previewContainer,
+							settings: this.settings,
+							callbacks: { setTooltip: obsidianTooltip },
+						});
+						try {
+							preview.render(markdown);
+							applyGapSetting(preview, markdown, this.settings);
+						} catch (error) {
+							preview.destroy();
+							throw error;
+						}
+						return () => preview.destroy();
+					},
+					() => this._getAiProviderConfig(),
+				).open();
+			},
+		});
 
 		// Setup ResizeObserver to track editor size changes
 		this._setupEditorResizeObserver(container);
@@ -577,7 +636,7 @@ export default class ChronosPlugin extends Plugin {
 			callbacks: { setTooltip: obsidianTooltip },
 		});
 
-		this.chronosBlocks.add({ el, source, timeline });
+		this.chronosBlocks.add({ el, source, context, timeline });
 
 		try {
 			timeline.render(source);

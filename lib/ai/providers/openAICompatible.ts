@@ -46,7 +46,7 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 		this.config = config;
 	}
 
-	async toChronos(content: string): Promise<string> {
+	async toChronos(content: string, prompt = systemPrompt): Promise<string> {
 		const provider = this.config.provider;
 		const apiKey = this.config.apiKey?.trim();
 		if (provider === "openrouter" && !apiKey) {
@@ -96,7 +96,7 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 						? {
 								model,
 								input: content,
-								system_prompt: systemPrompt,
+								system_prompt: prompt,
 								reasoning: "low",
 								max_output_tokens: 4096,
 							}
@@ -104,7 +104,7 @@ export default class OpenAICompatibleProvider implements AIProviderInterface {
 								model,
 								max_tokens: 4096,
 								messages: [
-									{ role: "system", content: systemPrompt },
+									{ role: "system", content: prompt },
 									{ role: "user", content },
 								],
 								temperature: 0.8,

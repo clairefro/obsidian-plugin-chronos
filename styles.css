@@ -146,6 +146,97 @@
 	border-radius: 0;
 }
 
+.chronos-ai-edit-textarea {
+	width: 100%;
+	resize: vertical;
+}
+
+.chronos-ai-edit-accessible-label {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+.chronos-ai-edit-request {
+	background-color: var(--background-modifier-form-field);
+	border: var(--input-border-width, 1px) solid
+		var(--background-modifier-border);
+	border-radius: var(--input-radius);
+	padding: var(--size-4-2) var(--size-4-3);
+	font: inherit;
+}
+
+.chronos-ai-edit-details {
+	margin-block: 0.75em;
+}
+
+.chronos-ai-edit-details summary {
+	cursor: pointer;
+}
+
+.chronos-ai-edit-details > .chronos-ai-edit-original,
+.chronos-ai-edit-details > .chronos-ai-edit-diff {
+	margin-top: var(--size-4-2);
+}
+
+.chronos-ai-edit-original {
+	max-height: 16em;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	user-select: text;
+}
+
+.chronos-ai-edit-provider {
+	color: var(--text-muted);
+	font-size: var(--font-smallest);
+	text-align: right;
+	margin-top: var(--size-4-1);
+	overflow-wrap: anywhere;
+}
+
+.chronos-ai-edit-diff {
+	max-height: 20em;
+	min-height: 4em;
+	overflow: auto;
+	white-space: pre;
+	font-family: var(--font-monospace);
+	border: var(--input-border-width, 1px) solid
+		var(--background-modifier-border);
+	border-radius: var(--input-radius);
+	padding-bottom: var(--size-4-3);
+}
+
+.chronos-ai-edit-diff > div {
+	display: block;
+	min-width: max-content;
+}
+
+.chronos-ai-preview-timeline {
+	min-height: 200px;
+	margin-top: var(--size-4-2);
+}
+
+.chronos-ai-edit-diff-added {
+	background: rgba(var(--color-green-rgb), 0.2);
+	border-left: 3px solid var(--color-green);
+}
+
+.chronos-ai-edit-diff-removed {
+	background: rgba(var(--color-red-rgb), 0.2);
+	border-left: 3px solid var(--color-red);
+}
+
+.chronos-ai-edit-diff-unchanged {
+	border-left: 3px solid transparent;
+}
+
 /* Keep Obsidian's code-block edit control above Chronos timeline layers. */
 .cm-preview-code-block.cm-embed-block.cm-lang-chronos {
 	isolation: isolate;
@@ -246,51 +337,51 @@
 	outline-offset: 2px;
 }
 
-.cm-editor .cm-chronos-comment {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-comment {
 	color: var(--text-faint);
 	font-style: italic;
 }
 
-.cm-editor .cm-chronos-directive {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-directive {
 	color: var(--color-accent);
 	font-weight: 600;
 }
 
-.cm-editor .cm-chronos-item-marker {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-item-marker {
 	color: var(--text-faint);
 }
 
-.cm-editor .cm-chronos-date {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-date {
 	color: var(--color-orange);
 }
 
-.cm-editor .cm-chronos-date-range-separator {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-date-range-separator {
 	color: var(--text-muted);
 }
 
-.cm-editor .cm-chronos-group {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-group {
 	color: var(--color-green);
 }
 
-.cm-editor .cm-chronos-color {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-color {
 	color: var(--color-purple);
 }
 
-.cm-editor .cm-chronos-link {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-link {
 	color: var(--color-blue);
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }
 
-.cm-editor .cm-chronos-flag {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-flag {
 	color: var(--color-cyan);
 }
 
-.cm-editor .cm-chronos-separator {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-separator {
 	color: var(--text-muted);
 }
 
-.cm-editor .cm-chronos-description {
+:is(.cm-editor, .chronos-ai-edit-original) .cm-chronos-description {
 	color: var(--text-muted);
 }
 

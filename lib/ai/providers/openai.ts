@@ -80,7 +80,7 @@ export class OpenAIProvider implements AIProviderInterface {
 		this.model = model || OPENAI_MODEL;
 	}
 
-	async toChronos(content: string): Promise<string> {
+	async toChronos(content: string, prompt = systemPrompt): Promise<string> {
 		if (!this.apiKey) throw new Error("No OpenAI API key provided");
 
 		const usesOldSchema = OLD_SCHEMA_MODELS.some((prefix) =>
@@ -101,7 +101,7 @@ export class OpenAIProvider implements AIProviderInterface {
 						content: [
 							{
 								type: "input_text",
-								text: systemPrompt,
+								text: prompt,
 							},
 						],
 					},
@@ -125,7 +125,7 @@ export class OpenAIProvider implements AIProviderInterface {
 		} else {
 			// Use the old chat/completions schema for legacy models
 			const messages = [
-				{ role: "system", content: systemPrompt },
+				{ role: "system", content: prompt },
 				{ role: "user", content },
 			];
 

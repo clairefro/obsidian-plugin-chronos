@@ -32,7 +32,7 @@ export default class AnthropicProvider implements AIProviderInterface {
 				: model;
 	}
 
-	async toChronos(content: string): Promise<string> {
+	async toChronos(content: string, prompt = systemPrompt): Promise<string> {
 		if (!this.apiKey) throw new Error("No Anthropic API key provided");
 
 		let response: RequestUrlResponse;
@@ -49,7 +49,7 @@ export default class AnthropicProvider implements AIProviderInterface {
 				body: JSON.stringify({
 					model: this.model,
 					max_tokens: 4096,
-					system: systemPrompt,
+					system: prompt,
 					messages: [{ role: "user", content }],
 				}),
 			});

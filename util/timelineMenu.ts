@@ -91,6 +91,10 @@ export function attachTimelineMenu(
 	container: HTMLElement,
 	getMarkdown: () => string,
 	settings: ChronosPluginSettings,
+	editActions?: {
+		editMarkdown: () => void;
+		editMarkdownWithAI: () => void;
+	},
 ) {
 	const button = container.createEl("button", {
 		cls: "chronos-timeline-menu",
@@ -124,19 +128,37 @@ export function attachTimelineMenu(
 			const suffix = withLinks ? " (omit my links)" : "";
 			menu.addItem((item) =>
 				item
-					.setTitle("Copy timeline markdown")
+					.setTitle("Copy markdown")
 					.setIcon("copy")
 					.onClick(() => void copyMarkdown(markdown)),
 			);
 			if (withLinks) {
 				menu.addItem((item) =>
 					item
-						.setTitle(`Copy timeline markdown${suffix}`)
+						.setTitle(`Copy markdown${suffix}`)
 						.setIcon("copy")
 						.onClick(
 							() => void copyMarkdown(stripWikilinks(markdown)),
 						),
 				);
+			}
+			if (editActions) {
+				menu.addSeparator();
+				menu.addItem((item) =>
+					item
+						.setTitle("Edit markdown")
+						.setIcon("pencil")
+						.onClick(editActions.editMarkdown),
+				);
+				if (settings.useAI) {
+					menu.addItem((item) =>
+						item
+							.setTitle("Edit markdown with AI")
+							.setIcon("sparkles")
+							.onClick(editActions.editMarkdownWithAI),
+					);
+				}
+				menu.addSeparator();
 			}
 			menu.addItem((item) =>
 				item
