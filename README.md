@@ -76,11 +76,6 @@ Input can be long text in your notes with time information, or vague like:
 
 ![genai example 2](./docs/ex-points-2.png)
 
-### Edit an inline timeline
-
-Open the options menu in the lower-left corner of an inline timeline and select
-**Edit markdown** to edit the code block. This action is not available in Bases timelines.
-
 ### Edit timeline with AI
 
 With **Use AI features** enabled and a provider configured in Chronos settings,
