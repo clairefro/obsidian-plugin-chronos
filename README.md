@@ -84,7 +84,8 @@ your configured provider. Expand **Current markdown** to inspect the existing
 timeline, then expand **Proposed changes** to review the highlighted diff and
 inspect the rendered timeline preview. Enter
 additional instructions and select **Refine with AI** to revise the proposal
-before applying it.
+before applying it. Press Enter to generate or refine, and Shift+Enter to add
+a newline to your request.
 If the note changes while the request is in progress, generate the changes
 again. These actions are not available in Bases timelines.
 

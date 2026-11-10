@@ -146,6 +146,14 @@
 	border-radius: 0;
 }
 
+.chronos-ai-edit-title {
+	margin-inline-start: var(--size-4-6);
+}
+
+.chronos-ai-edit-content {
+	padding: var(--size-4-4) var(--size-4-6);
+}
+
 .chronos-ai-edit-textarea {
 	width: 100%;
 	resize: vertical;

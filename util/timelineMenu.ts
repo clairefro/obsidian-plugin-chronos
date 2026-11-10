@@ -158,8 +158,8 @@ export function attachTimelineMenu(
 							.onClick(editActions.editMarkdownWithAI),
 					);
 				}
-				menu.addSeparator();
 			}
+			menu.addSeparator();
 			menu.addItem((item) =>
 				item
 					.setTitle("Copy shareable link")

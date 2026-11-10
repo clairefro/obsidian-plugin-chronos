@@ -47,6 +47,8 @@ export class EditTimelineWithAiModal extends Modal {
 
 	onOpen(): void {
 		this.setTitle("Edit timeline markdown with AI");
+		this.titleEl.addClass("chronos-ai-edit-title");
+		this.contentEl.addClass("chronos-ai-edit-content");
 		const requestLabelId = `chronos-ai-edit-request-label-${++nextRequestLabelId}`;
 		const input = this.contentEl.createEl("textarea", {
 			cls: "chronos-ai-edit-textarea chronos-ai-edit-request",
@@ -104,6 +106,23 @@ export class EditTimelineWithAiModal extends Modal {
 			text: getProviderLabel(),
 		});
 		controls.addButton((button) => {
+			input.addEventListener("keydown", (event) => {
+				if (
+					event.key !== "Enter" ||
+					event.shiftKey ||
+					event.ctrlKey ||
+					event.metaKey ||
+					event.altKey ||
+					event.isComposing
+				) {
+					return;
+				}
+				event.preventDefault();
+				event.stopPropagation();
+				if (!event.repeat && !button.buttonEl.disabled) {
+					button.buttonEl.click();
+				}
+			});
 			button
 				.setButtonText("Generate changes")
 				.setCta()

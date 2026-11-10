@@ -11,6 +11,7 @@ class Notice {
 class Menu {
 	constructor() {
 		this.items = [];
+		this.layout = [];
 		state.menus.push(this);
 	}
 	addItem(callback) {
@@ -29,8 +30,11 @@ class Menu {
 		};
 		callback(item);
 		this.items.push(item);
+		this.layout.push(item.title);
 	}
-	addSeparator() {}
+	addSeparator() {
+		this.layout.push("---");
+	}
 	showAtMouseEvent() {}
 }
 class TestElement {
@@ -38,6 +42,10 @@ class TestElement {
 		this.children = [];
 		this.listeners = {};
 		this.value = "";
+		this.classes = new Set();
+	}
+	addClass(name) {
+		this.classes.add(name);
 	}
 	createEl(tag, options = {}) {
 		const child = new TestElement();
@@ -95,6 +103,7 @@ class TestElement {
 class Modal {
 	constructor() {
 		this.contentEl = new TestElement();
+		this.titleEl = new TestElement();
 	}
 	setTitle() {}
 	close() {
@@ -120,10 +129,14 @@ class Setting {
 			},
 			setDisabled(disabled) {
 				this.disabled = disabled;
+				this.buttonEl.disabled = disabled;
 				return this;
 			},
 			onClick(callback) {
 				this.click = callback;
+				this.buttonEl.click = () => {
+					if (!this.buttonEl.disabled) this.pending = callback();
+				};
 				return this;
 			},
 		};
@@ -374,6 +387,8 @@ test("AI proposals can be refined and are compared to the original", async () =>
 		() => ({ provider: "gemini", model: "gemini-test" }),
 	);
 	modal.onOpen();
+	assert(modal.titleEl.classes.has("chronos-ai-edit-title"));
+	assert(modal.contentEl.classes.has("chronos-ai-edit-content"));
 	const input = modal.contentEl.children[0];
 	assert.equal(input.attrs["aria-label"], undefined);
 	const label = modal.contentEl.children.at(-1);
@@ -451,6 +466,62 @@ test("AI dialog rejects stale requests while generating", async () => {
 	assert.equal(apply.disabled, true);
 	assert.match(modal.contentEl.children[2].text, /request changed/i);
 	cancel.click();
+});
+
+test("Enter generates and refines, while Shift+Enter and IME remain untouched", async () => {
+	const requests = [];
+	let resolve;
+	const modal = new EditTimelineWithAiModal(
+		{},
+		() => ({ markdown: "original" }),
+		(markdown, request) => {
+			requests.push([markdown, request]);
+			return new Promise((done) => {
+				resolve = done;
+			});
+		},
+		() => {},
+		() => () => {},
+		() => ({ provider: "ollama" }),
+	);
+	modal.onOpen();
+	const input = modal.contentEl.children[0];
+	const [generate] = state.controls.buttons;
+	const keydown = (options = {}) => {
+		const event = {
+			key: "Enter",
+			preventDefault() {
+				this.prevented = true;
+			},
+			stopPropagation() {
+				this.stopped = true;
+			},
+			...options,
+		};
+		input.listeners.keydown(event);
+		return event;
+	};
+	input.value = "first";
+	const shift = keydown({ shiftKey: true });
+	assert.equal(shift.prevented, undefined);
+	assert.equal(keydown({ isComposing: true }).prevented, undefined);
+	assert.equal(keydown({ key: "a" }).prevented, undefined);
+	const first = keydown();
+	assert.equal(first.prevented, true);
+	assert.equal(first.stopped, true);
+	assert.deepEqual(requests, [["original", "first"]]);
+	assert.equal(keydown().prevented, true);
+	assert.equal(requests.length, 1);
+	resolve("first proposal");
+	await generate.pending;
+	input.value = "next\nline";
+	input.listeners.input();
+	keydown();
+	assert.deepEqual(requests[1], ["first proposal", "next\nline"]);
+	resolve("second proposal");
+	await generate.pending;
+	assert.equal(keydown({ repeat: true }).prevented, true);
+	assert.equal(requests.length, 2);
 });
 
 test("failed refinement retains the prior proposal and preview", async () => {
@@ -644,6 +715,35 @@ test("inline menu exposes editing actions, while Bases menu does not", () => {
 			item.title.startsWith("Edit markdown"),
 		),
 	);
+	for (const markdown of ["markdown", "[[note]]"]) {
+		openMenu({ useAI: true }, undefined, markdown);
+		assert.deepEqual(state.menus.at(-1).layout, [
+			"Export as PNG",
+			"Export as SVG",
+			"---",
+			"Copy markdown",
+			...(markdown.includes("[[")
+				? ["Copy markdown (omit my links)"]
+				: []),
+			"---",
+			"Copy shareable link",
+			...(markdown.includes("[[")
+				? ["Copy shareable link (omit my links)"]
+				: []),
+		]);
+	}
+	openMenu({ useAI: true }, actions);
+	assert.deepEqual(state.menus.at(-1).layout, [
+		"Export as PNG",
+		"Export as SVG",
+		"---",
+		"Copy markdown",
+		"---",
+		"Edit markdown",
+		"Edit markdown with AI",
+		"---",
+		"Copy shareable link",
+	]);
 });
 
 test("all AI providers receive the edit prompt and original timeline", async () => {
