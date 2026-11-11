@@ -51,7 +51,7 @@ export class FolderListModal extends SuggestModal<TFolder> {
 			cls: "chronos-folder-list-modal-muted-text",
 			text: prefix,
 		});
-		div.append(document.createTextNode(folder.path));
+		div.appendText(folder.path);
 		if (countDisplay) {
 			const temp = createSpan({
 				cls: "chronos-folder-list-modal-muted-text",

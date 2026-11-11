@@ -125,7 +125,7 @@ export function openNativeTimelineEditor(el: HTMLElement): void {
 		(block?.nextElementSibling?.matches(".edit-block-button")
 			? block.nextElementSibling
 			: null);
-	if (button instanceof HTMLElement) {
+	if (button?.instanceOf(HTMLElement)) {
 		button.click();
 	} else {
 		new Notice("Could not find the timeline's edit button.");

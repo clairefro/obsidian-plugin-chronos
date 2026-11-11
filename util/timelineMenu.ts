@@ -191,7 +191,9 @@ export function attachTimelineMenu(
 
 // Copy resolved styles onto the clone so it renders the same outside the document.
 function inlineStyles(source: Element, target: Element) {
-	const computed = getComputedStyle(source);
+	const view = source.ownerDocument.defaultView;
+	if (!view) throw new Error("Timeline document has no window");
+	const computed = view.getComputedStyle(source);
 	const style = (target as HTMLElement).style;
 	if (style) {
 		for (let i = 0; i < computed.length; i++) {
@@ -215,6 +217,9 @@ function buildSvg(container: HTMLElement): {
 	width: number;
 	height: number;
 } {
+	const doc = container.ownerDocument;
+	const view = doc.defaultView;
+	if (!view) throw new Error("Timeline document has no window");
 	const { width, height } = container.getBoundingClientRect();
 	const clone = container.cloneNode(true) as HTMLElement;
 	inlineStyles(container, clone);
@@ -224,42 +229,48 @@ function buildSvg(container: HTMLElement): {
 
 	// the container's own layout is set by the page, pin it to what is on screen
 	clone.setCssProps({
-		margin: "0",
 		width: `${width}px`,
 		height: `${height}px`,
 	});
+	clone.addClass("chronos-export-root");
 	clone.setAttribute("xmlns", XHTML_NS);
 
 	const background =
-		getComputedStyle(container).backgroundColor ||
-		getComputedStyle(document.body).getPropertyValue(
-			"--background-primary",
-		);
+		view.getComputedStyle(container).backgroundColor ||
+		view
+			.getComputedStyle(doc.body)
+			.getPropertyValue("--background-primary");
 	clone.style.backgroundColor = background;
 
 	const xhtml = new XMLSerializer().serializeToString(clone);
 	const svg =
 		`<svg xmlns="${SVG_NS}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">` +
+		`<style>.chronos-export-root { margin: 0 !important; }</style>` +
 		`<foreignObject width="100%" height="100%">${xhtml}</foreignObject></svg>`;
 	return { svg, width, height };
 }
 
-function download(blob: Blob, filename: string) {
+function download(blob: Blob, filename: string, doc: Document) {
 	const url = URL.createObjectURL(blob);
-	const a = createEl("a");
+	const a = doc.createElement("a");
 	a.href = url;
 	a.download = filename;
-	document.body.appendChild(a);
+	doc.body.appendChild(a);
 	a.click();
 	a.remove();
 	window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function svgToPng(svg: string, width: number, height: number): Promise<Blob> {
+function svgToPng(
+	svg: string,
+	width: number,
+	height: number,
+	doc: Document,
+): Promise<Blob> {
 	return new Promise((resolve, reject) => {
-		const img = new Image();
+		const img = doc.createElement("img");
 		img.onload = () => {
-			const canvas = createEl("canvas");
+			const canvas = doc.createElement("canvas");
 			canvas.width = width * PNG_SCALE;
 			canvas.height = height * PNG_SCALE;
 			const ctx = canvas.getContext("2d");
@@ -291,8 +302,8 @@ async function exportTimeline(container: HTMLElement, format: "png" | "svg") {
 		const blob =
 			format === "svg"
 				? new Blob([svg], { type: "image/svg+xml" })
-				: await svgToPng(svg, width, height);
-		download(blob, filename);
+				: await svgToPng(svg, width, height, container.ownerDocument);
+		download(blob, filename, container.ownerDocument);
 	} catch (e) {
 		console.error("[Chronos] Export failed", e);
 		new Notice(`Failed to export timeline as ${format.toUpperCase()}`);

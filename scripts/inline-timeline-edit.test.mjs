@@ -347,6 +347,9 @@ test("preserves indented and blockquoted fences", () => {
 test("manual edit invokes the native code-block edit button", () => {
 	const oldHTMLElement = globalThis.HTMLElement;
 	class FakeElement {
+		instanceOf(type) {
+			return type === FakeElement;
+		}
 		click() {
 			this.clicked = true;
 		}
@@ -357,6 +360,16 @@ test("manual edit invokes the native code-block edit button", () => {
 		const block = { querySelector: () => button };
 		editing.openNativeTimelineEditor({ closest: () => block });
 		assert.equal(button.clicked, true);
+		const popoutButton = {
+			instanceOf: (type) => type === FakeElement,
+			click() {
+				this.clicked = true;
+			},
+		};
+		editing.openNativeTimelineEditor({
+			closest: () => ({ querySelector: () => popoutButton }),
+		});
+		assert.equal(popoutButton.clicked, true);
 		editing.openNativeTimelineEditor({ closest: () => null });
 		assert.match(state.notice, /edit button/);
 	} finally {
@@ -781,6 +794,144 @@ test("inline menu exposes editing actions, while Bases menu does not", () => {
 		"---",
 		"Copy shareable link",
 	]);
+});
+
+test("exports use the timeline document for styling and downloads", async () => {
+	const oldSerializer = globalThis.XMLSerializer;
+	const oldWindow = globalThis.window;
+	const oldCreateUrl = URL.createObjectURL;
+	const oldRevokeUrl = URL.revokeObjectURL;
+	const downloads = [];
+	const revoked = [];
+	const created = [];
+	const blobs = [];
+	let clone;
+	const body = {
+		appendChild(element) {
+			downloads.push(element);
+		},
+	};
+	const doc = {
+		body,
+		defaultView: {
+			getComputedStyle(element) {
+				return {
+					length: 0,
+					backgroundColor: "",
+					getPropertyValue: () =>
+						element === body ? "rgb(10, 20, 30)" : "",
+				};
+			},
+		},
+		createElement(tag) {
+			created.push(tag);
+			if (tag === "a") {
+				return {
+					click() {
+						this.clicked = true;
+					},
+					remove() {
+						this.removed = true;
+					},
+				};
+			}
+			if (tag === "img") {
+				return {
+					set src(value) {
+						this.value = value;
+						queueMicrotask(() => this.onload());
+					},
+				};
+			}
+			assert.equal(tag, "canvas");
+			return {
+				getContext: () => ({ scale() {}, drawImage() {} }),
+				toBlob: (callback) =>
+					callback(new Blob(["png"], { type: "image/png" })),
+			};
+		},
+	};
+	const button = {
+		addEventListener(_event, callback) {
+			this.click = callback;
+		},
+	};
+	const container = {
+		ownerDocument: doc,
+		children: [],
+		createEl: () => button,
+		getBoundingClientRect: () => ({ width: 120, height: 80 }),
+		cloneNode() {
+			clone = {
+				children: [],
+				style: { setProperty() {} },
+				setCssProps(props) {
+					this.props = props;
+				},
+				addClass(name) {
+					this.cls = name;
+				},
+				setAttribute() {},
+				querySelectorAll: () => [],
+			};
+			return clone;
+		},
+	};
+	globalThis.XMLSerializer = class {
+		serializeToString(element) {
+			assert.equal(element.style.backgroundColor, "rgb(10, 20, 30)");
+			assert.equal(element.cls, "chronos-export-root");
+			assert.deepEqual(element.props, {
+				width: "120px",
+				height: "80px",
+			});
+			return "<div/>";
+		}
+	};
+	globalThis.window = {
+		setTimeout(callback) {
+			callback();
+		},
+	};
+	URL.createObjectURL = (blob) => {
+		blobs.push(blob);
+		return `blob:${blob.type}`;
+	};
+	URL.revokeObjectURL = (url) => revoked.push(url);
+	try {
+		attachTimelineMenu(container, () => "markdown", { useAI: false });
+		button.click({
+			stopPropagation() {},
+			stopImmediatePropagation() {},
+			preventDefault() {},
+		});
+		const items = state.menus.at(-1).items;
+		items.find((item) => item.title === "Export as SVG").callback();
+		items.find((item) => item.title === "Export as PNG").callback();
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		assert.deepEqual(created, ["a", "img", "canvas", "a"]);
+		assert.deepEqual(
+			downloads.map((anchor) => [
+				anchor.href,
+				anchor.clicked,
+				anchor.removed,
+			]),
+			[
+				["blob:image/svg+xml", true, true],
+				["blob:image/png", true, true],
+			],
+		);
+		assert.deepEqual(revoked, ["blob:image/svg+xml", "blob:image/png"]);
+		assert.match(
+			await blobs[0].text(),
+			/<style>\.chronos-export-root \{ margin: 0 !important; \}<\/style>/,
+		);
+	} finally {
+		globalThis.XMLSerializer = oldSerializer;
+		globalThis.window = oldWindow;
+		URL.createObjectURL = oldCreateUrl;
+		URL.revokeObjectURL = oldRevokeUrl;
+	}
 });
 
 test("all AI providers receive the edit prompt and original timeline", async () => {
